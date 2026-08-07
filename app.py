@@ -1,7 +1,8 @@
 import os
 import requests
 import json
-import base64
+import urllib.parse
+import random
 from flask import Flask, request, jsonify, render_template_string
 
 app = Flask(__name__)
@@ -23,12 +24,6 @@ HTML_CODE = """
             --ai-msg-bg: #121215; --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
             --sidebar-bg: #09090b; --sidebar-border: #27272a; --sidebar-text: #f4f4f5;
         }
-        [data-theme="light"] {
-            --bg-main: #f4f4f5; --bg-surface: #ffffff; --bg-input: #ffffff;
-            --border-color: #e4e4e7; --text-main: #09090b; --text-sub: #52525b;
-            --action-text: #be185d; --ai-msg-bg: #ffffff; --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-            --sidebar-bg: #ffffff; --sidebar-border: #e4e4e7; --sidebar-text: #09090b;
-        }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         html, body { height: 100dvh; width: 100vw; background: #000000; color: var(--text-main); overflow: hidden; display: flex; justify-content: center; align-items: center; }
         .app-container { width: 100%; max-width: 440px; height: 100dvh; background: var(--bg-main); display: flex; flex-direction: column; position: relative; overflow: hidden; border: 1px solid var(--border-color); }
@@ -45,7 +40,6 @@ HTML_CODE = """
         .nav-section { padding: 12px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
         .menu-category-btn { width: 100%; padding: 12px 14px; background: var(--bg-surface); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 10px; text-align: left; cursor: pointer; font-size: 0.92rem; font-weight: 600; display: flex; align-items: center; gap: 10px; }
         .item-btn { width: 100%; padding: 9px 12px; background: transparent; border: none; color: var(--text-sub); border-radius: 8px; text-align: left; cursor: pointer; font-size: 0.88rem; }
-        .item-btn:hover { background: var(--border-color); color: var(--text-main); }
         
         .workspace { flex: 1; display: flex; flex-direction: column; height: calc(100% - 52px); position: relative; overflow: hidden; }
         .dashboard { flex: 1; padding: 24px 16px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; }
@@ -60,7 +54,7 @@ HTML_CODE = """
         .message.user { align-self: flex-end; flex-direction: row-reverse; }
         .message .content { background: var(--ai-msg-bg); border: 1px solid var(--border-color); padding: 10px 14px; border-radius: 14px; font-size: 0.9rem; line-height: 1.45; color: var(--text-main); word-break: break-word; box-shadow: var(--card-shadow); }
         .message.user .content { background: var(--user-msg-bg); border: none; color: #ffffff; }
-        .chat-img-attachment { width: 100%; max-width: 240px; aspect-ratio: 3/4; object-fit: cover; border-radius: 10px; margin-top: 6px; cursor: pointer; border: 1px solid var(--border-color); display: block; }
+        .chat-img-attachment { width: 100%; max-width: 240px; border-radius: 10px; margin-top: 6px; cursor: pointer; border: 1px solid var(--border-color); display: block; }
         
         .input-area { padding: 10px 12px; border-top: 1px solid var(--border-color); background: var(--bg-surface); display: flex; gap: 8px; width: 100%; align-items: center; }
         .input-wrapper { position: relative; flex: 1; display: flex; align-items: center; }
@@ -75,22 +69,22 @@ HTML_CODE = """
         .submit-btn { width: 100%; padding: 12px; background: linear-gradient(135deg, #9333ea, #ec4899); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; margin-top: 6px; }
         
         .lightbox-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.92); backdrop-filter: blur(10px); z-index: 300; display: flex; flex-direction: column; justify-content: space-between; padding: 16px 12px; align-items: center; }
-        .lightbox-img { width: auto; max-width: 95%; max-height: 68vh; object-fit: contain; border-radius: 14px; border: 1px solid #27272a; }
-        .lightbox-actions { display: flex; gap: 8px; width: 100%; max-width: 360px; margin-bottom: 10px; justify-content: space-between; }
-        .lightbox-btn { flex: 1; padding: 12px 6px; background: #121215; border: 1px solid #27272a; color: #ffffff; border-radius: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.8rem; }
-        .lightbox-btn.danger { background: #ef4444; border: none; color: white; }
+        .lightbox-img { max-width: 95%; max-height: 75vh; border-radius: 16px; object-fit: contain; border: 1px solid #27272a; }
+        .lightbox-actions { display: flex; gap: 12px; width: 100%; max-width: 340px; margin-bottom: 20px; }
+        .lightbox-btn { flex: 1; padding: 12px; background: #121215; border: 1px solid #27272a; color: #ffffff; border-radius: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.88rem; }
+        .lightbox-btn.primary { background: linear-gradient(135deg, #9333ea, #ec4899); border: none; }
         
         .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
-        .gallery-item { position: relative; border-radius: 12px; overflow: hidden; aspect-ratio: 3/4; border: 1px solid var(--border-color); cursor: pointer; }
+        .gallery-item { position: relative; border-radius: 12px; overflow: hidden; height: 160px; border: 1px solid var(--border-color); cursor: pointer; }
         .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
         .hidden { display: none !important; }
     </style>
 </head>
-<body data-theme="dark">
+<body>
     <div class="app-container">
         <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <span>Aura Companions</span>
+                <span>Aura v1.2</span>
                 <button class="icon-btn" onclick="toggleSidebar()"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="nav-section">
@@ -112,7 +106,7 @@ HTML_CODE = """
         <div class="workspace">
             <div id="dashboard-view" class="dashboard">
                 <h2 class="dash-title">Welcome to Aura</h2>
-                <p class="dash-sub">Your personal AI companion & roleplay platform.</p>
+                <p class="dash-sub">Your personal AI companion platform.</p>
                 <div class="dash-card" onclick="openNewCharForm()"><i class="fa-solid fa-user-plus"></i><div><strong>Create AI Companion</strong><span>Custom backstory & relationship</span></div></div>
             </div>
 
@@ -127,12 +121,12 @@ HTML_CODE = """
             </div>
 
             <div id="char-form" class="form-container hidden">
-                <h3 style="margin-bottom: 14px;">Create AI Companion</h3>
+                <h3 style="margin-bottom: 14px;">Create Companion</h3>
                 <input type="hidden" id="char-id">
                 <div class="form-group"><label>Name</label><input type="text" id="char-name"></div>
-                <div class="form-group"><label>Appearance</label><input type="text" id="char-app" placeholder="e.g. Indian girl, long dark hair, brown eyes"></div>
-                <div class="form-group"><label>Backstory / Personality</label><textarea id="char-backstory"></textarea></div>
-                <button class="submit-btn" onclick="saveCharacter()">Save Companion</button>
+                <div class="form-group"><label>Appearance</label><input type="text" id="char-app"></div>
+                <div class="form-group"><label>Backstory</label><textarea id="char-backstory"></textarea></div>
+                <button class="submit-btn" onclick="saveCharacter()">Save</button>
             </div>
 
             <div id="gallery-view" class="form-container hidden">
@@ -151,7 +145,7 @@ HTML_CODE = """
             <img id="lightbox-target-img" class="lightbox-img" src="">
             <div class="lightbox-actions">
                 <button class="lightbox-btn" onclick="downloadLightboxImage()"><i class="fa-solid fa-download"></i> Save</button>
-                <button class="lightbox-btn danger" onclick="deleteCurrentGalleryImage()"><i class="fa-solid fa-trash"></i> Delete</button>
+                <button class="lightbox-btn primary" onclick="document.getElementById('lightbox-modal').classList.add('hidden')">Close</button>
             </div>
         </div>
     </div>
@@ -191,25 +185,9 @@ HTML_CODE = """
             document.getElementById('lightbox-modal').classList.remove('hidden');
         }
 
-        function deleteCurrentGalleryImage() {
-            if(!activeContext || !activeLightboxImgUrl) return;
-            let charId = activeContext.id;
-            if(galleries[charId]) {
-                galleries[charId] = galleries[charId].filter(item => item.url !== activeLightboxImgUrl);
-                saveState();
-            }
-            document.getElementById('lightbox-modal').classList.add('hidden');
-            openCharacterGallery();
-        }
-
         async function downloadLightboxImage() {
             if(!activeLightboxImgUrl) return;
             try {
-                if(activeLightboxImgUrl.startsWith('data:')) {
-                    const a = document.createElement('a'); a.href = activeLightboxImgUrl; a.download = `Photo_${Date.now()}.jpg`;
-                    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-                    return;
-                }
                 const res = await fetch(activeLightboxImgUrl);
                 const blob = await res.blob();
                 const url = window.URL.createObjectURL(blob);
@@ -332,7 +310,6 @@ def home():
 def advanced_chat():
     data = request.json
     groq_api_key = os.environ.get("GROQ_API_KEY")
-    hf_token = os.environ.get("HF_TOKEN")
     c = data.get("character", {})
     history = data.get("history", [])
 
@@ -358,34 +335,16 @@ def advanced_chat():
 
         reply = res["choices"][0]["message"]["content"]
     except Exception as e:
-        reply = "*Smile* Hey there! Let's chat."
+        reply = "*Smile* Hey there!"
 
     resp = {"sender": c.get('name', 'Companion'), "text": reply}
 
-    if photo_requested and hf_token:
-        dynamic_photo_prompt = f"candid raw photo of {c.get('name', 'woman')}, {c.get('appearance', 'natural look')}, natural skin texture, realistic lighting, 35mm photography"
-        try:
-            scene_res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={
-                "model": "llama-3.1-8b-instant",
-                "messages": [{"role": "system", "content": f"Extract a short photorealistic image prompt for: {c.get('appearance')} based on chat: {history[-4:]}. Output ONLY prompt."}]
-            }, headers={"Authorization": f"Bearer {groq_api_key.strip()}", "Content-Type": "application/json"}).json()
-            if "choices" in scene_res:
-                dynamic_photo_prompt = scene_res["choices"][0]["message"]["content"].strip()
-        except:
-            pass
-
-        try:
-            img_res = requests.post(
-                "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell",
-                headers={"Authorization": f"Bearer {hf_token.strip()}"},
-                json={"inputs": dynamic_photo_prompt}
-            )
-            
-            if img_res.status_code == 200:
-                encoded_img = base64.b64encode(img_res.content).decode('utf-8')
-                resp["image"] = f"data:image/jpeg;base64,{encoded_img}"
-        except Exception as e:
-            print("HF Error:", e)
+    if photo_requested:
+        raw_prompt = f"photorealistic portrait of {c.get('name', 'woman')}, {c.get('appearance', '')}, natural lighting, high quality"
+        negative = "cartoon, anime, doll, plastic"
+        encoded_p = urllib.parse.quote(raw_prompt)
+        encoded_n = urllib.parse.quote(negative)
+        resp["image"] = f"https://image.pollinations.ai/prompt/{encoded_p}?negative={encoded_n}&width=768&height=1024&nologo=true&seed={random.randint(1000, 999999)}&model=flux"
 
     return jsonify({"responses": [resp]})
 
