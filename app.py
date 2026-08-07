@@ -4,7 +4,6 @@ from flask import Flask, request, jsonify, render_template_string
 
 app = Flask(__name__)
 
-# Complete Chat Interface (Frontend)
 HTML_CODE = """
 <!DOCTYPE html>
 <html lang="en">
@@ -47,7 +46,6 @@ HTML_CODE = """
             let text = input.value.trim();
             if(!text) return;
 
-            // Display User Message
             chatbox.innerHTML += `<div class="msg user-msg">${text}</div>`;
             input.value = "";
             chatbox.scrollTop = chatbox.scrollHeight;
@@ -60,7 +58,7 @@ HTML_CODE = """
                 });
                 let data = await response.json();
                 
-                if (data.reply.startsWith("Error:") || data.reply.startsWith("API Error:")) {
+                if (data.reply.startsWith("Error:")) {
                     chatbox.innerHTML += `<div class="msg error-msg">${data.reply}</div>`;
                 } else {
                     chatbox.innerHTML += `<div class="msg ai-msg">${data.reply}</div>`;
@@ -82,20 +80,19 @@ def home():
 @app.route("/chat", methods=["POST"])
 def chat():
     user_msg = request.json.get("message", "")
-    api_key = os.environ.get("OPENROUTER_API_KEY")
+    api_key = os.environ.get("GROQ_API_KEY")
 
     if not api_key:
-        return jsonify({"reply": "Error: OPENROUTER_API_KEY missing in Render environment variables!"})
+        return jsonify({"reply": "Error: GROQ_API_KEY missing in Render environment variables!"})
 
     headers = {
         "Authorization": f"Bearer {api_key.strip()}",
-        "HTTP-Referer": "https://render.com",
         "Content-Type": "application/json"
     }
     
-    # 100% Free Google Gemma Model
+    # Fast & Free Llama-3 model directly on Groq
     payload = {
-        "model": "google/gemma-2-9b-it:free",
+        "model": "llama-3.1-8b-instant",
         "messages": [
             {
                 "role": "system", 
@@ -106,15 +103,15 @@ def chat():
     }
     
     try:
-        res = requests.post("https://openrouter.ai/api/v1/chat/completions", json=payload, headers=headers, timeout=20)
+        res = requests.post("https://api.groq.com/openai/v1/chat/completions", json=payload, headers=headers, timeout=15)
         data = res.json()
         
         if "choices" in data and len(data["choices"]) > 0:
             reply = data["choices"][0]["message"]["content"]
         elif "error" in data:
-            reply = f"API Error: {data['error'].get('message', 'Check OpenRouter Settings')}"
+            reply = f"Error: {data['error'].get('message', 'Groq API Error')}"
         else:
-            reply = "API Error: Unexpected response from OpenRouter."
+            reply = "Error: Unexpected response from Groq."
             
     except Exception as e:
         reply = f"Error: Server connection failed ({str(e)})"
