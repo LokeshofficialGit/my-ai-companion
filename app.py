@@ -781,4 +781,551 @@ HTML_CODE = """
 
         function openNewGroupForm() {
             document.getElementById('sidebar').classList.remove('open');
-            document.getElementById('group-id').valu
+            document.getElementById('group-id').value = '';
+            document.getElementById('group-title').value = '';
+            document.getElementById('group-context').value = '';
+            document.getElementById('group-directives').value = '';
+            document.getElementById('group-avatar-preview').src = 'https://api.dicebear.com/7.x/shapes/svg?seed=' + Date.now();
+            document.getElementById('group-form-title').innerText = 'Create Group Chat';
+            document.getElementById('group-delete-btn').classList.add('hidden');
+            showForm('group-form');
+        }
+
+        function handleEditClick() {
+            if(!activeContext) return;
+            if(activeContext.type === 'char') editCurrentCharacter();
+            else if(activeContext.type === 'group') editCurrentGroup();
+        }
+
+        function editCurrentCharacter() {
+            let c = characters.find(item => item.id === activeContext.id);
+            if(!c) return;
+
+            document.getElementById('char-id').value = c.id;
+            document.getElementById('char-name').value = c.name;
+            document.getElementById('char-rel').value = c.relationship || '';
+            document.getElementById('char-app').value = c.appearance || '';
+            document.getElementById('char-backstory').value = c.backstory || '';
+            document.getElementById('char-directives').value = c.directives || '';
+            document.getElementById('char-memories').value = c.memories || '';
+            document.getElementById('avatar-img-preview').src = c.avatar;
+            document.getElementById('char-form-title').innerText = 'Modify Companion';
+            document.getElementById('char-delete-btn').classList.remove('hidden');
+            showForm('char-form');
+        }
+
+        function editCurrentGroup() {
+            let g = groups.find(item => item.id === activeContext.id);
+            if(!g) return;
+
+            document.getElementById('group-id').value = g.id;
+            document.getElementById('group-title').value = g.title || '';
+            document.getElementById('group-context').value = g.context || '';
+            document.getElementById('group-directives').value = g.directives || '';
+            document.getElementById('group-avatar-preview').src = g.avatar || 'https://api.dicebear.com/7.x/shapes/svg?seed=' + g.id;
+            document.getElementById('group-form-title').innerText = 'Modify Group Settings';
+            document.getElementById('group-delete-btn').classList.remove('hidden');
+            
+            showForm('group-form');
+        }
+
+        function deleteCurrentCharacter() {
+            let id = document.getElementById('char-id').value;
+            if(!id) return;
+
+            if(confirm("Are you sure? This character and all chat history will be permanently deleted!")) {
+                characters = characters.filter(c => c.id !== id);
+                delete chatHistories[id];
+                saveState();
+                goHome();
+            }
+        }
+
+        function deleteCurrentGroup() {
+            let id = document.getElementById('group-id').value;
+            if(!id) return;
+
+            if(confirm("Are you sure? This group room and its history will be deleted!")) {
+                groups = groups.filter(g => g.id !== id);
+                delete chatHistories[id];
+                saveState();
+                goHome();
+            }
+        }
+
+        function openPinnedMemoryModal() {
+            if(!activeContext || activeContext.type !== 'char') return;
+            let c = characters.find(item => item.id === activeContext.id);
+            let fact = prompt("Pin memory for " + c.name + ":", c.memories || '');
+            if(fact !== null) {
+                c.memories = fact;
+                saveState();
+            }
+        }
+
+        function saveUserPersona() {
+            userPersona.name = document.getElementById('user-name').value || 'User';
+            userPersona.bio = document.getElementById('user-bio').value || '';
+            userPersona.avatar = document.getElementById('user-avatar-preview').src;
+            saveState();
+            alert('Persona saved!');
+        }
+
+        function showForm(formId) {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('dashboard-view').classList.add('hidden');
+            document.getElementById('chat-view').classList.add('hidden');
+            document.getElementById('char-form').classList.add('hidden');
+            document.getElementById('group-form').classList.add('hidden');
+            document.getElementById('settings-form').classList.add('hidden');
+            document.getElementById('top-actions').classList.add('hidden');
+            document.getElementById(formId).classList.remove('hidden');
+
+            document.getElementById('top-title').innerHTML = `<svg viewBox="-40 -20 140 180" class="aura-logo-svg"><use href="#aura-brand-icon"/></svg> Aura`;
+
+            if(formId === 'settings-form') {
+                document.getElementById('user-name').value = userPersona.name || '';
+                document.getElementById('user-bio').value = userPersona.bio || '';
+                document.getElementById('user-avatar-preview').src = userPersona.avatar || 'https://api.dicebear.com/7.x/identicon/svg?seed=user';
+            }
+            if(formId === 'group-form') renderGroupSelector();
+        }
+
+        function renderSidebar() {
+            let charList = document.getElementById('char-list');
+            let groupList = document.getElementById('group-list');
+            
+            charList.innerHTML = characters.map(c => `
+                <button class="item-btn ${activeContext?.id === c.id ? 'active':''}" onclick="openChat('char', '${c.id}')">
+                    <img src="${c.avatar || 'https://via.placeholder.com/40'}" />
+                    <span>${c.name}</span>
+                </button>
+            `).join('');
+
+            groupList.innerHTML = groups.map(g => `
+                <button class="item-btn ${activeContext?.id === g.id ? 'active':''}" onclick="openChat('group', '${g.id}')">
+                    <img src="${g.avatar || 'https://api.dicebear.com/7.x/shapes/svg?seed=' + g.id}" />
+                    <span>${g.title}</span>
+                </button>
+            `).join('');
+        }
+
+        function saveCharacter() {
+            let id = document.getElementById('char-id').value || 'char_' + Date.now();
+            let avatarImg = document.getElementById('avatar-img-preview').src;
+            
+            let charObj = {
+                id,
+                name: document.getElementById('char-name').value || 'Companion',
+                relationship: document.getElementById('char-rel').value,
+                appearance: document.getElementById('char-app').value,
+                backstory: document.getElementById('char-backstory').value,
+                directives: document.getElementById('char-directives').value,
+                memories: document.getElementById('char-memories').value,
+                avatar: avatarImg
+            };
+
+            let existingIdx = characters.findIndex(c => c.id === id);
+            if(existingIdx >= 0) characters[existingIdx] = charObj;
+            else characters.push(charObj);
+
+            saveState();
+            openChat('char', id);
+        }
+
+        function renderGroupSelector() {
+            let container = document.getElementById('group-char-selector');
+            let currentGroup = groups.find(g => g.id === document.getElementById('group-id').value);
+            let selectedIds = currentGroup ? currentGroup.memberIds : [];
+
+            container.innerHTML = characters.map(c => `
+                <label style="display:flex; align-items:center; gap:8px; background:var(--bg-surface); padding:8px; border-radius:6px; cursor:pointer;">
+                    <input type="checkbox" value="${c.id}" ${selectedIds.includes(c.id) ? 'checked':''} class="group-char-checkbox" style="width:auto;">
+                    <img src="${c.avatar}" style="width:24px; height:24px; border-radius:50%;"/>
+                    ${c.name}
+                </label>
+            `).join('');
+        }
+
+        function saveGroup() {
+            let groupId = document.getElementById('group-id').value || 'group_' + Date.now();
+            let title = document.getElementById('group-title').value || 'Group Chat';
+            let context = document.getElementById('group-context').value || '';
+            let directives = document.getElementById('group-directives').value || '';
+            let avatar = document.getElementById('group-avatar-preview').src;
+            let selectedChars = Array.from(document.querySelectorAll('.group-char-checkbox:checked')).map(cb => cb.value);
+            
+            if(selectedChars.length < 2) return alert('Select at least 2 characters!');
+
+            let groupObj = { id: groupId, title, context, directives, avatar, memberIds: selectedChars };
+
+            let existingIdx = groups.findIndex(g => g.id === groupId);
+            if(existingIdx >= 0) groups[existingIdx] = groupObj;
+            else groups.push(groupObj);
+
+            saveState();
+            openChat('group', groupId);
+        }
+
+        function openChat(type, id) {
+            activeContext = { type, id };
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('dashboard-view').classList.add('hidden');
+            document.getElementById('char-form').classList.add('hidden');
+            document.getElementById('group-form').classList.add('hidden');
+            document.getElementById('settings-form').classList.add('hidden');
+            document.getElementById('chat-view').classList.remove('hidden');
+            document.getElementById('top-actions').classList.remove('hidden');
+
+            if(type === 'group') document.getElementById('pin-mem-btn').classList.add('hidden');
+            else document.getElementById('pin-mem-btn').classList.remove('hidden');
+
+            renderSidebar();
+            
+            let name = type === 'char' ? characters.find(c => c.id === id)?.name : groups.find(g => g.id === id)?.title;
+            document.getElementById('top-title').innerText = name || 'Chat';
+
+            renderMessages();
+            document.getElementById('chat-input').focus();
+        }
+
+        function formatText(text) {
+            return text.replace(/\*(.*?)\*/g, '<span class="action-text">*$1*</span>');
+        }
+
+        function renderMessages() {
+            let container = document.getElementById('message-container');
+            let history = chatHistories[activeContext.id] || [];
+
+            container.innerHTML = history.map((m, idx) => {
+                let isUser = m.sender === 'You';
+                let userImg = userPersona.avatar || 'https://api.dicebear.com/7.x/identicon/svg?seed=user';
+                let avatar = isUser ? userImg : m.avatar;
+                
+                // Show continue button only inside AI Chat Bubbles
+                let continueBtnHtml = !isUser ? `<span class="continue-bubble-btn" onclick="continueAiReply()" title="Continue message">&gt;&gt; continue</span>` : '';
+
+                return `
+                    <div class="message ${isUser ? 'user':'ai'}">
+                        <img class="avatar" src="${avatar}" />
+                        <div>
+                            <div class="sender-name">${m.sender}</div>
+                            <div class="content">
+                                ${formatText(m.text)}
+                                <div class="bubble-controls">
+                                    <span class="edit-link" onclick="tweakMsg(${idx})">edit</span>
+                                    ${continueBtnHtml}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function tweakMsg(idx) {
+            let history = chatHistories[activeContext.id];
+            let newText = prompt("Tweak message:", history[idx].text);
+            if(newText !== null) {
+                history[idx].text = newText;
+                saveState();
+                renderMessages();
+            }
+        }
+
+        async function typeWriterEffect(sender, fullText, avatar) {
+            let container = document.getElementById('message-container');
+            
+            let typingDiv = document.createElement('div');
+            typingDiv.className = 'message ai';
+            typingDiv.innerHTML = `
+                <img class="avatar" src="${avatar}" />
+                <div>
+                    <div class="sender-name">${sender}</div>
+                    <div class="content"><div class="typing-dots"><span></span><span></span><span></span></div></div>
+                </div>
+            `;
+            container.appendChild(typingDiv);
+            container.scrollTop = container.scrollHeight;
+
+            await new Promise(resolve => setTimeout(resolve, 800));
+
+            let contentDiv = typingDiv.querySelector('.content');
+            contentDiv.innerHTML = '';
+            let words = fullText.split(' ');
+            
+            for (let i = 0; i < words.length; i++) {
+                let currentSubText = words.slice(0, i + 1).join(' ');
+                contentDiv.innerHTML = formatText(currentSubText) + `
+                    <div class="bubble-controls">
+                        <span class="edit-link" onclick="tweakMsg(${chatHistories[activeContext.id].length})">edit</span>
+                        <span class="continue-bubble-btn" onclick="continueAiReply()">&gt;&gt; continue</span>
+                    </div>
+                `;
+                container.scrollTop = container.scrollHeight;
+                await new Promise(resolve => setTimeout(resolve, 30));
+            }
+
+            chatHistories[activeContext.id].push({ sender, text: fullText, avatar });
+            saveState();
+            renderMessages();
+        }
+
+        async function sendMsg() {
+            let input = document.getElementById('chat-input');
+            let text = input.value.trim();
+            if(!text || !activeContext) return;
+
+            input.value = '';
+            if(!chatHistories[activeContext.id]) chatHistories[activeContext.id] = [];
+            
+            chatHistories[activeContext.id].push({ sender: 'You', text });
+            renderMessages();
+
+            fetchAIResponse();
+        }
+
+        async function suggestUserMessage() {
+            if(!activeContext) return;
+            let input = document.getElementById('chat-input');
+            input.placeholder = "Generating magic reply...";
+
+            let payload = {
+                contextId: activeContext.id,
+                userPersona: userPersona,
+                history: chatHistories[activeContext.id] || []
+            };
+
+            let res = await fetch('/api/suggest-reply', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            let data = await res.json();
+            if(data.suggestion) {
+                input.value = data.suggestion;
+            }
+            input.placeholder = "Message...";
+        }
+
+        async function continueAiReply() {
+            if(!activeContext) return;
+            if(!chatHistories[activeContext.id]) chatHistories[activeContext.id] = [];
+            fetchAIResponse(true);
+        }
+
+        async function fetchAIResponse(isContinue = false) {
+            let payload = {
+                type: activeContext.type,
+                contextId: activeContext.id,
+                userPersona: userPersona,
+                isContinue: isContinue,
+                history: chatHistories[activeContext.id]
+            };
+
+            if(activeContext.type === 'char') {
+                payload.character = characters.find(c => c.id === activeContext.id);
+            } else {
+                let group = groups.find(g => g.id === activeContext.id);
+                payload.group = group;
+                payload.members = characters.filter(c => group.memberIds.includes(c.id));
+            }
+
+            let res = await fetch('/api/advanced-chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            let data = await res.json();
+            if(data.responses) {
+                for (let r of data.responses) {
+                    await typeWriterEffect(r.sender, r.text, r.avatar);
+                }
+            }
+        }
+
+        function regenerateLastResponse() {
+            if(!activeContext || !chatHistories[activeContext.id]) return;
+            let history = chatHistories[activeContext.id];
+            if(history.length === 0) return;
+
+            if(history[history.length - 1].sender !== 'You') {
+                history.pop();
+                renderMessages();
+                fetchAIResponse();
+            }
+        }
+
+        function clearCurrentChat() {
+            if(!activeContext || !confirm('Clear chat history?')) return;
+            chatHistories[activeContext.id] = [];
+            saveState();
+            renderMessages();
+        }
+
+        function importData(input) {
+            let file = input.files[0];
+            if(!file) return;
+
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    let imported = JSON.parse(e.target.result);
+                    
+                    if(imported.type === 'single_character_backup') {
+                        let c = imported.character;
+                        let existingIdx = characters.findIndex(item => item.id === c.id);
+                        if(existingIdx >= 0) characters[existingIdx] = c;
+                        else characters.push(c);
+
+                        chatHistories[c.id] = imported.chatHistory || [];
+                        saveState();
+                        alert(`Character "${c.name}" imported successfully!`);
+                    } else {
+                        if(imported.characters) characters = imported.characters;
+                        if(imported.groups) groups = imported.groups;
+                        if(imported.chatHistories) chatHistories = imported.chatHistories;
+                        if(imported.userPersona) userPersona = imported.userPersona;
+                        saveState();
+                        alert('Full app data imported successfully!');
+                    }
+                    location.reload();
+                } catch(err) {
+                    alert('Invalid JSON File!');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        renderSidebar();
+    </script>
+</body>
+</html>
+"""
+
+@app.route("/")
+def home():
+    return render_template_string(HTML_CODE)
+
+@app.route("/api/suggest-reply", methods=["POST"])
+def suggest_reply():
+    data = request.json
+    api_key = os.environ.get("GROQ_API_KEY")
+    if not api_key: return jsonify({"suggestion": ""})
+
+    headers = {"Authorization": f"Bearer {api_key.strip()}", "Content-Type": "application/json"}
+    user_info = data.get("userPersona", {})
+    
+    system_prompt = f"""
+You are a ghostwriter for the user ({user_info.get('name', 'User')}).
+User Bio: {user_info.get('bio', '')}
+Based on the chat history, write a short, natural, in-character next message that the User would say.
+Return ONLY the text/action response. Do not add quotes or explanations.
+    """
+
+    # Ghostwriter uses last 10 messages for auto-suggest
+    messages = [{"role": "system", "content": system_prompt}]
+    for m in data.get("history", [])[-10:]:
+        messages.append({"role": "user" if m["sender"] != "You" else "assistant", "content": f"{m['sender']}: {m['text']}"})
+
+    try:
+        res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={
+            "model": "llama-3.1-8b-instant",
+            "messages": messages
+        }, headers=headers).json()
+        
+        suggestion = res["choices"][0]["message"]["content"]
+        return jsonify({"suggestion": suggestion.strip('"')})
+    except:
+        return jsonify({"suggestion": "Hey! What's on your mind?"})
+
+@app.route("/api/advanced-chat", methods=["POST"])
+def advanced_chat():
+    data = request.json
+    api_key = os.environ.get("GROQ_API_KEY")
+
+    if not api_key:
+        return jsonify({"responses": [{"sender": "System", "text": "Groq Key missing in Render Environment!"}]})
+
+    headers = {
+        "Authorization": f"Bearer {api_key.strip()}",
+        "Content-Type": "application/json"
+    }
+
+    user_info = data.get("userPersona", {})
+    user_name = user_info.get("name", "User")
+    user_bio = user_info.get("bio", "")
+
+    responses = []
+
+    if data["type"] == "char":
+        c = data["character"]
+        system_prompt = f"""
+Name: {c['name']}
+Relationship with User: {c.get('relationship', 'Friend')}
+Appearance: {c.get('appearance', '')}
+Backstory: {c.get('backstory', '')}
+Directives: {c.get('directives', '')}
+Key Memories / Current Context: {c.get('memories', '')}
+
+User Profile:
+Name: {user_name}
+Bio: {user_bio}
+
+Roleplay naturally as {c['name']}. Stay in character. Use asterisks for actions like *smiles and looks at you*.
+        """
+        if data.get("isContinue"):
+            system_prompt += "\nUser pressed Continue. Extend your previous reply seamlessly."
+
+        messages = [{"role": "system", "content": system_prompt}]
+        
+        # MEMORY BOOSTER: Upgraded from 8 to LAST 50 MESSAGES for deep context retention
+        for m in data["history"][-50:]:
+            role = "user" if m["sender"] == "You" or m["sender"] == user_name else "assistant"
+            messages.append({"role": role, "content": m["text"]})
+
+        res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={
+            "model": "llama-3.1-8b-instant",
+            "messages": messages
+        }, headers=headers).json()
+
+        reply_text = res["choices"][0]["message"]["content"]
+        responses.append({"sender": c['name'], "text": reply_text, "avatar": c['avatar']})
+
+    else:
+        group = data["group"]
+        members = data["members"]
+        for char in members[:2]:
+            system_prompt = f"""
+You are in a group chat named "{group.get('title', 'Group Chat')}" as {char['name']}.
+Group Setting/Context: {group.get('context', '')}
+Group Directives: {group.get('directives', '')}
+
+User Profile: {user_name} ({user_bio})
+Relationship with User: {char.get('relationship', 'Friend')}
+Character Backstory: {char.get('backstory', '')}
+
+Respond briefly from {char['name']}'s perspective. Use asterisks for actions like *laughs*.
+            """
+
+            messages = [{"role": "system", "content": system_prompt}]
+            
+            # MEMORY BOOSTER FOR GROUPS: Last 50 Messages
+            for m in data["history"][-50:]:
+                messages.append({"role": "user", "content": f"{m['sender']}: {m['text']}"})
+
+            res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={
+                "model": "llama-3.1-8b-instant",
+                "messages": messages
+            }, headers=headers).json()
+
+            reply_text = res["choices"][0]["message"]["content"]
+            responses.append({"sender": char['name'], "text": reply_text, "avatar": char['avatar']})
+
+    return jsonify({"responses": responses})
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000)
