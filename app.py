@@ -144,6 +144,8 @@ HTML_CODE = """
         .edit-link, .continue-bubble-btn { font-size: 0.68rem; color: var(--text-sub); text-decoration: underline; cursor: pointer; opacity: 0.65; transition: opacity 0.2s; }
         .edit-link:hover, .continue-bubble-btn:hover { opacity: 1; color: var(--accent-pink); }
 
+        .typing-indicator { display: flex; align-items: center; gap: 4px; padding: 4px 8px; font-style: italic; font-size: 0.78rem; color: var(--accent-pink); }
+
         .input-area { padding: 10px 12px; border-top: 1px solid var(--border-color); background: var(--bg-surface); display: flex; gap: 8px; width: 100%; align-items: center; }
         .input-wrapper { position: relative; flex: 1; display: flex; align-items: center; }
         .input-wrapper input { 
@@ -178,6 +180,9 @@ HTML_CODE = """
         
         .tool-btn { background: var(--bg-input) !important; color: var(--accent-pink) !important; border: 1px solid var(--border-color) !important; padding: 0 10px !important; font-size: 0.95rem; border-radius: 10px !important; height: 38px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
+        .form-header-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+        .form-back-btn { background: var(--bg-surface); border: 1px solid var(--border-color); color: var(--text-main); padding: 6px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+
         .form-container { padding: 16px; overflow-y: auto; flex: 1; width: 100%; }
         .form-group { margin-bottom: 14px; }
         .form-group label { display: block; margin-bottom: 4px; font-size: 0.8rem; color: var(--text-sub); font-weight: 600; }
@@ -211,6 +216,7 @@ HTML_CODE = """
             width: 100%; max-width: 360px; background: #121215;
             border: 1px solid #27272a; border-radius: 20px; padding: 16px;
             display: flex; flex-direction: column; align-items: center; gap: 14px; color: #ffffff;
+            position: relative;
         }
         .cropper-container-box {
             width: 100%; height: 260px; background: #000; border-radius: 12px;
@@ -225,6 +231,14 @@ HTML_CODE = """
 
         .submit-btn { width: 100%; padding: 11px; background: linear-gradient(135deg, #9333ea, #ec4899); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 0.9rem; margin-top: 8px; }
         .delete-btn { background: #ef4444 !important; margin-top: 10px; }
+
+        .memory-tag-chip {
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--bg-input); border: 1px solid var(--border-color);
+            padding: 6px 10px; border-radius: 8px; font-size: 0.8rem; color: var(--text-main); margin-bottom: 6px;
+        }
+        .memory-tag-chip i { cursor: pointer; color: #ef4444; opacity: 0.8; }
+        .memory-tag-chip i:hover { opacity: 1; }
 
         .hidden { display: none !important; }
         .aura-logo-svg { width: 28px; height: 28px; filter: drop-shadow(0 0 6px rgba(236,72,153,0.5)); }
@@ -343,7 +357,7 @@ HTML_CODE = """
                     <i class="fa-solid fa-sliders"></i>
                     <div>
                         <strong>Persona & Settings</strong>
-                        <span>Edit profile, export/import backups</span>
+                        <span>Edit profile, memories, backups</span>
                     </div>
                 </div>
             </div>
@@ -363,7 +377,10 @@ HTML_CODE = """
 
             <!-- Character Creation / Edit Form -->
             <div id="char-form" class="form-container hidden">
-                <h3 style="margin-bottom: 14px;" id="char-form-title">Create Companion</h3>
+                <div class="form-header-bar">
+                    <button class="form-back-btn" onclick="smartFormBack()"><i class="fa-solid fa-chevron-left"></i> Back</button>
+                    <h3 style="font-size:1.1rem; font-weight:800;" id="char-form-title">Create Companion</h3>
+                </div>
                 <input type="hidden" id="char-id">
                 
                 <div class="form-group">
@@ -392,7 +409,10 @@ HTML_CODE = """
 
             <!-- Group Form -->
             <div id="group-form" class="form-container hidden">
-                <h3 style="margin-bottom: 14px;" id="group-form-title">Create Group Chat</h3>
+                <div class="form-header-bar">
+                    <button class="form-back-btn" onclick="smartFormBack()"><i class="fa-solid fa-chevron-left"></i> Back</button>
+                    <h3 style="font-size:1.1rem; font-weight:800;" id="group-form-title">Create Group Chat</h3>
+                </div>
                 <input type="hidden" id="group-id">
 
                 <div class="form-group">
@@ -419,7 +439,11 @@ HTML_CODE = """
 
             <!-- Settings & Backup Form -->
             <div id="settings-form" class="form-container hidden">
-                <h3 style="margin-bottom: 14px;">Persona & Settings</h3>
+                <div class="form-header-bar">
+                    <button class="form-back-btn" onclick="smartFormBack()"><i class="fa-solid fa-chevron-left"></i> Back</button>
+                    <h3 style="font-size:1.1rem; font-weight:800;">Persona & Settings</h3>
+                </div>
+
                 <div class="form-group">
                     <label>Your Avatar Picture</label>
                     <div class="avatar-edit-trigger" onclick="openAvatarCropperModal('user')">
@@ -440,6 +464,15 @@ HTML_CODE = """
                 <hr style="border-color:var(--border-color); margin: 16px 0;">
 
                 <div class="form-group">
+                    <label style="color:var(--accent-pink); display:flex; align-items:center; gap:6px;">
+                        <i class="fa-solid fa-brain"></i> AI Auto-Remembered Facts
+                    </label>
+                    <div id="user-memories-list" style="margin-top:8px;"></div>
+                </div>
+
+                <hr style="border-color:var(--border-color); margin: 16px 0;">
+
+                <div class="form-group">
                     <label>Data Backup & Export</label>
                     <button class="submit-btn" style="background:var(--bg-surface); border:1px solid var(--border-color); color:var(--text-main); margin-top:0;" onclick="openBackupOptionsModal()"><i class="fa-solid fa-download"></i> Selective Backup Data</button>
                 </div>
@@ -453,12 +486,16 @@ HTML_CODE = """
         <!-- Cropper Modal -->
         <div id="cropper-modal" class="avatar-modal-overlay hidden">
             <div class="avatar-modal-card">
-                <h4>Crop Avatar</h4>
+                <div style="width:100%; display:flex; justify-content:space-between; align-items:center;">
+                    <h4 style="font-size:1rem;">Crop Avatar</h4>
+                    <button class="toggle-btn" onclick="closeCropperModal()" style="font-size:1.1rem;"><i class="fa-solid fa-xmark"></i></button>
+                </div>
                 <div class="cropper-container-box"><img id="cropper-target-img" src="" style="max-width:100%;"></div>
                 <input type="file" id="cropper-file-input" accept="image/*" class="hidden" onchange="loadNewCropperImage(this)">
                 <div style="display:flex; gap:8px; width:100%;">
-                    <button class="sub-create-btn" style="background:#27272a;" onclick="document.getElementById('cropper-file-input').click()">Upload</button>
-                    <button class="sub-create-btn" onclick="applyCroppedAvatar()">Done</button>
+                    <button class="sub-create-btn" style="background:#27272a; flex:1;" onclick="closeCropperModal()">Cancel</button>
+                    <button class="sub-create-btn" style="background:#3f3f46; flex:1;" onclick="document.getElementById('cropper-file-input').click()">Upload</button>
+                    <button class="sub-create-btn" style="flex:1;" onclick="applyCroppedAvatar()">Done</button>
                 </div>
             </div>
         </div>
@@ -484,7 +521,9 @@ HTML_CODE = """
         let characters = JSON.parse(localStorage.getItem('aura_chars') || '[]');
         let groups = JSON.parse(localStorage.getItem('aura_groups') || '[]');
         let chatHistories = JSON.parse(localStorage.getItem('aura_chats') || '{}');
-        let userPersona = JSON.parse(localStorage.getItem('aura_user') || '{"name":"User", "bio":"", "avatar":"https://api.dicebear.com/7.x/identicon/svg?seed=user"}');
+        let userPersona = JSON.parse(localStorage.getItem('aura_user') || '{"name":"User", "bio":"", "avatar":"https://api.dicebear.com/7.x/identicon/svg?seed=user", "memories":[]}');
+        if (!userPersona.memories) userPersona.memories = [];
+        
         let currentTheme = localStorage.getItem('aura_theme') || 'dark';
         let activeContext = null;
         let cropperInstance = null;
@@ -501,6 +540,14 @@ HTML_CODE = """
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
         function toggleMenuCategory(subId) { document.getElementById(subId).classList.toggle('hidden'); }
         function toggleFullScreen() { if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
+
+        function smartFormBack() {
+            if (activeContext) {
+                openChat(activeContext.type, activeContext.id);
+            } else {
+                goHome();
+            }
+        }
 
         function goHome() {
             activeContext = null;
@@ -536,6 +583,14 @@ HTML_CODE = """
             cropperInstance = new Cropper(imgElem, { aspectRatio: 1, viewMode: 1, dragMode: 'move' });
         }
 
+        function closeCropperModal() {
+            if(cropperInstance) {
+                cropperInstance.destroy();
+                cropperInstance = null;
+            }
+            document.getElementById('cropper-modal').classList.add('hidden');
+        }
+
         function loadNewCropperImage(input) {
             if (input.files && input.files[0]) {
                 let reader = new FileReader();
@@ -558,9 +613,27 @@ HTML_CODE = """
             else if (currentEditingAvatarType === 'group') document.getElementById('group-avatar-preview').src = finalDataUrl;
             else if (currentEditingAvatarType === 'user') document.getElementById('user-avatar-preview').src = finalDataUrl;
 
-            cropperInstance.destroy();
-            cropperInstance = null;
-            document.getElementById('cropper-modal').classList.add('hidden');
+            closeCropperModal();
+        }
+
+        function renderUserMemories() {
+            let container = document.getElementById('user-memories-list');
+            if(!userPersona.memories || userPersona.memories.length === 0) {
+                container.innerHTML = `<div style="font-size:0.78rem; color:var(--text-sub);">No facts stored yet. AI will auto-remember things during chat.</div>`;
+                return;
+            }
+            container.innerHTML = userPersona.memories.map((m, idx) => `
+                <div class="memory-tag-chip">
+                    <span>${m}</span>
+                    <i class="fa-solid fa-trash" onclick="deleteUserMemory(${idx})"></i>
+                </div>
+            `).join('');
+        }
+
+        function deleteUserMemory(idx) {
+            userPersona.memories.splice(idx, 1);
+            saveState();
+            renderUserMemories();
         }
 
         function openBackupOptionsModal() {
@@ -638,7 +711,7 @@ HTML_CODE = """
             document.getElementById('char-directives').value = '';
             document.getElementById('char-memories').value = '';
             document.getElementById('avatar-img-preview').src = 'https://api.dicebear.com/7.x/bottts/svg?seed=' + Date.now();
-            document.getElementById('char-form-title').innerText = 'Create New Companion';
+            document.getElementById('char-form-title').innerText = 'Create Companion';
             document.getElementById('char-delete-btn').classList.add('hidden');
             showForm('char-form');
         }
@@ -738,6 +811,7 @@ HTML_CODE = """
                 document.getElementById('user-name').value = userPersona.name || '';
                 document.getElementById('user-bio').value = userPersona.bio || '';
                 document.getElementById('user-avatar-preview').src = userPersona.avatar || 'https://api.dicebear.com/7.x/identicon/svg?seed=user';
+                renderUserMemories();
             }
             if(formId === 'group-form') renderGroupSelector();
         }
@@ -881,6 +955,53 @@ HTML_CODE = """
             container.scrollTop = container.scrollHeight;
         }
 
+        function showTypingIndicator(senderName, avatar) {
+            let container = document.getElementById('message-container');
+            let typingElem = document.createElement('div');
+            typingElem.id = 'typing-bubble';
+            typingElem.className = 'message ai';
+            typingElem.innerHTML = `
+                <img class="avatar" src="${avatar}" />
+                <div>
+                    <div class="sender-name">${senderName}</div>
+                    <div class="content typing-indicator">
+                        <i class="fa-solid fa-ellipsis fa-beat"></i> typing...
+                    </div>
+                </div>
+            `;
+            container.appendChild(typingElem);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            let elem = document.getElementById('typing-bubble');
+            if(elem) elem.remove();
+        }
+
+        function streamWordByWord(sender, fullText, avatar) {
+            removeTypingIndicator();
+            if(!chatHistories[activeContext.id]) chatHistories[activeContext.id] = [];
+            
+            let words = fullText.split(' ');
+            let currentText = '';
+            let msgObj = { sender: sender, text: '', avatar: avatar };
+            chatHistories[activeContext.id].push(msgObj);
+            let msgIndex = chatHistories[activeContext.id].length - 1;
+
+            let wordIdx = 0;
+            let timer = setInterval(() => {
+                if (wordIdx < words.length) {
+                    currentText += (wordIdx === 0 ? '' : ' ') + words[wordIdx];
+                    chatHistories[activeContext.id][msgIndex].text = currentText;
+                    renderMessages();
+                    wordIdx++;
+                } else {
+                    clearInterval(timer);
+                    saveState();
+                }
+            }, 30);
+        }
+
         function tweakMsg(idx) {
             let history = chatHistories[activeContext.id];
             let newText = prompt("Tweak message:", history[idx].text);
@@ -933,6 +1054,16 @@ HTML_CODE = """
         }
 
         async function fetchAIResponse(isContinue = false) {
+            let targetAvatar = 'https://api.dicebear.com/7.x/bottts/svg?seed=default';
+            let targetName = 'Companion';
+            
+            if(activeContext.type === 'char') {
+                let c = characters.find(item => item.id === activeContext.id);
+                if(c) { targetAvatar = c.avatar; targetName = c.name; }
+            }
+            
+            showTypingIndicator(targetName, targetAvatar);
+
             let payload = {
                 type: activeContext.type,
                 contextId: activeContext.id,
@@ -956,10 +1087,17 @@ HTML_CODE = """
             });
 
             let data = await res.json();
+            removeTypingIndicator();
+
+            if(data.extractedMemory) {
+                if(!userPersona.memories.includes(data.extractedMemory)) {
+                    userPersona.memories.push(data.extractedMemory);
+                    saveState();
+                }
+            }
+
             if(data.responses) {
                 for (let r of data.responses) {
-                    chatHistories[activeContext.id].push({ sender: r.sender, text: r.text, avatar: r.avatar });
-
                     if(r.newAffinity !== undefined && activeContext.type === 'char') {
                         let charObj = characters.find(c => c.id === activeContext.id);
                         if(charObj) {
@@ -967,8 +1105,7 @@ HTML_CODE = """
                             document.getElementById('top-title').innerHTML = `${charObj.name} <span style="font-size:0.65rem; padding:2px 6px; background:rgba(236,72,153,0.15); border:1px solid var(--accent-pink); color:var(--accent-pink); border-radius:10px; margin-left:4px;">${r.affinityLabel} (${r.newAffinity}%)</span>`;
                         }
                     }
-                    saveState();
-                    renderMessages();
+                    streamWordByWord(r.sender, r.text, r.avatar);
                 }
             }
         }
@@ -1047,6 +1184,25 @@ def advanced_chat():
     user_info = data.get("userPersona", {})
     user_name = user_info.get("name", "User")
     user_bio = user_info.get("bio", "")
+    user_memories = user_info.get("memories", [])
+
+    extracted_memory = None
+    last_user_msg = data["history"][-1]["text"] if data["history"] else ""
+
+    # Silent Auto-Memory Extraction
+    if len(last_user_msg) > 12 and any(k in last_user_msg.lower() for k in ["i am", "i love", "i like", "my birthday", "my favorite", "mujhe", "mera", "meri", "hu"]):
+        try:
+            mem_prompt = f"Extract a short, single personal fact about the user from this message: '{last_user_msg}'. If no specific fact, return NONE. Output fact ONLY in 3-6 words."
+            mem_res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={
+                "model": "llama-3.1-8b-instant",
+                "messages": [{"role": "user", "content": mem_prompt}]
+            }, headers=headers).json()
+            
+            fact = mem_res["choices"][0]["message"]["content"].strip()
+            if fact.upper() != "NONE" and len(fact) < 50:
+                extracted_memory = fact
+        except:
+            pass
 
     responses = []
 
@@ -1054,7 +1210,6 @@ def advanced_chat():
         c = data["character"]
         current_affinity = c.get("affinity", 50)
 
-        last_user_msg = data["history"][-1]["text"] if data["history"] else ""
         delta = 1
         positive_words = ["love", "pyar", "achha", "sweet", "thanks", "dost", "like", "cute", "care", "pyaar"]
         negative_words = ["hate", "chup", "bad", "rude", "pagal", "shut up", "irritating"]
@@ -1076,17 +1231,21 @@ def advanced_chat():
             mood_str = "Distant 💔"
             behavior_note = "Be slightly distant, formal, and give short replies as bond is low."
 
+        memories_formatted = ", ".join(user_memories) if user_memories else "None"
+
         system_prompt = f"""
 Name: {c['name']}
 Relationship: {c.get('relationship', 'Friend')}
 Appearance: {c.get('appearance', '')}
 Backstory: {c.get('backstory', '')}
 Directives: {c.get('directives', '')}
-Memories: {c.get('memories', '')}
+Character Key Memories: {c.get('memories', '')}
+
 Current Relationship Bond: {new_affinity}/100 ({mood_str})
 Behavior Guidance: {behavior_note}
 
 User Profile: {user_name} ({user_bio})
+Known User Personal Details/Preferences: {memories_formatted}
 
 CRITICAL HINGLISH RULE:
 - Talk strictly in natural, casual Hinglish (Roman Hindi + simple English mixed, like WhatsApp texting).
@@ -1145,7 +1304,7 @@ Talk briefly in casual Hinglish (Roman Hindi/English mixed). Use asterisks for a
             reply_text = res["choices"][0]["message"]["content"]
             responses.append({"sender": char['name'], "text": reply_text, "avatar": char['avatar']})
 
-    return jsonify({"responses": responses})
+    return jsonify({"responses": responses, "extractedMemory": extracted_memory})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
