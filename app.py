@@ -75,9 +75,7 @@ HTML_CODE = """
         .message.ai .content { border-bottom-left-radius: 2px; }
         .message .sender-name { font-size: 0.7rem; color: var(--text-sub); margin-bottom: 3px; font-weight: 600; }
         
-        /* Chat Image Box Non-Stretched */
         .chat-img-attachment { width: 100%; max-width: 240px; aspect-ratio: 3/4; object-fit: cover; border-radius: 10px; margin-top: 6px; cursor: pointer; border: 1px solid var(--border-color); display: block; }
-        
         .action-text { color: var(--action-text); font-style: italic; font-weight: 500; }
         .bubble-controls { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
         .edit-link, .continue-bubble-btn { font-size: 0.68rem; color: var(--text-sub); text-decoration: underline; cursor: pointer; opacity: 0.65; transition: opacity 0.2s; }
@@ -97,7 +95,6 @@ HTML_CODE = """
         .avatar-thumb-wrapper { width: 54px; height: 54px; border-radius: 50%; overflow: hidden; border: 2px solid var(--accent-pink); flex-shrink: 0; background: var(--border-color); display: flex; justify-content: center; align-items: center; }
         .avatar-thumb-wrapper img { width: 100%; height: 100%; object-fit: cover; }
         
-        /* Lightbox Fixes */
         .lightbox-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.92); backdrop-filter: blur(10px); z-index: 300; display: flex; flex-direction: column; justify-content: space-between; padding: 16px 12px; align-items: center; }
         .lightbox-img { width: auto; max-width: 95%; max-height: 68vh; object-fit: contain; border-radius: 14px; border: 1px solid #27272a; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
         .lightbox-actions { display: flex; gap: 8px; width: 100%; max-width: 360px; margin-bottom: 10px; justify-content: space-between; }
@@ -134,8 +131,6 @@ HTML_CODE = """
                     <svg viewBox="-40 -20 140 180" class="aura-logo-svg"><use href="#aura-brand-icon"/></svg> Aura
                 </span>
                 <div class="header-actions">
-                    <button class="sidebar-icon-btn" onclick="toggleAppTheme()" id="sidebar-theme-btn"><i class="fa-solid fa-moon"></i></button>
-                    <button class="sidebar-icon-btn" onclick="toggleFullScreen()"><i class="fa-solid fa-expand"></i></button>
                     <button class="sidebar-icon-btn" onclick="toggleSidebar()"><i class="fa-solid fa-xmark"></i></button>
                 </div>
             </div>
@@ -148,14 +143,6 @@ HTML_CODE = """
                         <div id="char-list"></div>
                     </div>
                 </div>
-                <div>
-                    <button class="menu-category-btn" onclick="toggleMenuCategory('groups-sub')"><span><i class="fa-solid fa-people-group cat-icon"></i> Groups</span><i class="fa-solid fa-chevron-down arrow-icon"></i></button>
-                    <div class="submenu-container hidden" id="groups-sub">
-                        <button class="sub-create-btn blue" onclick="openNewGroupForm()"><i class="fa-solid fa-plus"></i> New Group Room</button>
-                        <div id="group-list"></div>
-                    </div>
-                </div>
-                <button class="menu-category-btn" onclick="showForm('settings-form')"><span><i class="fa-solid fa-sliders cat-icon"></i> Settings & Backup</span></button>
             </div>
         </div>
 
@@ -169,9 +156,6 @@ HTML_CODE = """
             <div style="display: flex; gap: 6px; align-items: center;">
                 <div id="top-actions" class="hidden" style="display: flex; gap: 6px;">
                     <button class="icon-btn" id="gallery-btn" onclick="openCharacterGallery()">🖼️<span id="gallery-red-dot" class="notification-dot hidden"></span></button>
-                    <button class="icon-btn" id="pin-mem-btn" onclick="openPinnedMemoryModal()"><i class="fa-solid fa-thumbtack"></i></button>
-                    <button class="icon-btn" onclick="handleEditClick()"><i class="fa-solid fa-wrench"></i></button>
-                    <button class="icon-btn" onclick="regenerateLastResponse()"><i class="fa-solid fa-rotate-right"></i></button>
                     <button class="icon-btn" onclick="clearCurrentChat()"><i class="fa-solid fa-trash"></i></button>
                 </div>
             </div>
@@ -181,10 +165,7 @@ HTML_CODE = """
             <div id="dashboard-view" class="dashboard">
                 <svg viewBox="-40 -20 140 180" class="dash-logo"><use href="#aura-brand-icon"/></svg>
                 <h2 class="dash-title">Welcome to Aura</h2>
-                <p class="dash-sub">Your personal AI companion & roleplay platform.</p>
-                <div class="dash-card" onclick="openNewCharForm()"><i class="fa-solid fa-user-plus"></i><div><strong>Create AI Companion</strong><span>Custom backstory & relationship</span></div></div>
-                <div class="dash-card" onclick="openNewGroupForm()"><i class="fa-solid fa-users"></i><div><strong>Create Group Room</strong><span>Chat with multiple characters</span></div></div>
-                <div class="dash-card" onclick="showForm('settings-form')"><i class="fa-solid fa-sliders"></i><div><strong>Persona & Settings</strong><span>Edit profile & backup</span></div></div>
+                <div class="dash-card" onclick="openNewCharForm()"><i class="fa-solid fa-user-plus"></i><div><strong>Create AI Companion</strong></div></div>
             </div>
             <div id="chat-view" class="hidden">
                 <div class="chat-messages" id="message-container"></div>
@@ -192,16 +173,14 @@ HTML_CODE = """
                     <button class="tool-btn" onclick="openManualImageModal()">🤳</button>
                     <div class="input-wrapper">
                         <input type="text" id="chat-input" placeholder="Message..." onkeypress="if(event.key==='Enter') sendMsg()">
-                        <button class="wand-inbox-btn" onclick="suggestUserMessage()">🪄</button>
                     </div>
                     <button class="send-btn" onclick="sendMsg()"><i class="fa-solid fa-paper-plane"></i></button>
                 </div>
             </div>
             <div id="char-form" class="form-container hidden">
-                <h3 style="margin-bottom: 14px;" id="char-form-title">Create Companion</h3>
+                <h3 style="margin-bottom: 14px;">Create Companion</h3>
                 <input type="hidden" id="char-id">
                 <div class="form-group"><label>Name</label><input type="text" id="char-name"></div>
-                <div class="form-group"><label>Relationship</label><input type="text" id="char-rel"></div>
                 <div class="form-group"><label>Appearance</label><input type="text" id="char-app"></div>
                 <div class="form-group"><label>Backstory</label><textarea id="char-backstory"></textarea></div>
                 <button class="submit-btn" onclick="saveCharacter()">Save</button>
@@ -218,13 +197,12 @@ HTML_CODE = """
         <div id="image-gen-modal" class="avatar-modal-overlay hidden">
             <div class="avatar-modal-card">
                 <h4 style="font-size:1rem;">Generate Photo</h4>
-                <div class="input-wrapper" style="width:100%;"><input type="text" id="manual-prompt-input" placeholder="Keywords..."><button class="wand-inbox-btn" onclick="enhancePromptWithWand()">🪄</button></div>
+                <div class="input-wrapper" style="width:100%;"><input type="text" id="manual-prompt-input" placeholder="Keywords..."></div>
                 <button class="submit-btn" onclick="submitManualImageGen()">Generate Image</button>
                 <button class="toggle-btn" style="color:#ffffff; margin-top:10px;" onclick="document.getElementById('image-gen-modal').classList.add('hidden')">Cancel</button>
             </div>
         </div>
 
-        <!-- Lightbox Overlay with Fixed Delete Button -->
         <div id="lightbox-modal" class="lightbox-overlay hidden">
             <div style="width:100%; display:flex; justify-content:flex-end; padding:4px;">
                 <button class="toggle-btn" style="color:#ffffff; font-size:1.8rem;" onclick="document.getElementById('lightbox-modal').classList.add('hidden')"><i class="fa-solid fa-xmark"></i></button>
@@ -232,7 +210,6 @@ HTML_CODE = """
             <img id="lightbox-target-img" class="lightbox-img" src="">
             <div class="lightbox-actions">
                 <button class="lightbox-btn" onclick="downloadLightboxImage()"><i class="fa-solid fa-download"></i> Save</button>
-                <button class="lightbox-btn primary" onclick="regenerateLightboxImage()"><i class="fa-solid fa-rotate-right"></i> Retry</button>
                 <button class="lightbox-btn danger" onclick="deleteCurrentGalleryImage()"><i class="fa-solid fa-trash"></i> Delete</button>
             </div>
         </div>
@@ -240,36 +217,33 @@ HTML_CODE = """
     
     <script>
         let characters = JSON.parse(localStorage.getItem('aura_chars') || '[]');
-        let groups = JSON.parse(localStorage.getItem('aura_groups') || '[]');
         let chatHistories = JSON.parse(localStorage.getItem('aura_chats') || '{}');
         let galleries = JSON.parse(localStorage.getItem('aura_galleries') || '{}');
-        let userPersona = JSON.parse(localStorage.getItem('aura_user') || '{"name":"User", "bio":""}');
+        let userPersona = JSON.parse(localStorage.getItem('aura_user') || '{"name":"User"}');
         let activeContext = null;
-        let activeLightboxImgUrl = ''; let activeLightboxPrompt = '';
+        let activeLightboxImgUrl = '';
 
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
         function goHome() { activeContext = null; document.getElementById('sidebar').classList.remove('open'); document.getElementById('dashboard-view').classList.remove('hidden'); document.getElementById('chat-view').classList.add('hidden'); document.getElementById('char-form').classList.add('hidden'); document.getElementById('gallery-view').classList.add('hidden'); document.getElementById('top-actions').classList.add('hidden'); }
-        function saveState() { localStorage.setItem('aura_chars', JSON.stringify(characters)); localStorage.setItem('aura_groups', JSON.stringify(groups)); localStorage.setItem('aura_chats', JSON.stringify(chatHistories)); localStorage.setItem('aura_galleries', JSON.stringify(galleries)); renderSidebar(); }
+        function saveState() { localStorage.setItem('aura_chars', JSON.stringify(characters)); localStorage.setItem('aura_chats', JSON.stringify(chatHistories)); localStorage.setItem('aura_galleries', JSON.stringify(galleries)); renderSidebar(); }
         
         function saveToCharacterGallery(charId, imgUrl, promptText) {
             if(!galleries[charId]) galleries[charId] = [];
             galleries[charId].unshift({ id: 'img_' + Date.now(), url: imgUrl, prompt: promptText });
             saveState();
-            document.getElementById('gallery-red-dot')?.classList.remove('hidden');
         }
 
         function openCharacterGallery() {
             if(!activeContext || activeContext.type !== 'char') return;
-            document.getElementById('gallery-red-dot')?.classList.add('hidden');
             let container = document.getElementById('gallery-grid-container');
             let list = galleries[activeContext.id] || [];
-            container.innerHTML = list.length === 0 ? '<div style="grid-column:span 2; padding:20px; text-align:center;">No photos yet.</div>' : list.map(item => `<div class="gallery-item" onclick="openLightbox('${item.url}', '${item.prompt}')"><img src="${item.url}" /></div>`).join('');
+            container.innerHTML = list.length === 0 ? '<div style="grid-column:span 2; padding:20px; text-align:center;">No photos yet.</div>' : list.map(item => `<div class="gallery-item" onclick="openLightbox('${item.url}')"><img src="${item.url}" /></div>`).join('');
             document.getElementById('chat-view').classList.add('hidden');
             document.getElementById('gallery-view').classList.remove('hidden');
         }
 
-        function openLightbox(imgUrl, promptText) {
-            activeLightboxImgUrl = imgUrl; activeLightboxPrompt = promptText;
+        function openLightbox(imgUrl) {
+            activeLightboxImgUrl = imgUrl;
             document.getElementById('lightbox-target-img').src = imgUrl;
             document.getElementById('lightbox-modal').classList.remove('hidden');
         }
@@ -297,36 +271,89 @@ HTML_CODE = """
             } catch(e) { alert("Download failed"); }
         }
 
+        function openManualImageModal() { document.getElementById('image-gen-modal').classList.remove('hidden'); }
+
         async function submitManualImageGen() {
             let promptVal = document.getElementById('manual-prompt-input').value;
             document.getElementById('image-gen-modal').classList.add('hidden');
             let c = characters.find(item => item.id === activeContext.id);
             let res = await fetch('/api/generate-image', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({charId: activeContext.id, character: c, userPrompt: promptVal})});
             let data = await res.json();
-            if(data.imageUrl) { typeWriterEffect(c.name, `*Here is the photo!*`, c.avatar, data.imageUrl, data.prompt); saveToCharacterGallery(activeContext.id, data.imageUrl, data.prompt); }
+            if(data.imageUrl) { appendMsg(c.name, `*Here is the photo!*`, c.avatar, data.imageUrl); saveToCharacterGallery(activeContext.id, data.imageUrl, data.prompt); }
         }
 
-        async function typeWriterEffect(sender, fullText, avatar, image = null, prompt = null) {
-            let msg = { sender, text: fullText, avatar };
-            if(image) { msg.image = image; msg.prompt = prompt; }
+        function appendMsg(sender, text, avatar, image = null) {
+            if(!chatHistories[activeContext.id]) chatHistories[activeContext.id] = [];
+            let msg = { sender, text, avatar };
+            if(image) msg.image = image;
             chatHistories[activeContext.id].push(msg);
-            saveState(); renderMessages();
+            saveState();
+            renderMessages();
         }
 
         function renderMessages() {
             let container = document.getElementById('message-container');
             let history = chatHistories[activeContext.id] || [];
-            container.innerHTML = history.map((m, idx) => {
+            container.innerHTML = history.map((m) => {
                 let isUser = m.sender === 'You';
                 return `<div class="message ${isUser ? 'user':'ai'}">
                     <div class="content">
                         ${m.text}
-                        ${m.image ? `<img src="${m.image}" class="chat-img-attachment" onclick="openLightbox('${m.image}', '${m.prompt}')" />` : ''}
+                        ${m.image ? `<img src="${m.image}" class="chat-img-attachment" onclick="openLightbox('${m.image}')" />` : ''}
                     </div>
                 </div>`;
             }).join('');
             container.scrollTop = container.scrollHeight;
         }
+
+        async function sendMsg() {
+            let input = document.getElementById('chat-input');
+            let val = input.value.trim();
+            if(!val) return;
+            input.value = '';
+            
+            appendMsg('You', val, userPersona.avatar);
+            
+            let res = await fetch('/api/advanced-chat', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({
+                    type: activeContext.type,
+                    contextId: activeContext.id,
+                    history: chatHistories[activeContext.id],
+                    character: characters.find(c => c.id === activeContext.id)
+                })
+            });
+            let data = await res.json();
+            if(data.responses) {
+                data.responses.forEach(r => appendMsg(r.sender, r.text, r.avatar, r.image));
+            }
+        }
+
+        function openNewCharForm() {
+            document.getElementById('char-id').value = 'char_' + Date.now();
+            document.getElementById('char-name').value = '';
+            document.getElementById('char-app').value = '';
+            document.getElementById('char-backstory').value = '';
+            document.getElementById('dashboard-view').classList.add('hidden');
+            document.getElementById('char-form').classList.remove('hidden');
+        }
+
+        function saveCharacter() {
+            let id = document.getElementById('char-id').value;
+            let c = {
+                id,
+                name: document.getElementById('char-name').value || 'Companion',
+                appearance: document.getElementById('char-app').value,
+                backstory: document.getElementById('char-backstory').value,
+                avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=' + id
+            };
+            characters.push(c);
+            saveState();
+            openChat('char', id);
+        }
+
+        function toggleMenuCategory(id) { document.getElementById(id).classList.toggle('hidden'); }
 
         function renderSidebar() {
             document.getElementById('char-list').innerHTML = characters.map(c => `<button class="item-btn" onclick="openChat('char', '${c.id}')"><span>${c.name}</span></button>`).join('');
@@ -335,10 +362,19 @@ HTML_CODE = """
         function openChat(type, id) {
             activeContext = { type, id };
             document.getElementById('dashboard-view').classList.add('hidden');
+            document.getElementById('char-form').classList.add('hidden');
             document.getElementById('gallery-view').classList.add('hidden');
             document.getElementById('chat-view').classList.remove('hidden');
             document.getElementById('top-actions').classList.remove('hidden');
             renderMessages();
+        }
+
+        function clearCurrentChat() {
+            if(confirm("Clear chat?")) {
+                chatHistories[activeContext.id] = [];
+                saveState();
+                renderMessages();
+            }
         }
 
         renderSidebar();
@@ -350,22 +386,59 @@ HTML_CODE = """
 @app.route("/")
 def home(): return render_template_string(HTML_CODE)
 
+@app.route("/api/advanced-chat", methods=["POST"])
+def advanced_chat():
+    data = request.json
+    api_key = os.environ.get("GROQ_API_KEY")
+    c = data.get("character", {})
+    history = data.get("history", [])
+
+    if not api_key:
+        return jsonify({"responses": [{"sender": c.get('name', 'AI'), "text": "Groq Key Missing!"}]})
+
+    last_user_msg = history[-1]["text"].lower() if history else ""
+    photo_requested = any(kw in last_user_msg for kw in ["photo", "pic", "picture", "selfie", "bhejo", "vejo", "dikhao", "send"])
+
+    system_prompt = f"Roleplay naturally as {c.get('name', 'Companion')}. Backstory: {c.get('backstory', '')}. Stay in character."
+    if photo_requested:
+        system_prompt += " The user asked for a photo. Agree enthusiastically (e.g. *Here is the photo for you!*)."
+
+    messages = [{"role": "system", "content": system_prompt}]
+    for m in history[-20:]:
+        messages.append({"role": "user" if m["sender"] == "You" else "assistant", "content": m["text"]})
+
+    res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={
+        "model": "llama-3.1-8b-instant",
+        "messages": messages
+    }, headers={"Authorization": f"Bearer {api_key.strip()}", "Content-Type": "application/json"}).json()
+
+    reply = res["choices"][0]["message"]["content"]
+    resp = {"sender": c.get('name', 'Companion'), "text": reply, "avatar": c.get('avatar', '')}
+
+    if photo_requested:
+        raw_prompt = f"candid photo of {c.get('name', 'person')}, {c.get('appearance', '')}, realistic skin texture, natural lighting, 35mm film"
+        negative = "cartoon, anime, 3d render, doll, plastic skin, airbrushed, smooth, stretched"
+        encoded_p = urllib.parse.quote(raw_prompt)
+        encoded_n = urllib.parse.quote(negative)
+        resp["image"] = f"https://image.pollinations.ai/prompt/{encoded_p}?negative={encoded_n}&width=768&height=1024&nologo=true&seed={random.randint(1000, 999999)}&model=turbo"
+
+    return jsonify({"responses": [resp]})
+
 @app.route("/api/generate-image", methods=["POST"])
 def generate_image():
     data = request.json
     c = data.get("character", {})
     user_prompt = data.get("userPrompt", "candid photo")
 
-    # Real human prompt + 768x1024 native non-stretched 4:3 aspect ratio
-    raw_prompt = f"candid photograph of {c.get('name', 'person')}, {c.get('appearance', '')}, {user_prompt}, realistic skin texture, natural lighting, 35mm film detail, unedited"
-    negative = "cartoon, anime, 3d render, doll, plastic skin, airbrushed, smooth, stretched, distorted proportions"
+    raw_prompt = f"candid photograph of {c.get('name', 'person')}, {c.get('appearance', '')}, {user_prompt}, realistic skin texture, natural lighting, unedited"
+    negative = "cartoon, anime, 3d render, doll, plastic skin, airbrushed, smooth, stretched"
 
     encoded_p = urllib.parse.quote(raw_prompt)
     encoded_n = urllib.parse.quote(negative)
 
-    # Fixed 768x1024 Dimensions
     image_url = f"https://image.pollinations.ai/prompt/{encoded_p}?negative={encoded_n}&width=768&height=1024&nologo=true&seed={random.randint(1000, 999999)}&model=turbo"
 
     return jsonify({"imageUrl": image_url, "prompt": user_prompt})
 
-if __name__ == "__main__": app.run(host="0.0.0.0", port=10000)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000)
