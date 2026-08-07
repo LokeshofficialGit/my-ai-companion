@@ -121,7 +121,6 @@ HTML_CODE = """
         }
         .input-wrapper input:focus { border-color: #3f3f46; }
 
-        /* Transparent Magic Wand Button inside Input Field */
         .wand-inbox-btn { 
             position: absolute; 
             right: 10px; 
@@ -148,6 +147,54 @@ HTML_CODE = """
         .form-group label { display: block; margin-bottom: 4px; font-size: 0.8rem; color: #a1a1aa; font-weight: 600; }
         .form-group input, .form-group textarea { width: 100%; background: #121215; border: 1px solid #27272a; padding: 10px; border-radius: 8px; color: #ffffff; outline: none; font-size: 0.88rem; }
         .form-group textarea { height: 75px; resize: vertical; }
+
+        /* Interactive Avatar Clickable Component */
+        .avatar-edit-trigger {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #121215;
+            border: 1px solid #27272a;
+            padding: 10px 14px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        .avatar-edit-trigger:hover { border-color: #a855f7; }
+        .avatar-thumb-wrapper {
+            width: 54px; height: 54px; border-radius: 50%; overflow: hidden;
+            border: 2px solid #a855f7; flex-shrink: 0; background: #27272a;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .avatar-thumb-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* Interactive Avatar Editor Modal */
+        .avatar-modal-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+            z-index: 200; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; padding: 20px;
+        }
+        .avatar-modal-card {
+            width: 100%; max-width: 320px; background: #121215;
+            border: 1px solid #27272a; border-radius: 20px; padding: 20px;
+            display: flex; flex-direction: column; align-items: center; gap: 16px;
+        }
+        .avatar-crop-view {
+            width: 140px; height: 140px; border-radius: 50%; overflow: hidden;
+            border: 3px solid #a855f7; background: #000; display: flex;
+            justify-content: center; align-items: center; position: relative;
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+        }
+        .avatar-crop-view img {
+            width: 100%; height: 100%; object-fit: cover;
+            transition: transform 0.1s ease;
+        }
+        .slider-control { width: 100%; display: flex; flex-direction: column; gap: 6px; }
+        .slider-control label { font-size: 0.75rem; color: #a1a1aa; display: flex; justify-content: space-between; }
+        .slider-control input[type="range"] {
+            width: 100%; accent-color: #a855f7; cursor: pointer;
+        }
 
         .submit-btn { width: 100%; padding: 11px; background: #9333ea; color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 0.9rem; margin-top: 8px; }
         .delete-btn { background: #ef4444 !important; margin-top: 10px; }
@@ -280,9 +327,16 @@ HTML_CODE = """
                 <input type="hidden" id="char-id">
                 
                 <div class="form-group">
-                    <label>Avatar Picture</label>
-                    <input type="file" id="char-avatar-file" accept="image/*" onchange="previewCharImage(this)">
-                    <img id="avatar-img-preview" src="https://api.dicebear.com/7.x/bottts/svg?seed=default" style="width:60px; height:60px; border-radius:50%; margin-top:6px; object-fit:cover;">
+                    <label>Avatar Picture (Tap to Edit & Zoom)</label>
+                    <div class="avatar-edit-trigger" onclick="openAvatarModal('char')">
+                        <div class="avatar-thumb-wrapper">
+                            <img id="avatar-img-preview" src="https://api.dicebear.com/7.x/bottts/svg?seed=default">
+                        </div>
+                        <div>
+                            <strong style="font-size:0.85rem; color:#f4f4f5; display:block;">Change / Scale Avatar</strong>
+                            <span style="font-size:0.75rem; color:#a1a1aa;">Tap to crop, scale or replace image</span>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -325,9 +379,16 @@ HTML_CODE = """
                 <input type="hidden" id="group-id">
 
                 <div class="form-group">
-                    <label>Group Icon</label>
-                    <input type="file" id="group-avatar-file" accept="image/*" onchange="previewGroupImage(this)">
-                    <img id="group-avatar-preview" src="https://api.dicebear.com/7.x/shapes/svg?seed=group" style="width:60px; height:60px; border-radius:50%; margin-top:6px; object-fit:cover;">
+                    <label>Group Icon (Tap to Edit & Zoom)</label>
+                    <div class="avatar-edit-trigger" onclick="openAvatarModal('group')">
+                        <div class="avatar-thumb-wrapper">
+                            <img id="group-avatar-preview" src="https://api.dicebear.com/7.x/shapes/svg?seed=group">
+                        </div>
+                        <div>
+                            <strong style="font-size:0.85rem; color:#f4f4f5; display:block;">Change / Scale Group Icon</strong>
+                            <span style="font-size:0.75rem; color:#a1a1aa;">Tap to crop, scale or replace icon</span>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -359,6 +420,19 @@ HTML_CODE = """
                 <h3 style="margin-bottom: 14px; color: #ffffff;">User Persona & Settings</h3>
                 
                 <div class="form-group">
+                    <label>Your Avatar Picture (Tap to Edit & Zoom)</label>
+                    <div class="avatar-edit-trigger" onclick="openAvatarModal('user')">
+                        <div class="avatar-thumb-wrapper">
+                            <img id="user-avatar-preview" src="https://api.dicebear.com/7.x/identicon/svg?seed=user">
+                        </div>
+                        <div>
+                            <strong style="font-size:0.85rem; color:#f4f4f5; display:block;">Change / Scale Your Avatar</strong>
+                            <span style="font-size:0.75rem; color:#a1a1aa;">Tap to crop, scale or upload photo</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
                     <label>Your Name</label>
                     <input type="text" id="user-name" placeholder="Your name">
                 </div>
@@ -382,14 +456,42 @@ HTML_CODE = """
                 </div>
             </div>
         </div>
+
+        <!-- Avatar Editor Modal -->
+        <div id="avatar-modal" class="avatar-modal-overlay hidden">
+            <div class="avatar-modal-card">
+                <h4 style="color:#ffffff; font-size:1rem;">Adjust & Scale Avatar</h4>
+                
+                <div class="avatar-crop-view">
+                    <img id="modal-avatar-img" src="">
+                </div>
+
+                <div class="slider-control">
+                    <label><span>Zoom / Scale</span><span id="zoom-val-label">1.0x</span></label>
+                    <input type="range" id="avatar-zoom-slider" min="1" max="2.5" step="0.05" value="1" oninput="updateAvatarZoom(this.value)">
+                </div>
+
+                <input type="file" id="modal-file-input" accept="image/*" class="hidden" onchange="loadNewModalImage(this)">
+
+                <div style="display:flex; gap:8px; width:100%;">
+                    <button class="sub-create-btn" style="flex:1; background:#27272a;" onclick="document.getElementById('modal-file-input').click()"><i class="fa-solid fa-image"></i> Replace</button>
+                    <button class="sub-create-btn" style="flex:1; background:#9333ea;" onclick="applyAvatarModal()">Done</button>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script>
         let characters = JSON.parse(localStorage.getItem('aura_chars') || '[]');
         let groups = JSON.parse(localStorage.getItem('aura_groups') || '[]');
         let chatHistories = JSON.parse(localStorage.getItem('aura_chats') || '{}');
-        let userPersona = JSON.parse(localStorage.getItem('aura_user') || '{"name":"User", "bio":""}');
+        let userPersona = JSON.parse(localStorage.getItem('aura_user') || '{"name":"User", "bio":"", "avatar":"https://api.dicebear.com/7.x/identicon/svg?seed=user"}');
         let activeContext = null;
+
+        // Avatar Modal State
+        let currentEditingAvatarType = null; // 'char', 'group', or 'user'
+        let currentAvatarScale = 1;
 
         function toggleSidebar() { 
             document.getElementById('sidebar').classList.toggle('open'); 
@@ -430,20 +532,70 @@ HTML_CODE = """
             renderSidebar();
         }
 
-        function previewCharImage(input) {
+        /* Avatar Interactive Editor Modal Functions */
+        function openAvatarModal(type) {
+            currentEditingAvatarType = type;
+            let currentSrc = '';
+            
+            if(type === 'char') currentSrc = document.getElementById('avatar-img-preview').src;
+            else if(type === 'group') currentSrc = document.getElementById('group-avatar-preview').src;
+            else if(type === 'user') currentSrc = document.getElementById('user-avatar-preview').src;
+
+            document.getElementById('modal-avatar-img').src = currentSrc;
+            document.getElementById('avatar-zoom-slider').value = 1;
+            updateAvatarZoom(1);
+            document.getElementById('avatar-modal').classList.remove('hidden');
+        }
+
+        function updateAvatarZoom(val) {
+            currentAvatarScale = val;
+            document.getElementById('modal-avatar-img').style.transform = `scale(${val})`;
+            document.getElementById('zoom-val-label').innerText = parseFloat(val).toFixed(2) + 'x';
+        }
+
+        function loadNewModalImage(input) {
             if (input.files && input.files[0]) {
                 let reader = new FileReader();
-                reader.onload = (e) => document.getElementById('avatar-img-preview').src = e.target.result;
+                reader.onload = (e) => {
+                    document.getElementById('modal-avatar-img').src = e.target.result;
+                    document.getElementById('avatar-zoom-slider').value = 1;
+                    updateAvatarZoom(1);
+                };
                 reader.readAsDataURL(input.files[0]);
             }
         }
 
-        function previewGroupImage(input) {
-            if (input.files && input.files[0]) {
-                let reader = new FileReader();
-                reader.onload = (e) => document.getElementById('group-avatar-preview').src = e.target.result;
-                reader.readAsDataURL(input.files[0]);
-            }
+        function applyAvatarModal() {
+            let modalImg = document.getElementById('modal-avatar-img');
+            
+            let canvas = document.createElement('canvas');
+            let ctx = canvas.getContext('2d');
+            canvas.width = 200;
+            canvas.height = 200;
+
+            let img = new Image();
+            img.crossOrigin = "anonymous";
+            img.onload = function() {
+                ctx.clearRect(0, 0, 200, 200);
+                let scale = currentAvatarScale;
+                let sw = canvas.width / scale;
+                let sh = canvas.height / scale;
+                let sx = (canvas.width - sw) / 2;
+                let sy = (canvas.height - sh) / 2;
+
+                ctx.drawImage(img, sx, sy, sw, sh, 0, 0, 200, 200);
+                let finalDataUrl = canvas.toDataURL('image/png');
+
+                if (currentEditingAvatarType === 'char') {
+                    document.getElementById('avatar-img-preview').src = finalDataUrl;
+                } else if (currentEditingAvatarType === 'group') {
+                    document.getElementById('group-avatar-preview').src = finalDataUrl;
+                } else if (currentEditingAvatarType === 'user') {
+                    document.getElementById('user-avatar-preview').src = finalDataUrl;
+                }
+                document.getElementById('avatar-modal').classList.add('hidden');
+            };
+            img.src = modalImg.src;
         }
 
         function openNewCharForm() {
@@ -548,6 +700,7 @@ HTML_CODE = """
         function saveUserPersona() {
             userPersona.name = document.getElementById('user-name').value || 'User';
             userPersona.bio = document.getElementById('user-bio').value || '';
+            userPersona.avatar = document.getElementById('user-avatar-preview').src;
             saveState();
             alert('Persona saved!');
         }
@@ -567,6 +720,7 @@ HTML_CODE = """
             if(formId === 'settings-form') {
                 document.getElementById('user-name').value = userPersona.name || '';
                 document.getElementById('user-bio').value = userPersona.bio || '';
+                document.getElementById('user-avatar-preview').src = userPersona.avatar || 'https://api.dicebear.com/7.x/identicon/svg?seed=user';
             }
             if(formId === 'group-form') renderGroupSelector();
         }
@@ -679,7 +833,8 @@ HTML_CODE = """
 
             container.innerHTML = history.map((m, idx) => {
                 let isUser = m.sender === 'You';
-                let avatar = isUser ? 'https://api.dicebear.com/7.x/identicon/svg?seed=user' : m.avatar;
+                let userImg = userPersona.avatar || 'https://api.dicebear.com/7.x/identicon/svg?seed=user';
+                let avatar = isUser ? userImg : m.avatar;
                 return `
                     <div class="message ${isUser ? 'user':'ai'}">
                         <img class="avatar" src="${avatar}" />
