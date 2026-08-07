@@ -23,51 +23,70 @@ HTML_CODE = """
             --ai-msg-bg: #121215; --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
             --sidebar-bg: #09090b; --sidebar-border: #27272a; --sidebar-text: #f4f4f5;
         }
+        [data-theme="light"] {
+            --bg-main: #f4f4f5; --bg-surface: #ffffff; --bg-input: #ffffff;
+            --border-color: #e4e4e7; --text-main: #09090b; --text-sub: #52525b;
+            --action-text: #be185d; --ai-msg-bg: #ffffff; --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            --sidebar-bg: #ffffff; --sidebar-border: #e4e4e7; --sidebar-text: #09090b;
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         html, body { height: 100dvh; width: 100vw; background: #000000; color: var(--text-main); overflow: hidden; display: flex; justify-content: center; align-items: center; }
         .app-container { width: 100%; max-width: 440px; height: 100dvh; background: var(--bg-main); display: flex; flex-direction: column; position: relative; overflow: hidden; border: 1px solid var(--border-color); }
-        .top-bar { height: 52px; background: var(--bg-surface); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 16px; z-index: 10; }
-        .toggle-btn { background: transparent; border: none; color: var(--text-main); font-size: 1.2rem; cursor: pointer; }
+        @media (min-width: 500px) { .app-container { height: 94dvh; border-radius: 20px; } }
+        
+        .top-bar { height: 52px; min-height: 52px; background: var(--bg-surface); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 16px; z-index: 10; }
+        .toggle-btn { background: transparent; border: none; color: var(--text-main); font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .top-title { font-weight: 700; font-size: 1rem; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
         .icon-btn { background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; }
+        
         .sidebar { position: absolute; top: 0; left: 0; width: 85%; height: 100%; background: var(--sidebar-bg); color: var(--sidebar-text); border-right: 1px solid var(--sidebar-border); display: flex; flex-direction: column; transition: transform 0.3s ease; z-index: 100; transform: translateX(-100%); }
         .sidebar.open { transform: translateX(0); }
         .sidebar-header { padding: 14px 16px; font-size: 1.2rem; font-weight: 800; color: var(--accent-pink); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--sidebar-border); }
         .nav-section { padding: 12px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
-        .menu-category-btn { width: 100%; padding: 12px 14px; background: #121215; border: 1px solid var(--sidebar-border); color: var(--sidebar-text); border-radius: 10px; text-align: left; cursor: pointer; font-size: 0.92rem; font-weight: 600; }
+        .menu-category-btn { width: 100%; padding: 12px 14px; background: var(--bg-surface); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 10px; text-align: left; cursor: pointer; font-size: 0.92rem; font-weight: 600; display: flex; align-items: center; gap: 10px; }
         .item-btn { width: 100%; padding: 9px 12px; background: transparent; border: none; color: var(--text-sub); border-radius: 8px; text-align: left; cursor: pointer; font-size: 0.88rem; }
+        .item-btn:hover { background: var(--border-color); color: var(--text-main); }
+        
         .workspace { flex: 1; display: flex; flex-direction: column; height: calc(100% - 52px); position: relative; overflow: hidden; }
         .dashboard { flex: 1; padding: 24px 16px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; }
-        .dash-title { font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin-bottom: 12px; }
-        .dash-card { width: 100%; background: var(--bg-surface); border: 1px solid var(--border-color); padding: 14px 16px; border-radius: 14px; display: flex; align-items: center; gap: 14px; margin-bottom: 12px; cursor: pointer; }
+        .dash-title { font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin-bottom: 6px; }
+        .dash-sub { font-size: 0.85rem; color: var(--text-sub); text-align: center; margin-bottom: 24px; }
+        .dash-card { width: 100%; background: var(--bg-surface); border: 1px solid var(--border-color); padding: 14px 16px; border-radius: 14px; display: flex; align-items: center; gap: 14px; margin-bottom: 12px; cursor: pointer; box-shadow: var(--card-shadow); }
+        .dash-card i { font-size: 1.3rem; color: var(--accent-pink); }
+        
         #chat-view { flex: 1; display: flex; flex-direction: column; height: 100%; overflow: hidden; }
         .chat-messages { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
         .message { display: flex; gap: 10px; max-width: 88%; position: relative; }
         .message.user { align-self: flex-end; flex-direction: row-reverse; }
-        .message .content { background: var(--ai-msg-bg); border: 1px solid var(--border-color); padding: 10px 14px; border-radius: 14px; font-size: 0.9rem; line-height: 1.45; color: var(--text-main); word-break: break-word; }
+        .message .content { background: var(--ai-msg-bg); border: 1px solid var(--border-color); padding: 10px 14px; border-radius: 14px; font-size: 0.9rem; line-height: 1.45; color: var(--text-main); word-break: break-word; box-shadow: var(--card-shadow); }
         .message.user .content { background: var(--user-msg-bg); border: none; color: #ffffff; }
         .chat-img-attachment { width: 100%; max-width: 240px; aspect-ratio: 3/4; object-fit: cover; border-radius: 10px; margin-top: 6px; cursor: pointer; border: 1px solid var(--border-color); display: block; }
+        
         .input-area { padding: 10px 12px; border-top: 1px solid var(--border-color); background: var(--bg-surface); display: flex; gap: 8px; width: 100%; align-items: center; }
         .input-wrapper { position: relative; flex: 1; display: flex; align-items: center; }
         .input-wrapper input { width: 100%; background: var(--bg-input); border: 1px solid var(--border-color); padding: 10px 12px; border-radius: 20px; color: var(--text-main); outline: none; font-size: 0.88rem; }
         .send-btn { height: 38px; padding: 0 14px; background: linear-gradient(135deg, #9333ea, #ec4899); color: #ffffff; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; }
+        
         .form-container { padding: 16px; overflow-y: auto; flex: 1; width: 100%; }
         .form-group { margin-bottom: 14px; }
         .form-group label { display: block; margin-bottom: 4px; font-size: 0.8rem; color: var(--text-sub); font-weight: 600; }
         .form-group input, .form-group textarea { width: 100%; background: var(--bg-surface); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; color: var(--text-main); outline: none; font-size: 0.88rem; }
         .form-group textarea { height: 75px; resize: vertical; }
+        .submit-btn { width: 100%; padding: 12px; background: linear-gradient(135deg, #9333ea, #ec4899); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; margin-top: 6px; }
+        
         .lightbox-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.92); backdrop-filter: blur(10px); z-index: 300; display: flex; flex-direction: column; justify-content: space-between; padding: 16px 12px; align-items: center; }
         .lightbox-img { width: auto; max-width: 95%; max-height: 68vh; object-fit: contain; border-radius: 14px; border: 1px solid #27272a; }
         .lightbox-actions { display: flex; gap: 8px; width: 100%; max-width: 360px; margin-bottom: 10px; justify-content: space-between; }
         .lightbox-btn { flex: 1; padding: 12px 6px; background: #121215; border: 1px solid #27272a; color: #ffffff; border-radius: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.8rem; }
         .lightbox-btn.danger { background: #ef4444; border: none; color: white; }
+        
         .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
         .gallery-item { position: relative; border-radius: 12px; overflow: hidden; aspect-ratio: 3/4; border: 1px solid var(--border-color); cursor: pointer; }
         .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
         .hidden { display: none !important; }
     </style>
 </head>
-<body>
+<body data-theme="dark">
     <div class="app-container">
         <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
@@ -75,25 +94,26 @@ HTML_CODE = """
                 <button class="icon-btn" onclick="toggleSidebar()"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="nav-section">
-                <button class="menu-category-btn" onclick="goHome()"><i class="fa-solid fa-house"></i> Home</button>
-                <button class="menu-category-btn" onclick="openNewCharForm()"><i class="fa-solid fa-plus"></i> New Character</button>
-                <div id="char-list"></div>
+                <button class="menu-category-btn" onclick="goHome()"><i class="fa-solid fa-house" style="color:var(--accent-pink);"></i> Home</button>
+                <button class="menu-category-btn" onclick="openNewCharForm()"><i class="fa-solid fa-user-plus" style="color:var(--accent-pink);"></i> New Character</button>
+                <div id="char-list" style="margin-top: 8px; display:flex; flex-direction:column; gap:4px;"></div>
             </div>
         </div>
 
         <div class="top-bar">
             <button class="toggle-btn" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
             <div class="top-title">Aura</div>
-            <div id="top-actions" class="hidden">
-                <button class="icon-btn" onclick="openCharacterGallery()"><i class="fa-solid fa-image"></i></button>
-                <button class="icon-btn" onclick="clearCurrentChat()"><i class="fa-solid fa-trash"></i></button>
+            <div id="top-actions" class="hidden" style="display: flex; gap: 6px;">
+                <button class="icon-btn" onclick="openCharacterGallery()" title="Gallery">🖼️</button>
+                <button class="icon-btn" onclick="clearCurrentChat()" title="Clear Chat"><i class="fa-solid fa-trash"></i></button>
             </div>
         </div>
 
         <div class="workspace">
             <div id="dashboard-view" class="dashboard">
-                <h2 class="dash-title">Aura AI</h2>
-                <div class="dash-card" onclick="openNewCharForm()"><i class="fa-solid fa-user-plus"></i><div><strong>Create Companion</strong></div></div>
+                <h2 class="dash-title">Welcome to Aura</h2>
+                <p class="dash-sub">Your personal AI companion & roleplay platform.</p>
+                <div class="dash-card" onclick="openNewCharForm()"><i class="fa-solid fa-user-plus"></i><div><strong>Create AI Companion</strong><span>Custom backstory & relationship</span></div></div>
             </div>
 
             <div id="chat-view" class="hidden">
@@ -107,12 +127,12 @@ HTML_CODE = """
             </div>
 
             <div id="char-form" class="form-container hidden">
-                <h3>Create AI Companion</h3>
+                <h3 style="margin-bottom: 14px;">Create AI Companion</h3>
                 <input type="hidden" id="char-id">
                 <div class="form-group"><label>Name</label><input type="text" id="char-name"></div>
                 <div class="form-group"><label>Appearance</label><input type="text" id="char-app" placeholder="e.g. Indian girl, long dark hair, brown eyes"></div>
                 <div class="form-group"><label>Backstory / Personality</label><textarea id="char-backstory"></textarea></div>
-                <button class="send-btn" style="width:100%; margin-top:10px;" onclick="saveCharacter()">Save Companion</button>
+                <button class="submit-btn" onclick="saveCharacter()">Save Companion</button>
             </div>
 
             <div id="gallery-view" class="form-container hidden">
@@ -155,10 +175,13 @@ HTML_CODE = """
 
         function openCharacterGallery() {
             if(!activeContext) return;
+            document.getElementById('sidebar').classList.remove('open');
             let container = document.getElementById('gallery-grid-container');
             let list = galleries[activeContext.id] || [];
-            container.innerHTML = list.length === 0 ? '<div style="grid-column:span 2; text-align:center;">No photos yet.</div>' : list.map(item => `<div class="gallery-item" onclick="openLightbox('${item.url}')"><img src="${item.url}" /></div>`).join('');
+            container.innerHTML = list.length === 0 ? '<div style="grid-column:span 2; text-align:center; color:var(--text-sub);">No photos yet.</div>' : list.map(item => `<div class="gallery-item" onclick="openLightbox('${item.url}')"><img src="${item.url}" /></div>`).join('');
             document.getElementById('chat-view').classList.add('hidden');
+            document.getElementById('dashboard-view').classList.add('hidden');
+            document.getElementById('char-form').classList.add('hidden');
             document.getElementById('gallery-view').classList.remove('hidden');
         }
 
@@ -247,12 +270,16 @@ HTML_CODE = """
         }
 
         function openNewCharForm() {
+            document.getElementById('sidebar').classList.remove('open');
             document.getElementById('char-id').value = 'char_' + Date.now();
             document.getElementById('char-name').value = '';
             document.getElementById('char-app').value = '';
             document.getElementById('char-backstory').value = '';
             document.getElementById('dashboard-view').classList.add('hidden');
+            document.getElementById('chat-view').classList.add('hidden');
+            document.getElementById('gallery-view').classList.add('hidden');
             document.getElementById('char-form').classList.remove('hidden');
+            document.getElementById('top-actions').classList.add('hidden');
         }
 
         function saveCharacter() {
@@ -269,11 +296,12 @@ HTML_CODE = """
         }
 
         function renderSidebar() {
-            document.getElementById('char-list').innerHTML = characters.map(c => `<button class="item-btn" onclick="openChat('char', '${c.id}')">${c.name}</button>`).join('');
+            document.getElementById('char-list').innerHTML = characters.map(c => `<button class="item-btn" onclick="openChat('char', '${c.id}')"><i class="fa-solid fa-user" style="margin-right:8px; color:var(--accent-pink);"></i>${c.name}</button>`).join('');
         }
 
         function openChat(type, id) {
             activeContext = { type, id };
+            document.getElementById('sidebar').classList.remove('open');
             document.getElementById('dashboard-view').classList.add('hidden');
             document.getElementById('char-form').classList.add('hidden');
             document.getElementById('gallery-view').classList.add('hidden');
@@ -322,28 +350,29 @@ def advanced_chat():
     for m in history[-20:]:
         messages.append({"role": "user" if m["sender"] == "You" else "assistant", "content": m["text"]})
 
-    res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={
-        "model": "llama-3.1-8b-instant",
-        "messages": messages
-    }, headers={"Authorization": f"Bearer {groq_api_key.strip()}", "Content-Type": "application/json"}).json()
+    try:
+        res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={
+            "model": "llama-3.1-8b-instant",
+            "messages": messages
+        }, headers={"Authorization": f"Bearer {groq_api_key.strip()}", "Content-Type": "application/json"}).json()
 
-    reply = res["choices"][0]["message"]["content"]
+        reply = res["choices"][0]["message"]["content"]
+    except Exception as e:
+        reply = "*Smile* Hey there! Let's chat."
+
     resp = {"sender": c.get('name', 'Companion'), "text": reply}
 
     if photo_requested and hf_token:
-        scene_extractor_prompt = f"""
-Based on the character details: {c.get('appearance', 'Indian woman')}
-And recent chat history: {history[-6:]}
-
-Create a short, highly realistic image generation prompt describing the exact current scene, setting, outfit, pose, and background.
-OUTPUT ONLY THE PROMPT TEXT.
-"""
-        scene_res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={
-            "model": "llama-3.1-8b-instant",
-            "messages": [{"role": "system", "content": scene_extractor_prompt}]
-        }, headers={"Authorization": f"Bearer {groq_api_key.strip()}", "Content-Type": "application/json"}).json()
-
-        dynamic_photo_prompt = scene_res["choices"][0]["message"]["content"].strip()
+        dynamic_photo_prompt = f"candid raw photo of {c.get('name', 'woman')}, {c.get('appearance', 'natural look')}, natural skin texture, realistic lighting, 35mm photography"
+        try:
+            scene_res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={
+                "model": "llama-3.1-8b-instant",
+                "messages": [{"role": "system", "content": f"Extract a short photorealistic image prompt for: {c.get('appearance')} based on chat: {history[-4:]}. Output ONLY prompt."}]
+            }, headers={"Authorization": f"Bearer {groq_api_key.strip()}", "Content-Type": "application/json"}).json()
+            if "choices" in scene_res:
+                dynamic_photo_prompt = scene_res["choices"][0]["message"]["content"].strip()
+        except:
+            pass
 
         try:
             img_res = requests.post(
