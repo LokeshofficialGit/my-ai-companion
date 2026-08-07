@@ -92,7 +92,7 @@ HTML_CODE = """
             transform: scale(0.96) !important;
         }
 
-        /* Top Bar (Only visible in Chat) */
+        /* Top Bar (Visible ONLY in Chat) */
         .top-bar { 
             height: 56px; 
             min-height: 56px; 
@@ -145,7 +145,7 @@ HTML_CODE = """
 
         /* Dashboard Layout */
         .dashboard { flex: 1; padding: 24px 16px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
-        .dash-logo-large { width: 100px; height: 100px; margin-bottom: 14px; filter: drop-shadow(0 0 16px rgba(236,72,153,0.6)); }
+        .dash-logo-large { width: 90px; height: 90px; margin-bottom: 14px; filter: drop-shadow(0 0 16px rgba(236,72,153,0.6)); display: block; }
         .dash-title { font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin-bottom: 4px; }
         .dash-sub { font-size: 0.85rem; color: var(--text-sub); text-align: center; margin-bottom: 24px; }
         
@@ -267,24 +267,17 @@ HTML_CODE = """
         .memory-tag-chip i { cursor: pointer; color: #ef4444; opacity: 0.8; }
 
         .hidden { display: none !important; }
-        .aura-logo-svg { width: 28px; height: 28px; flex-shrink: 0; filter: drop-shadow(0 0 6px rgba(236, 72, 153, 0.5)); }
+        .aura-logo-svg { width: 28px; height: 28px; flex-shrink: 0; filter: drop-shadow(0 0 6px rgba(236, 72, 153, 0.5)); display: inline-block; }
     </style>
 </head>
 <body data-theme="dark">
 
-    <!-- Option 1 Logo SVG Definition -->
-    <svg class="hidden">
-        <defs>
-            <linearGradient id="auraLogoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#a855f7"/>
-                <stop offset="100%" stop-color="#ec4899"/>
-            </linearGradient>
-            <g id="aura-brand-icon">
-                <circle cx="50" cy="50" r="38" fill="none" stroke="url(#auraLogoGrad)" stroke-width="10"/>
-                <path d="M 50 18 L 70 72 L 58 72 L 53 58 L 47 58 L 42 72 L 30 72 Z M 48 45 L 50 34 L 52 45 Z" fill="url(#auraLogoGrad)"/>
-                <path d="M 59 62 L 68 76 Q 72 82 78 78 L 74 68 Z" fill="url(#auraLogoGrad)"/>
-            </g>
-        </defs>
+    <!-- Global SVG Gradient Definition -->
+    <svg style="width:0;height:0;position:absolute;" aria-hidden="true" focusable="false">
+        <linearGradient id="auraLogoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#a855f7"/>
+            <stop offset="100%" stop-color="#ec4899"/>
+        </linearGradient>
     </svg>
 
     <div class="app-container">
@@ -292,7 +285,11 @@ HTML_CODE = """
         <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <span style="display:flex; align-items:center; gap:10px;">
-                    <svg viewBox="0 0 100 100" class="aura-logo-svg"><use href="#aura-brand-icon"/></svg>
+                    <svg viewBox="0 0 100 100" class="aura-logo-svg">
+                        <circle cx="50" cy="50" r="38" fill="none" stroke="url(#auraLogoGrad)" stroke-width="10"/>
+                        <path d="M 50 18 L 70 72 L 58 72 L 53 58 L 47 58 L 42 72 L 30 72 Z M 48 45 L 50 34 L 52 45 Z" fill="url(#auraLogoGrad)"/>
+                        <path d="M 59 62 L 68 76 Q 72 82 78 78 L 74 68 Z" fill="url(#auraLogoGrad)"/>
+                    </svg>
                     Aura
                 </span>
                 <div class="header-actions">
@@ -357,7 +354,11 @@ HTML_CODE = """
                 <div style="position: absolute; top: 16px; left: 16px;">
                     <button class="icon-btn" onclick="toggleSidebar()" style="width:38px; height:38px; font-size:1rem;"><i class="fa-solid fa-bars"></i></button>
                 </div>
-                <svg viewBox="0 0 100 100" class="dash-logo-large"><use href="#aura-brand-icon"/></svg>
+                <svg viewBox="0 0 100 100" class="dash-logo-large">
+                    <circle cx="50" cy="50" r="38" fill="none" stroke="url(#auraLogoGrad)" stroke-width="10"/>
+                    <path d="M 50 18 L 70 72 L 58 72 L 53 58 L 47 58 L 42 72 L 30 72 Z M 48 45 L 50 34 L 52 45 Z" fill="url(#auraLogoGrad)"/>
+                    <path d="M 59 62 L 68 76 Q 72 82 78 78 L 74 68 Z" fill="url(#auraLogoGrad)"/>
+                </svg>
                 <h2 class="dash-title">Welcome to Aura</h2>
                 <p class="dash-sub">Your secure personal AI companion space.</p>
                 
@@ -927,16 +928,18 @@ HTML_CODE = """
             document.getElementById('chat-view').classList.remove('hidden');
             document.getElementById('top-bar').classList.remove('hidden');
 
+            let logoHtml = `<svg viewBox="0 0 100 100" class="aura-logo-svg"><circle cx="50" cy="50" r="38" fill="none" stroke="url(#auraLogoGrad)" stroke-width="10"/><path d="M 50 18 L 70 72 L 58 72 L 53 58 L 47 58 L 42 72 L 30 72 Z M 48 45 L 50 34 L 52 45 Z" fill="url(#auraLogoGrad)"/><path d="M 59 62 L 68 76 Q 72 82 78 78 L 74 68 Z" fill="url(#auraLogoGrad)"/></svg>`;
+
             if(type === 'group') {
                 document.getElementById('pin-mem-btn').classList.add('hidden');
                 let g = groups.find(item => item.id === id);
-                document.getElementById('top-title').innerHTML = `<svg viewBox="0 0 100 100" class="aura-logo-svg"><use href="#aura-brand-icon"/></svg> ${g ? g.title : 'Group Chat'}`;
+                document.getElementById('top-title').innerHTML = `${logoHtml} ${g ? g.title : 'Group Chat'}`;
             } else {
                 document.getElementById('pin-mem-btn').classList.remove('hidden');
                 let c = characters.find(item => item.id === id);
                 let aff = c ? (c.affinity || 50) : 50;
                 let label = aff >= 80 ? 'Deep Bond ❤️' : (aff >= 50 ? 'Warm 😊' : 'Distant 💔');
-                document.getElementById('top-title').innerHTML = `<svg viewBox="0 0 100 100" class="aura-logo-svg"><use href="#aura-brand-icon"/></svg> ${c ? c.name : 'Chat'} <span style="font-size:0.6rem; padding:2px 5px; background:rgba(236,72,153,0.15); border:1px solid var(--accent-pink); color:var(--accent-pink); border-radius:8px; margin-left:4px; flex-shrink:0;">${label} (${aff}%)</span>`;
+                document.getElementById('top-title').innerHTML = `${logoHtml} ${c ? c.name : 'Chat'} <span style="font-size:0.6rem; padding:2px 5px; background:rgba(236,72,153,0.15); border:1px solid var(--accent-pink); color:var(--accent-pink); border-radius:8px; margin-left:4px; flex-shrink:0;">${label} (${aff}%)</span>`;
             }
 
             renderSidebar();
@@ -1129,13 +1132,15 @@ HTML_CODE = """
                 }
             }
 
+            let logoHtml = `<svg viewBox="0 0 100 100" class="aura-logo-svg"><circle cx="50" cy="50" r="38" fill="none" stroke="url(#auraLogoGrad)" stroke-width="10"/><path d="M 50 18 L 70 72 L 58 72 L 53 58 L 47 58 L 42 72 L 30 72 Z M 48 45 L 50 34 L 52 45 Z" fill="url(#auraLogoGrad)"/><path d="M 59 62 L 68 76 Q 72 82 78 78 L 74 68 Z" fill="url(#auraLogoGrad)"/></svg>`;
+
             if(data.responses) {
                 for (let r of data.responses) {
                     if(r.newAffinity !== undefined && activeContext.type === 'char') {
                         let charObj = characters.find(c => c.id === activeContext.id);
                         if(charObj) {
                             charObj.affinity = r.newAffinity;
-                            document.getElementById('top-title').innerHTML = `<svg viewBox="0 0 100 100" class="aura-logo-svg"><use href="#aura-brand-icon"/></svg> ${charObj.name} <span style="font-size:0.6rem; padding:2px 5px; background:rgba(236,72,153,0.15); border:1px solid var(--accent-pink); color:var(--accent-pink); border-radius:8px; margin-left:4px; flex-shrink:0;">${r.affinityLabel} (${r.newAffinity}%)</span>`;
+                            document.getElementById('top-title').innerHTML = `${logoHtml} ${charObj.name} <span style="font-size:0.6rem; padding:2px 5px; background:rgba(236,72,153,0.15); border:1px solid var(--accent-pink); color:var(--accent-pink); border-radius:8px; margin-left:4px; flex-shrink:0;">${r.affinityLabel} (${r.newAffinity}%)</span>`;
                         }
                     }
                     streamWordByWord(r.sender, r.text, r.avatar);
