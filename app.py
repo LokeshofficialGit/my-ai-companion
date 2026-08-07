@@ -136,19 +136,13 @@ HTML_CODE = """
         .message .content { background: var(--ai-msg-bg); border: 1px solid var(--border-color); padding: 10px 14px; border-radius: 14px; font-size: 0.9rem; line-height: 1.45; color: var(--text-main); word-break: break-word; box-shadow: var(--card-shadow); }
         .message.user .content { background: var(--user-msg-bg); border: none; color: #ffffff; border-bottom-right-radius: 2px; }
         .message.ai .content { border-bottom-left-radius: 2px; }
-        .message .sender-name { font-size: 0.7rem; color: var(--text-sub); margin-bottom: 3px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+        .message .sender-name { font-size: 0.7rem; color: var(--text-sub); margin-bottom: 3px; font-weight: 600; }
         
         .action-text { color: var(--action-text); font-style: italic; font-weight: 500; }
         
         .bubble-controls { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
         .edit-link, .continue-bubble-btn, .tts-btn { font-size: 0.68rem; color: var(--text-sub); text-decoration: underline; cursor: pointer; opacity: 0.65; transition: opacity 0.2s; }
         .edit-link:hover, .continue-bubble-btn:hover, .tts-btn:hover { opacity: 1; color: var(--accent-pink); }
-
-        .typing-dots { display: flex; gap: 4px; align-items: center; padding: 4px 0; }
-        .typing-dots span { width: 5px; height: 5px; background: var(--accent-pink); border-radius: 50%; animation: pulse 1.2s infinite ease-in-out; }
-        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
-        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes pulse { 0%, 100% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.1); } }
 
         .input-area { padding: 10px 12px; border-top: 1px solid var(--border-color); background: var(--bg-surface); display: flex; gap: 8px; width: 100%; align-items: center; }
         .input-wrapper { position: relative; flex: 1; display: flex; align-items: center; }
@@ -233,9 +227,7 @@ HTML_CODE = """
         .delete-btn { background: #ef4444 !important; margin-top: 10px; }
 
         .hidden { display: none !important; }
-
         .aura-logo-svg { width: 28px; height: 28px; filter: drop-shadow(0 0 6px rgba(236,72,153,0.5)); }
-        .affinity-badge { font-size: 0.65rem; padding: 2px 6px; background: rgba(236,72,153,0.15); border: 1px solid var(--accent-pink); color: var(--accent-pink); border-radius: 10px; margin-left: 6px; }
     </style>
 </head>
 <body data-theme="dark">
@@ -303,7 +295,7 @@ HTML_CODE = """
             </div>
         </div>
 
-        <!-- Top Navigation Bar -->
+        <!-- Top Bar -->
         <div class="top-bar">
             <div style="display: flex; align-items: center; gap: 10px;">
                 <button class="toggle-btn" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
@@ -315,21 +307,21 @@ HTML_CODE = """
             
             <div style="display: flex; gap: 6px; align-items: center;">
                 <div id="top-actions" class="hidden" style="display: flex; gap: 6px;">
-                    <button class="icon-btn" id="pin-mem-btn" onclick="openPinnedMemoryModal()"><i class="fa-solid fa-thumbtack"></i></button>
-                    <button class="icon-btn" onclick="handleEditClick()"><i class="fa-solid fa-wrench"></i></button>
-                    <button class="icon-btn" onclick="regenerateLastResponse()"><i class="fa-solid fa-rotate-right"></i></button>
-                    <button class="icon-btn" onclick="clearCurrentChat()"><i class="fa-solid fa-trash"></i></button>
+                    <button class="icon-btn" id="pin-mem-btn" onclick="openPinnedMemoryModal()" title="Pin Memory"><i class="fa-solid fa-thumbtack"></i></button>
+                    <button class="icon-btn" onclick="handleEditClick()" title="Edit Companion / Group"><i class="fa-solid fa-wrench"></i></button>
+                    <button class="icon-btn" onclick="regenerateLastResponse()" title="Regenerate"><i class="fa-solid fa-rotate-right"></i></button>
+                    <button class="icon-btn" onclick="clearCurrentChat()" title="Clear Chat"><i class="fa-solid fa-trash"></i></button>
                 </div>
             </div>
         </div>
 
-        <!-- Main Workspace Area -->
+        <!-- Workspace -->
         <div class="workspace">
             <!-- Dashboard View -->
             <div id="dashboard-view" class="dashboard">
                 <svg viewBox="-40 -20 140 180" class="dash-logo"><use href="#aura-brand-icon"/></svg>
                 <h2 class="dash-title">Welcome to Aura</h2>
-                <p class="dash-sub">Your personal AI companion platform.</p>
+                <p class="dash-sub">Your personal AI companion & roleplay platform.</p>
                 
                 <div class="dash-card" onclick="openNewCharForm()">
                     <i class="fa-solid fa-user-plus"></i>
@@ -351,7 +343,7 @@ HTML_CODE = """
                     <i class="fa-solid fa-sliders"></i>
                     <div>
                         <strong>Persona & Settings</strong>
-                        <span>Edit your profile, backup & restore</span>
+                        <span>Edit profile, export/import backups</span>
                     </div>
                 </div>
             </div>
@@ -360,10 +352,10 @@ HTML_CODE = """
             <div id="chat-view" class="hidden">
                 <div class="chat-messages" id="message-container"></div>
                 <div class="input-area">
-                    <button class="tool-btn" onclick="alert('Image Generation coming next!')" title="Photo">🤳</button>
+                    <button class="tool-btn" onclick="alert('Photo generation feature paused.')" title="Photo">🤳</button>
                     <div class="input-wrapper">
                         <input type="text" id="chat-input" placeholder="Message..." onkeypress="if(event.key==='Enter') sendMsg()">
-                        <button class="wand-inbox-btn" onclick="suggestUserMessage()">🪄</button>
+                        <button class="wand-inbox-btn" onclick="suggestUserMessage()" title="Magic Reply">🪄</button>
                     </div>
                     <button class="send-btn" onclick="sendMsg()"><i class="fa-solid fa-paper-plane"></i></button>
                 </div>
@@ -388,7 +380,7 @@ HTML_CODE = """
                 </div>
 
                 <div class="form-group"><label>Name</label><input type="text" id="char-name" placeholder="e.g. Maya"></div>
-                <div class="form-group"><label>Relationship</label><input type="text" id="char-rel" placeholder="e.g. Best Friend"></div>
+                <div class="form-group"><label>Relationship with You</label><input type="text" id="char-rel" placeholder="e.g. Best Friend"></div>
                 <div class="form-group"><label>Appearance</label><input type="text" id="char-app" placeholder="e.g. Cute, brown eyes"></div>
                 <div class="form-group"><label>Backstory</label><textarea id="char-backstory"></textarea></div>
                 <div class="form-group"><label>Response Directives</label><textarea id="char-directives"></textarea></div>
@@ -402,18 +394,59 @@ HTML_CODE = """
             <div id="group-form" class="form-container hidden">
                 <h3 style="margin-bottom: 14px;" id="group-form-title">Create Group Chat</h3>
                 <input type="hidden" id="group-id">
-                <div class="form-group"><label>Group Title</label><input type="text" id="group-title"></div>
-                <div class="form-group"><label>Context</label><textarea id="group-context"></textarea></div>
-                <div class="form-group"><label>Members</label><div id="group-char-selector"></div></div>
-                <button class="submit-btn" style="background:#2563eb;" onclick="saveGroup()">Save Group</button>
+
+                <div class="form-group">
+                    <label>Group Icon</label>
+                    <div class="avatar-edit-trigger" onclick="openAvatarCropperModal('group')">
+                        <div class="avatar-thumb-wrapper">
+                            <img id="group-avatar-preview" src="https://api.dicebear.com/7.x/shapes/svg?seed=group">
+                        </div>
+                        <div>
+                            <strong style="font-size:0.85rem; display:block;">Pinch & Drag Crop Group Icon</strong>
+                            <span style="font-size:0.75rem; color:var(--text-sub);">Tap to crop icon</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group"><label>Group Name</label><input type="text" id="group-title" placeholder="e.g. Squad"></div>
+                <div class="form-group"><label>Group Context / Setting</label><textarea id="group-context"></textarea></div>
+                <div class="form-group"><label>Group Directives</label><textarea id="group-directives"></textarea></div>
+                <div class="form-group"><label>Group Members</label><div id="group-char-selector"></div></div>
+
+                <button class="submit-btn" style="background:#2563eb;" onclick="saveGroup()">Save Group Room</button>
+                <button class="submit-btn delete-btn" id="group-delete-btn" onclick="deleteCurrentGroup()">Delete Group</button>
             </div>
 
-            <!-- Settings Form -->
+            <!-- Settings & Backup Form -->
             <div id="settings-form" class="form-container hidden">
                 <h3 style="margin-bottom: 14px;">Persona & Settings</h3>
+                <div class="form-group">
+                    <label>Your Avatar Picture</label>
+                    <div class="avatar-edit-trigger" onclick="openAvatarCropperModal('user')">
+                        <div class="avatar-thumb-wrapper">
+                            <img id="user-avatar-preview" src="https://api.dicebear.com/7.x/identicon/svg?seed=user">
+                        </div>
+                        <div>
+                            <strong style="font-size:0.85rem; display:block;">Pinch & Drag Crop Your Avatar</strong>
+                            <span style="font-size:0.75rem; color:var(--text-sub);">Tap to adjust photo</span>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="form-group"><label>Your Name</label><input type="text" id="user-name"></div>
-                <div class="form-group"><label>Your Bio</label><textarea id="user-bio"></textarea></div>
+                <div class="form-group"><label>Your Bio / Persona</label><textarea id="user-bio"></textarea></div>
                 <button class="submit-btn" onclick="saveUserPersona()">Save Persona</button>
+
+                <hr style="border-color:var(--border-color); margin: 16px 0;">
+
+                <div class="form-group">
+                    <label>Data Backup & Export</label>
+                    <button class="submit-btn" style="background:var(--bg-surface); border:1px solid var(--border-color); color:var(--text-main); margin-top:0;" onclick="openBackupOptionsModal()"><i class="fa-solid fa-download"></i> Selective Backup Data</button>
+                </div>
+                <div class="form-group" style="margin-top: 10px;">
+                    <label>Import Data File (.json)</label>
+                    <input type="file" id="import-file" accept=".json" onchange="importData(this)">
+                </div>
             </div>
         </div>
 
@@ -429,6 +462,20 @@ HTML_CODE = """
                 </div>
             </div>
         </div>
+
+        <!-- Selective Backup Modal -->
+        <div id="backup-modal" class="avatar-modal-overlay hidden">
+            <div class="modal-card">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h4 style="font-size:1rem;">Select Data to Backup</h4>
+                    <button class="toggle-btn" onclick="document.getElementById('backup-modal').classList.add('hidden')"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <button class="sub-create-btn" style="padding:10px;" onclick="exportFullData()"><i class="fa-solid fa-box-archive"></i> Export Entire App Data</button>
+                <hr style="border-color:var(--border-color); margin: 4px 0;">
+                <div style="font-size:0.75rem; color:var(--text-sub); font-weight:700;">INDIVIDUAL COMPANIONS</div>
+                <div id="backup-char-list" style="display:flex; flex-direction:column; gap:6px;"></div>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
@@ -437,10 +484,11 @@ HTML_CODE = """
         let characters = JSON.parse(localStorage.getItem('aura_chars') || '[]');
         let groups = JSON.parse(localStorage.getItem('aura_groups') || '[]');
         let chatHistories = JSON.parse(localStorage.getItem('aura_chats') || '{}');
-        let userPersona = JSON.parse(localStorage.getItem('aura_user') || '{"name":"User", "bio":""}');
+        let userPersona = JSON.parse(localStorage.getItem('aura_user') || '{"name":"User", "bio":"", "avatar":"https://api.dicebear.com/7.x/identicon/svg?seed=user"}');
         let currentTheme = localStorage.getItem('aura_theme') || 'dark';
         let activeContext = null;
         let cropperInstance = null;
+        let currentEditingAvatarType = null;
 
         document.body.setAttribute('data-theme', currentTheme);
 
@@ -474,15 +522,340 @@ HTML_CODE = """
             renderSidebar();
         }
 
+        function openAvatarCropperModal(type) {
+            currentEditingAvatarType = type;
+            let currentSrc = type === 'char' ? document.getElementById('avatar-img-preview').src :
+                             type === 'group' ? document.getElementById('group-avatar-preview').src :
+                             document.getElementById('user-avatar-preview').src;
+
+            let imgElem = document.getElementById('cropper-target-img');
+            imgElem.src = currentSrc;
+            document.getElementById('cropper-modal').classList.remove('hidden');
+
+            if(cropperInstance) cropperInstance.destroy();
+            cropperInstance = new Cropper(imgElem, { aspectRatio: 1, viewMode: 1, dragMode: 'move' });
+        }
+
+        function loadNewCropperImage(input) {
+            if (input.files && input.files[0]) {
+                let reader = new FileReader();
+                reader.onload = (e) => {
+                    if(cropperInstance) cropperInstance.destroy();
+                    let imgElem = document.getElementById('cropper-target-img');
+                    imgElem.src = e.target.result;
+                    cropperInstance = new Cropper(imgElem, { aspectRatio: 1, viewMode: 1, dragMode: 'move' });
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function applyCroppedAvatar() {
+            if(!cropperInstance) return;
+            let canvas = cropperInstance.getCroppedCanvas({ width: 512, height: 512 });
+            let finalDataUrl = canvas.toDataURL('image/jpeg', 0.82);
+
+            if (currentEditingAvatarType === 'char') document.getElementById('avatar-img-preview').src = finalDataUrl;
+            else if (currentEditingAvatarType === 'group') document.getElementById('group-avatar-preview').src = finalDataUrl;
+            else if (currentEditingAvatarType === 'user') document.getElementById('user-avatar-preview').src = finalDataUrl;
+
+            cropperInstance.destroy();
+            cropperInstance = null;
+            document.getElementById('cropper-modal').classList.add('hidden');
+        }
+
+        function openBackupOptionsModal() {
+            let container = document.getElementById('backup-char-list');
+            if(characters.length === 0) container.innerHTML = `<div style="font-size:0.8rem; color:var(--text-sub);">No characters created yet.</div>`;
+            else {
+                container.innerHTML = characters.map(c => `
+                    <button class="item-btn" style="background:var(--bg-input); border:1px solid var(--border-color);" onclick="exportSingleCharacterData('${c.id}')">
+                        <img src="${c.avatar}" style="width:28px; height:28px; border-radius:50%;" />
+                        <span>${c.name} (Export JSON)</span>
+                    </button>
+                `).join('');
+            }
+            document.getElementById('backup-modal').classList.remove('hidden');
+        }
+
+        function exportSingleCharacterData(charId) {
+            let c = characters.find(item => item.id === charId);
+            if(!c) return;
+            let charBackup = { type: 'single_character_backup', character: c, chatHistory: chatHistories[charId] || [] };
+            let blob = new Blob([JSON.stringify(charBackup, null, 2)], { type: 'application/json' });
+            let a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `${c.name}_Backup_${Date.now()}.json`;
+            a.click();
+            document.getElementById('backup-modal').classList.add('hidden');
+        }
+
+        function exportFullData() {
+            let backupData = { characters, groups, chatHistories, userPersona };
+            let blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+            let a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'Aura_Full_Backup_' + Date.now() + '.json';
+            a.click();
+            document.getElementById('backup-modal').classList.add('hidden');
+        }
+
+        function importData(input) {
+            let file = input.files[0];
+            if(!file) return;
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    let imported = JSON.parse(e.target.result);
+                    if(imported.type === 'single_character_backup') {
+                        let c = imported.character;
+                        let existingIdx = characters.findIndex(item => item.id === c.id);
+                        if(existingIdx >= 0) characters[existingIdx] = c;
+                        else characters.push(c);
+                        chatHistories[c.id] = imported.chatHistory || [];
+                        saveState();
+                        alert(`Character "${c.name}" imported!`);
+                    } else {
+                        if(imported.characters) characters = imported.characters;
+                        if(imported.groups) groups = imported.groups;
+                        if(imported.chatHistories) chatHistories = imported.chatHistories;
+                        if(imported.userPersona) userPersona = imported.userPersona;
+                        saveState();
+                        alert('Full app data imported!');
+                    }
+                    location.reload();
+                } catch(err) { alert('Invalid JSON File!'); }
+            };
+            reader.readAsText(file);
+        }
+
+        function openNewCharForm() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('char-id').value = '';
+            document.getElementById('char-name').value = '';
+            document.getElementById('char-rel').value = '';
+            document.getElementById('char-app').value = '';
+            document.getElementById('char-backstory').value = '';
+            document.getElementById('char-directives').value = '';
+            document.getElementById('char-memories').value = '';
+            document.getElementById('avatar-img-preview').src = 'https://api.dicebear.com/7.x/bottts/svg?seed=' + Date.now();
+            document.getElementById('char-form-title').innerText = 'Create New Companion';
+            document.getElementById('char-delete-btn').classList.add('hidden');
+            showForm('char-form');
+        }
+
+        function openNewGroupForm() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('group-id').value = '';
+            document.getElementById('group-title').value = '';
+            document.getElementById('group-context').value = '';
+            document.getElementById('group-directives').value = '';
+            document.getElementById('group-avatar-preview').src = 'https://api.dicebear.com/7.x/shapes/svg?seed=' + Date.now();
+            document.getElementById('group-form-title').innerText = 'Create Group Chat';
+            document.getElementById('group-delete-btn').classList.add('hidden');
+            showForm('group-form');
+        }
+
+        function handleEditClick() {
+            if(!activeContext) return;
+            if(activeContext.type === 'char') editCurrentCharacter();
+            else if(activeContext.type === 'group') editCurrentGroup();
+        }
+
+        function editCurrentCharacter() {
+            let c = characters.find(item => item.id === activeContext.id);
+            if(!c) return;
+            document.getElementById('char-id').value = c.id;
+            document.getElementById('char-name').value = c.name;
+            document.getElementById('char-rel').value = c.relationship || '';
+            document.getElementById('char-app').value = c.appearance || '';
+            document.getElementById('char-backstory').value = c.backstory || '';
+            document.getElementById('char-directives').value = c.directives || '';
+            document.getElementById('char-memories').value = c.memories || '';
+            document.getElementById('avatar-img-preview').src = c.avatar;
+            document.getElementById('char-form-title').innerText = 'Modify Companion';
+            document.getElementById('char-delete-btn').classList.remove('hidden');
+            showForm('char-form');
+        }
+
+        function editCurrentGroup() {
+            let g = groups.find(item => item.id === activeContext.id);
+            if(!g) return;
+            document.getElementById('group-id').value = g.id;
+            document.getElementById('group-title').value = g.title || '';
+            document.getElementById('group-context').value = g.context || '';
+            document.getElementById('group-directives').value = g.directives || '';
+            document.getElementById('group-avatar-preview').src = g.avatar || 'https://api.dicebear.com/7.x/shapes/svg?seed=' + g.id;
+            document.getElementById('group-form-title').innerText = 'Modify Group Settings';
+            document.getElementById('group-delete-btn').classList.remove('hidden');
+            showForm('group-form');
+        }
+
+        function deleteCurrentCharacter() {
+            let id = document.getElementById('char-id').value;
+            if(!id) return;
+            if(confirm("Delete character permanently?")) {
+                characters = characters.filter(c => c.id !== id);
+                delete chatHistories[id];
+                saveState();
+                goHome();
+            }
+        }
+
+        function deleteCurrentGroup() {
+            let id = document.getElementById('group-id').value;
+            if(!id) return;
+            if(confirm("Delete group room permanently?")) {
+                groups = groups.filter(g => g.id !== id);
+                delete chatHistories[id];
+                saveState();
+                goHome();
+            }
+        }
+
+        function openPinnedMemoryModal() {
+            if(!activeContext || activeContext.type !== 'char') return;
+            let c = characters.find(item => item.id === activeContext.id);
+            let fact = prompt("Pin memory for " + c.name + ":", c.memories || '');
+            if(fact !== null) {
+                c.memories = fact;
+                saveState();
+            }
+        }
+
+        function showForm(formId) {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('dashboard-view').classList.add('hidden');
+            document.getElementById('chat-view').classList.add('hidden');
+            document.getElementById('char-form').classList.add('hidden');
+            document.getElementById('group-form').classList.add('hidden');
+            document.getElementById('settings-form').classList.add('hidden');
+            document.getElementById('top-actions').classList.add('hidden');
+            document.getElementById(formId).classList.remove('hidden');
+
+            document.getElementById('top-title').innerHTML = `<svg viewBox="-40 -20 140 180" class="aura-logo-svg"><use href="#aura-brand-icon"/></svg> Aura`;
+
+            if(formId === 'settings-form') {
+                document.getElementById('user-name').value = userPersona.name || '';
+                document.getElementById('user-bio').value = userPersona.bio || '';
+                document.getElementById('user-avatar-preview').src = userPersona.avatar || 'https://api.dicebear.com/7.x/identicon/svg?seed=user';
+            }
+            if(formId === 'group-form') renderGroupSelector();
+        }
+
+        function renderGroupSelector() {
+            let container = document.getElementById('group-char-selector');
+            let currentGroup = groups.find(g => g.id === document.getElementById('group-id').value);
+            let selectedIds = currentGroup ? currentGroup.memberIds : [];
+
+            container.innerHTML = characters.map(c => `
+                <label style="display:flex; align-items:center; gap:8px; background:var(--bg-surface); padding:8px; border-radius:6px; cursor:pointer;">
+                    <input type="checkbox" value="${c.id}" ${selectedIds.includes(c.id) ? 'checked':''} class="group-char-checkbox" style="width:auto;">
+                    <img src="${c.avatar}" style="width:24px; height:24px; border-radius:50%;"/>
+                    ${c.name}
+                </label>
+            `).join('');
+        }
+
+        function saveCharacter() {
+            let id = document.getElementById('char-id').value || 'char_' + Date.now();
+            let charObj = {
+                id,
+                name: document.getElementById('char-name').value || 'Companion',
+                relationship: document.getElementById('char-rel').value,
+                appearance: document.getElementById('char-app').value,
+                backstory: document.getElementById('char-backstory').value,
+                directives: document.getElementById('char-directives').value,
+                memories: document.getElementById('char-memories').value,
+                avatar: document.getElementById('avatar-img-preview').src
+            };
+
+            let existingIdx = characters.findIndex(c => c.id === id);
+            if(existingIdx >= 0) characters[existingIdx] = charObj;
+            else characters.push(charObj);
+
+            saveState();
+            openChat('char', id);
+        }
+
+        function saveGroup() {
+            let groupId = document.getElementById('group-id').value || 'group_' + Date.now();
+            let title = document.getElementById('group-title').value || 'Group Chat';
+            let context = document.getElementById('group-context').value || '';
+            let directives = document.getElementById('group-directives').value || '';
+            let avatar = document.getElementById('group-avatar-preview').src;
+            let selectedChars = Array.from(document.querySelectorAll('.group-char-checkbox:checked')).map(cb => cb.value);
+
+            if(selectedChars.length < 2) return alert('Select at least 2 characters!');
+
+            let groupObj = { id: groupId, title, context, directives, avatar, memberIds: selectedChars };
+            let existingIdx = groups.findIndex(g => g.id === groupId);
+            if(existingIdx >= 0) groups[existingIdx] = groupObj;
+            else groups.push(groupObj);
+
+            saveState();
+            openChat('group', groupId);
+        }
+
+        function saveUserPersona() {
+            userPersona.name = document.getElementById('user-name').value || 'User';
+            userPersona.bio = document.getElementById('user-bio').value || '';
+            userPersona.avatar = document.getElementById('user-avatar-preview').src;
+            saveState();
+            alert('Persona saved!');
+        }
+
+        function renderSidebar() {
+            let charList = document.getElementById('char-list');
+            let groupList = document.getElementById('group-list');
+
+            charList.innerHTML = characters.map(c => `
+                <button class="item-btn ${activeContext?.id === c.id ? 'active':''}" onclick="openChat('char', '${c.id}')">
+                    <img src="${c.avatar || 'https://via.placeholder.com/40'}" />
+                    <span>${c.name}</span>
+                </button>
+            `).join('');
+
+            groupList.innerHTML = groups.map(g => `
+                <button class="item-btn ${activeContext?.id === g.id ? 'active':''}" onclick="openChat('group', '${g.id}')">
+                    <img src="${g.avatar || 'https://api.dicebear.com/7.x/shapes/svg?seed=' + g.id}" />
+                    <span>${g.title}</span>
+                </button>
+            `).join('');
+        }
+
+        function openChat(type, id) {
+            activeContext = { type, id };
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('dashboard-view').classList.add('hidden');
+            document.getElementById('char-form').classList.add('hidden');
+            document.getElementById('group-form').classList.add('hidden');
+            document.getElementById('settings-form').classList.add('hidden');
+            document.getElementById('chat-view').classList.remove('hidden');
+            document.getElementById('top-actions').classList.remove('hidden');
+
+            if(type === 'group') document.getElementById('pin-mem-btn').classList.add('hidden');
+            else document.getElementById('pin-mem-btn').classList.remove('hidden');
+
+            renderSidebar();
+
+            let name = type === 'char' ? characters.find(c => c.id === id)?.name : groups.find(g => g.id === id)?.title;
+            document.getElementById('top-title').innerText = name || 'Chat';
+
+            renderMessages();
+        }
+
         function speakMessage(text) {
-            let cleanText = text.replace(/\*(.*?)\*/g, ''); // strip action text for natural speech
+            let cleanText = text.replace(/\*(.*?)\*/g, '');
             if('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
                 let utterance = new SpeechSynthesisUtterance(cleanText);
                 utterance.rate = 1.0;
-                utterance.pitch = 1.0;
                 window.speechSynthesis.speak(utterance);
             }
+        }
+
+        function formatText(text) {
+            return text.replace(/\*(.*?)\*/g, '<span class="action-text">*$1*</span>');
         }
 
         function renderMessages() {
@@ -492,7 +865,7 @@ HTML_CODE = """
             container.innerHTML = history.map((m, idx) => {
                 let isUser = m.sender === 'You';
                 let avatar = isUser ? (userPersona.avatar || 'https://api.dicebear.com/7.x/identicon/svg?seed=user') : m.avatar;
-                
+
                 return `
                     <div class="message ${isUser ? 'user':'ai'}">
                         <img class="avatar" src="${avatar}" />
@@ -513,8 +886,14 @@ HTML_CODE = """
             container.scrollTop = container.scrollHeight;
         }
 
-        function formatText(text) {
-            return text.replace(/\*(.*?)\*/g, '<span class="action-text">*$1*</span>');
+        function tweakMsg(idx) {
+            let history = chatHistories[activeContext.id];
+            let newText = prompt("Tweak message:", history[idx].text);
+            if(newText !== null) {
+                history[idx].text = newText;
+                saveState();
+                renderMessages();
+            }
         }
 
         async function sendMsg() {
@@ -524,11 +903,38 @@ HTML_CODE = """
 
             input.value = '';
             if(!chatHistories[activeContext.id]) chatHistories[activeContext.id] = [];
-            
             chatHistories[activeContext.id].push({ sender: 'You', text });
             renderMessages();
 
             fetchAIResponse();
+        }
+
+        async function suggestUserMessage() {
+            if(!activeContext) return;
+            let input = document.getElementById('chat-input');
+            input.placeholder = "Generating magic reply...";
+
+            let payload = {
+                contextId: activeContext.id,
+                userPersona: userPersona,
+                history: chatHistories[activeContext.id] || []
+            };
+
+            let res = await fetch('/api/suggest-reply', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            let data = await res.json();
+            if(data.suggestion) input.value = data.suggestion;
+            input.placeholder = "Message...";
+        }
+
+        async function continueAiReply() {
+            if(!activeContext) return;
+            if(!chatHistories[activeContext.id]) chatHistories[activeContext.id] = [];
+            fetchAIResponse(true);
         }
 
         async function fetchAIResponse(isContinue = false) {
@@ -542,6 +948,10 @@ HTML_CODE = """
 
             if(activeContext.type === 'char') {
                 payload.character = characters.find(c => c.id === activeContext.id);
+            } else {
+                let group = groups.find(g => g.id === activeContext.id);
+                payload.group = group;
+                payload.members = characters.filter(c => group.memberIds.includes(c.id));
             }
 
             let res = await fetch('/api/advanced-chat', {
@@ -560,72 +970,23 @@ HTML_CODE = """
             }
         }
 
-        function openChat(type, id) {
-            activeContext = { type, id };
-            document.getElementById('sidebar').classList.remove('open');
-            document.getElementById('dashboard-view').classList.add('hidden');
-            document.getElementById('char-form').classList.add('hidden');
-            document.getElementById('chat-view').classList.remove('hidden');
-            document.getElementById('top-actions').classList.remove('hidden');
+        function regenerateLastResponse() {
+            if(!activeContext || !chatHistories[activeContext.id]) return;
+            let history = chatHistories[activeContext.id];
+            if(history.length === 0) return;
 
-            let c = characters.find(item => item.id === id);
-            let name = c ? c.name : 'Chat';
-            let affinity = c ? (c.affinity || 50) : 50;
-            let statusLabel = affinity > 70 ? 'Warm' : 'Getting to know you';
+            if(history[history.length - 1].sender !== 'You') {
+                history.pop();
+                renderMessages();
+                fetchAIResponse();
+            }
+        }
 
-            document.getElementById('top-title').innerHTML = `${name} <span class="affinity-badge">${statusLabel}</span>`;
+        function clearCurrentChat() {
+            if(!activeContext || !confirm('Clear chat history?')) return;
+            chatHistories[activeContext.id] = [];
+            saveState();
             renderMessages();
-        }
-
-        function renderSidebar() {
-            document.getElementById('char-list').innerHTML = characters.map(c => `
-                <button class="item-btn" onclick="openChat('char', '${c.id}')">
-                    <img src="${c.avatar || 'https://via.placeholder.com/40'}" />
-                    <span>${c.name}</span>
-                </button>
-            `).join('');
-        }
-
-        function openNewCharForm() {
-            document.getElementById('sidebar').classList.remove('open');
-            document.getElementById('char-id').value = 'char_' + Date.now();
-            document.getElementById('char-name').value = '';
-            document.getElementById('char-rel').value = '';
-            document.getElementById('char-app').value = '';
-            document.getElementById('char-backstory').value = '';
-            document.getElementById('dashboard-view').classList.add('hidden');
-            document.getElementById('chat-view').classList.add('hidden');
-            document.getElementById('char-form').classList.remove('hidden');
-        }
-
-        function saveCharacter() {
-            let id = document.getElementById('char-id').value;
-            let charObj = {
-                id,
-                name: document.getElementById('char-name').value || 'Companion',
-                relationship: document.getElementById('char-rel').value,
-                appearance: document.getElementById('char-app').value,
-                backstory: document.getElementById('char-backstory').value,
-                avatar: document.getElementById('avatar-img-preview').src,
-                affinity: 50
-            };
-            characters.push(charObj);
-            saveState();
-            openChat('char', id);
-        }
-
-        function showForm(formId) {
-            document.getElementById('sidebar').classList.remove('open');
-            document.getElementById('dashboard-view').classList.add('hidden');
-            document.getElementById('chat-view').classList.add('hidden');
-            document.getElementById(formId).classList.remove('hidden');
-        }
-
-        function saveUserPersona() {
-            userPersona.name = document.getElementById('user-name').value;
-            userPersona.bio = document.getElementById('user-bio').value;
-            saveState();
-            alert("Saved!");
         }
 
         renderSidebar();
@@ -638,6 +999,35 @@ HTML_CODE = """
 def home():
     return render_template_string(HTML_CODE)
 
+@app.route("/api/suggest-reply", methods=["POST"])
+def suggest_reply():
+    data = request.json
+    api_key = os.environ.get("GROQ_API_KEY")
+    if not api_key: return jsonify({"suggestion": ""})
+
+    headers = {"Authorization": f"Bearer {api_key.strip()}", "Content-Type": "application/json"}
+    user_info = data.get("userPersona", {})
+    
+    system_prompt = f"""
+You are ghostwriting for {user_info.get('name', 'User')}. Bio: {user_info.get('bio', '')}.
+Generate the next short, natural Hinglish text reply for the user based on history.
+Return ONLY text.
+    """
+
+    messages = [{"role": "system", "content": system_prompt}]
+    for m in data.get("history", [])[-10:]:
+        messages.append({"role": "user" if m["sender"] != "You" else "assistant", "content": f"{m['sender']}: {m['text']}"})
+
+    try:
+        res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={
+            "model": "llama-3.1-8b-instant",
+            "messages": messages
+        }, headers=headers).json()
+        
+        return jsonify({"suggestion": res["choices"][0]["message"]["content"].strip('"')})
+    except:
+        return jsonify({"suggestion": "Arey batao, kya haal hai?"})
+
 @app.route("/api/advanced-chat", methods=["POST"])
 def advanced_chat():
     data = request.json
@@ -646,40 +1036,77 @@ def advanced_chat():
     if not api_key:
         return jsonify({"responses": [{"sender": "System", "text": "Groq Key missing!"}]})
 
-    c = data.get("character", {})
+    headers = {
+        "Authorization": f"Bearer {api_key.strip()}",
+        "Content-Type": "application/json"
+    }
+
     user_info = data.get("userPersona", {})
+    user_name = user_info.get("name", "User")
+    user_bio = user_info.get("bio", "")
 
-    # STRICT HINGLISH SYSTEM INSTRUCTION FOR CASUAL WHATSAPP STYLE CHAT
-    system_prompt = f"""
-You are roleplaying as {c.get('name', 'Companion')}.
-Relationship with User: {c.get('relationship', 'Close Friend')}
+    responses = []
+
+    if data["type"] == "char":
+        c = data["character"]
+        system_prompt = f"""
+Name: {c['name']}
+Relationship: {c.get('relationship', 'Friend')}
+Appearance: {c.get('appearance', '')}
 Backstory: {c.get('backstory', '')}
+Directives: {c.get('directives', '')}
+Memories: {c.get('memories', '')}
 
-USER PROFILE: Name: {user_info.get('name', 'User')}, Bio: {user_info.get('bio', '')}
+User Profile: {user_name} ({user_bio})
 
-CRITICAL LANGUAGE RULE:
-- Talk ONLY in casual, natural Hinglish (Roman Hindi + everyday English mixed, just like young friends text on WhatsApp/Instagram).
-- Do NOT use formal/complex English words. Keep sentences short, relaxed, and natural.
-- Use everyday words like "aaj", "phir", "batao", "sahi hai", "thik hai", "waise", "yaar", etc.
-- Express actions in asterisks, e.g., *smiles and grabs a coffee*.
+CRITICAL HINGLISH RULE:
+- Talk strictly in natural, casual Hinglish (Roman Hindi + simple English mixed, like WhatsApp texting).
+- Never use high-level, corporate, or complex English.
+- Use casual words like "aaj", "phir", "batao", "sahi hai", "thik hai", "waise", "yaar".
+- Use asterisks for actions like *smiles and sits down*.
 """
+        if data.get("isContinue"):
+            system_prompt += "\nUser pressed Continue. Extend your last response seamlessly."
 
-    messages = [{"role": "system", "content": system_prompt}]
-    for m in data.get("history", [])[-25:]:
-        role = "user" if m["sender"] == "You" else "assistant"
-        messages.append({"role": role, "content": m["text"]})
+        messages = [{"role": "system", "content": system_prompt}]
+        for m in data["history"][-50:]:
+            role = "user" if m["sender"] == "You" or m["sender"] == user_name else "assistant"
+            messages.append({"role": role, "content": m["text"]})
 
-    try:
         res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={
             "model": "llama-3.1-8b-instant",
             "messages": messages
-        }, headers={"Authorization": f"Bearer {api_key.strip()}", "Content-Type": "application/json"}).json()
+        }, headers=headers).json()
 
-        reply = res["choices"][0]["message"]["content"]
-    except Exception as e:
-        reply = "*Smiles* Aaj thoda busy hu, baad mein baat karte hain!"
+        reply_text = res["choices"][0]["message"]["content"]
+        responses.append({"sender": c['name'], "text": reply_text, "avatar": c['avatar']})
 
-    return jsonify({"responses": [{"sender": c.get('name', 'Companion'), "text": reply, "avatar": c.get('avatar', '')}]})
+    else:
+        group = data["group"]
+        members = data["members"]
+        for char in members[:2]:
+            system_prompt = f"""
+You are in a group chat "{group.get('title', 'Group')}" as {char['name']}.
+Group Setting: {group.get('context', '')}
+Group Directives: {group.get('directives', '')}
+User Profile: {user_name} ({user_bio})
+
+Talk briefly in casual Hinglish (Roman Hindi/English mixed). Use asterisks for actions like *laughs*.
+            """
+
+            messages = [{"role": "system", "content": system_prompt}]
+            for m in data["history"][-50:]:
+                messages.append({"role": "user", "content": f"{m['sender']}: {m['text']}"})
+
+            res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={
+                "model": "llama-3.1-8b-instant",
+                "messages": messages
+            }, headers=headers).json()
+
+            reply_text = res["choices"][0]["message"]["content"]
+            responses.append({"sender": char['name'], "text": reply_text, "avatar": char['avatar']})
+
+    return jsonify({"responses": responses})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
