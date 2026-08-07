@@ -16,7 +16,6 @@ HTML_CODE = """
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         
-        /* Fixed Dynamic Viewport Height for Mobile Browsers */
         html, body { 
             height: 100dvh; 
             width: 100vw; 
@@ -47,18 +46,31 @@ HTML_CODE = """
         .top-title { font-weight: 700; font-size: 1rem; color: #ffffff; display: flex; align-items: center; gap: 8px; }
         .icon-btn { background: #27272a; border: none; color: #f4f4f5; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; }
 
-        /* Sidebar Overlay */
+        /* Sidebar Navigation Overlay */
         .sidebar { position: absolute; top: 0; left: 0; width: 85%; height: 100%; background: #121215; border-right: 1px solid #27272a; display: flex; flex-direction: column; transition: transform 0.3s ease; z-index: 100; transform: translateX(-100%); pointer-events: none; }
         .sidebar.open { transform: translateX(0); pointer-events: auto; }
         .sidebar-header { padding: 16px; font-size: 1.2rem; font-weight: 800; color: #a855f7; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #18181b; }
-        .nav-section { padding: 12px; flex: 1; overflow-y: auto; }
-        .section-title { font-size: 0.7rem; text-transform: uppercase; color: #71717a; padding: 6px 8px; font-weight: 700; }
-        
-        .item-btn { width: 100%; padding: 10px; background: transparent; border: none; color: #a1a1aa; border-radius: 8px; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 10px; margin-bottom: 4px; font-size: 0.9rem; }
-        .item-btn:hover, .item-btn.active { background: #27272a; color: #fff; }
-        .item-btn img { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }
+        .header-actions { display: flex; align-items: center; gap: 12px; }
+        .fullscreen-icon-btn { background: #27272a; border: 1px solid #3f3f46; color: #a855f7; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
 
-        /* Workspace & Pages */
+        .nav-section { padding: 12px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+
+        /* Accordion Menu */
+        .menu-category-btn { width: 100%; padding: 12px 14px; background: #18181b; border: 1px solid #27272a; color: #f4f4f5; border-radius: 10px; text-align: left; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-size: 0.92rem; font-weight: 600; }
+        .menu-category-btn i.cat-icon { color: #a855f7; font-size: 1rem; margin-right: 10px; }
+        .menu-category-btn .arrow-icon { font-size: 0.8rem; color: #71717a; transition: transform 0.2s ease; }
+        .menu-category-btn.active .arrow-icon { transform: rotate(180deg); }
+
+        .submenu-container { padding: 6px 0 6px 12px; display: flex; flex-direction: column; gap: 4px; }
+        
+        .item-btn { width: 100%; padding: 9px 12px; background: transparent; border: none; color: #a1a1aa; border-radius: 8px; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 0.88rem; }
+        .item-btn:hover, .item-btn.active { background: #27272a; color: #fff; }
+        .item-btn img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
+
+        .sub-create-btn { width: 100%; padding: 9px; background: #9333ea; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.82rem; display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 4px; }
+        .sub-create-btn.blue { background: #2563eb; }
+
+        /* Workspace */
         .workspace { flex: 1; display: flex; flex-direction: column; height: calc(100% - 52px); position: relative; overflow: hidden; }
 
         /* Dashboard */
@@ -83,9 +95,7 @@ HTML_CODE = """
         .message.ai .content { border-bottom-left-radius: 2px; }
         .message .sender-name { font-size: 0.7rem; color: #a1a1aa; margin-bottom: 3px; font-weight: 600; }
         
-        /* Actions Text Changed from Purple to Soft Silver/Gray */
         .action-text { color: #a1a1aa; font-style: italic; }
-
         .edit-link { font-size: 0.68rem; color: #71717a; text-decoration: underline; cursor: pointer; display: inline-block; margin-top: 4px; }
         .edit-link:hover { color: #c084fc; }
 
@@ -96,13 +106,43 @@ HTML_CODE = """
         .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
         @keyframes pulse { 0%, 100% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.1); } }
 
-        /* Input Controls Bar */
-        .input-area { padding: 10px 12px; border-top: 1px solid #1c1c21; background: #121215; display: flex; gap: 6px; width: 100%; align-items: center; }
-        .input-area input { flex: 1; background: #09090b; border: 1px solid #27272a; padding: 10px 12px; border-radius: 10px; color: #ffffff; outline: none; font-size: 0.88rem; }
-        .input-area button { height: 38px; padding: 0 12px; background: #9333ea; color: #ffffff; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .tool-btn { background: #27272a !important; color: #a855f7 !important; border: 1px solid #3f3f46 !important; padding: 0 10px !important; font-size: 0.85rem; }
+        /* Input Area & Transparent In-Box Magic Wand */
+        .input-area { padding: 10px 12px; border-top: 1px solid #1c1c21; background: #121215; display: flex; gap: 8px; width: 100%; align-items: center; }
+        .input-wrapper { position: relative; flex: 1; display: flex; align-items: center; }
+        .input-wrapper input { 
+            width: 100%; 
+            background: #09090b; 
+            border: 1px solid #27272a; 
+            padding: 10px 38px 10px 12px; 
+            border-radius: 20px; 
+            color: #ffffff; 
+            outline: none; 
+            font-size: 0.88rem; 
+        }
+        .input-wrapper input:focus { border-color: #3f3f46; }
 
-        /* Forms */
+        /* Transparent Magic Wand Button inside Input Field */
+        .wand-inbox-btn { 
+            position: absolute; 
+            right: 10px; 
+            background: transparent; 
+            border: none; 
+            color: #ffffff; 
+            opacity: 0.45; 
+            font-size: 0.95rem; 
+            cursor: pointer; 
+            transition: opacity 0.2s, transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px;
+        }
+        .wand-inbox-btn:hover, .wand-inbox-btn:active { opacity: 1; transform: scale(1.15); color: #c084fc; }
+
+        .input-area button.send-btn { height: 38px; padding: 0 14px; background: #9333ea; color: #ffffff; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .tool-btn { background: #27272a !important; color: #a855f7 !important; border: 1px solid #3f3f46 !important; padding: 0 10px !important; font-size: 0.85rem; border-radius: 10px !important; height: 38px; }
+
+        /* Form Styles */
         .form-container { padding: 16px; overflow-y: auto; flex: 1; width: 100%; }
         .form-group { margin-bottom: 14px; }
         .form-group label { display: block; margin-bottom: 4px; font-size: 0.8rem; color: #a1a1aa; font-weight: 600; }
@@ -110,6 +150,7 @@ HTML_CODE = """
         .form-group textarea { height: 75px; resize: vertical; }
 
         .submit-btn { width: 100%; padding: 11px; background: #9333ea; color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 0.9rem; margin-top: 8px; }
+        .delete-btn { background: #ef4444 !important; margin-top: 10px; }
 
         .hidden { display: none !important; }
     </style>
@@ -117,21 +158,50 @@ HTML_CODE = """
 <body>
 
     <div class="app-container">
-        <!-- Sidebar Overlay Navigation -->
+        <!-- Sidebar Navigation -->
         <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <span>✨ Aura</span>
-                <button class="toggle-btn" onclick="toggleSidebar()"><i class="fa-solid fa-xmark"></i></button>
+                <div class="header-actions">
+                    <button class="fullscreen-icon-btn" onclick="toggleFullScreen()" title="Fullscreen Mode"><i class="fa-solid fa-expand"></i></button>
+                    <button class="toggle-btn" onclick="toggleSidebar()"><i class="fa-solid fa-xmark"></i></button>
+                </div>
             </div>
 
-            <button class="submit-btn" style="margin: 12px; width: calc(100% - 24px);" onclick="openNewCharForm()"><i class="fa-solid fa-plus"></i> New Character</button>
-
             <div class="nav-section">
-                <div class="section-title">Characters</div>
-                <div id="char-list"></div>
+                <!-- Menu 1: Home -->
+                <button class="menu-category-btn" onclick="goHome()">
+                    <span><i class="fa-solid fa-house cat-icon"></i> Home</span>
+                </button>
 
-                <div class="section-title" style="margin-top: 10px;">Group Chats</div>
-                <div id="group-list"></div>
+                <!-- Menu 2: Characters -->
+                <div>
+                    <button class="menu-category-btn" onclick="toggleMenuCategory('chars-sub')">
+                        <span><i class="fa-solid fa-users-viewfinder cat-icon"></i> Characters</span>
+                        <i class="fa-solid fa-chevron-down arrow-icon"></i>
+                    </button>
+                    <div class="submenu-container hidden" id="chars-sub">
+                        <button class="sub-create-btn" onclick="openNewCharForm()"><i class="fa-solid fa-plus"></i> New Character</button>
+                        <div id="char-list"></div>
+                    </div>
+                </div>
+
+                <!-- Menu 3: Groups -->
+                <div>
+                    <button class="menu-category-btn" onclick="toggleMenuCategory('groups-sub')">
+                        <span><i class="fa-solid fa-people-group cat-icon"></i> Groups</span>
+                        <i class="fa-solid fa-chevron-down arrow-icon"></i>
+                    </button>
+                    <div class="submenu-container hidden" id="groups-sub">
+                        <button class="sub-create-btn blue" onclick="openNewGroupForm()"><i class="fa-solid fa-plus"></i> New Group Room</button>
+                        <div id="group-list"></div>
+                    </div>
+                </div>
+
+                <!-- Menu 4: Settings -->
+                <button class="menu-category-btn" onclick="showForm('settings-form')">
+                    <span><i class="fa-solid fa-sliders cat-icon"></i> Settings & Backup</span>
+                </button>
             </div>
         </div>
 
@@ -141,10 +211,10 @@ HTML_CODE = """
                 <button class="toggle-btn" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
                 <div class="top-title" id="top-title">✨ Aura</div>
             </div>
-            <!-- Header Icons (Shown ONLY Inside Active Chat) -->
+            <!-- Dynamic Actions Header -->
             <div id="top-actions" class="hidden" style="display: flex; gap: 6px;">
-                <button class="icon-btn" onclick="openPinnedMemoryModal()" title="Pin Memory"><i class="fa-solid fa-thumbtack"></i></button>
-                <button class="icon-btn" onclick="editCurrentCharacter()" title="Edit Companion"><i class="fa-solid fa-wrench"></i></button>
+                <button class="icon-btn" id="pin-mem-btn" onclick="openPinnedMemoryModal()" title="Pin Memory"><i class="fa-solid fa-thumbtack"></i></button>
+                <button class="icon-btn" onclick="handleEditClick()" title="Edit Companion / Group"><i class="fa-solid fa-wrench"></i></button>
                 <button class="icon-btn" onclick="regenerateLastResponse()" title="Regenerate"><i class="fa-solid fa-rotate-right"></i></button>
                 <button class="icon-btn" onclick="clearCurrentChat()" title="Clear Chat"><i class="fa-solid fa-trash"></i></button>
             </div>
@@ -166,7 +236,7 @@ HTML_CODE = """
                     </div>
                 </div>
 
-                <div class="dash-card" onclick="showForm('group-form')">
+                <div class="dash-card" onclick="openNewGroupForm()">
                     <i class="fa-solid fa-users"></i>
                     <div>
                         <strong>Create Group Room</strong>
@@ -195,21 +265,23 @@ HTML_CODE = """
             <div id="chat-view" class="hidden">
                 <div class="chat-messages" id="message-container"></div>
                 <div class="input-area">
-                    <button class="tool-btn" onclick="suggestUserMessage()" title="Magic Auto-Suggest">🪄</button>
                     <button class="tool-btn" onclick="continueAiReply()" title="Continue AI Reply">&gt;&gt;</button>
-                    <input type="text" id="chat-input" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendMsg()">
-                    <button onclick="sendMsg()"><i class="fa-solid fa-paper-plane"></i></button>
+                    <div class="input-wrapper">
+                        <input type="text" id="chat-input" placeholder="Message..." onkeypress="if(event.key==='Enter') sendMsg()">
+                        <button class="wand-inbox-btn" onclick="suggestUserMessage()" title="Magic Auto-Suggest">🪄</button>
+                    </div>
+                    <button class="send-btn" onclick="sendMsg()"><i class="fa-solid fa-paper-plane"></i></button>
                 </div>
             </div>
 
-            <!-- Character Creation Form -->
+            <!-- Character Creation / Edit Form -->
             <div id="char-form" class="form-container hidden">
                 <h3 style="margin-bottom: 14px; color: #ffffff;" id="char-form-title">Create Companion</h3>
                 <input type="hidden" id="char-id">
                 
                 <div class="form-group">
                     <label>Avatar Picture</label>
-                    <input type="file" id="char-avatar-file" accept="image/*" onchange="previewImage(this)">
+                    <input type="file" id="char-avatar-file" accept="image/*" onchange="previewCharImage(this)">
                     <img id="avatar-img-preview" src="https://api.dicebear.com/7.x/bottts/svg?seed=default" style="width:60px; height:60px; border-radius:50%; margin-top:6px; object-fit:cover;">
                 </div>
 
@@ -244,23 +316,45 @@ HTML_CODE = """
                 </div>
 
                 <button class="submit-btn" onclick="saveCharacter()">Save Character</button>
+                <button class="submit-btn delete-btn" id="char-delete-btn" onclick="deleteCurrentCharacter()">Delete Companion</button>
             </div>
 
-            <!-- Group Chat Form -->
+            <!-- Group Chat Creation & Editing Form -->
             <div id="group-form" class="form-container hidden">
-                <h3 style="margin-bottom: 14px; color: #ffffff;">Create Group Chat</h3>
+                <h3 style="margin-bottom: 14px; color: #ffffff;" id="group-form-title">Create Group Chat</h3>
+                <input type="hidden" id="group-id">
+
                 <div class="form-group">
-                    <label>Group Title</label>
-                    <input type="text" id="group-title" placeholder="e.g. Squad Chat">
+                    <label>Group Icon</label>
+                    <input type="file" id="group-avatar-file" accept="image/*" onchange="previewGroupImage(this)">
+                    <img id="group-avatar-preview" src="https://api.dicebear.com/7.x/shapes/svg?seed=group" style="width:60px; height:60px; border-radius:50%; margin-top:6px; object-fit:cover;">
                 </div>
+
                 <div class="form-group">
-                    <label>Select Characters</label>
+                    <label>Group Name</label>
+                    <input type="text" id="group-title" placeholder="e.g. Late Night Squad">
+                </div>
+
+                <div class="form-group">
+                    <label>Group Context / Setting</label>
+                    <textarea id="group-context" placeholder="Describe the current scene..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Group Directives</label>
+                    <textarea id="group-directives" placeholder="Instructions for group behavior..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Group Members</label>
                     <div id="group-char-selector" style="display:flex; flex-direction:column; gap:6px;"></div>
                 </div>
-                <button class="submit-btn" style="background:#2563eb;" onclick="saveGroup()">Launch Group Chat</button>
+
+                <button class="submit-btn" style="background:#2563eb;" onclick="saveGroup()">Save Group Room</button>
+                <button class="submit-btn delete-btn" id="group-delete-btn" onclick="deleteCurrentGroup()">Delete Group Room</button>
             </div>
 
-            <!-- Persona & Settings Form -->
+            <!-- User Persona & Backup Form -->
             <div id="settings-form" class="form-container hidden">
                 <h3 style="margin-bottom: 14px; color: #ffffff;">User Persona & Settings</h3>
                 
@@ -298,8 +392,26 @@ HTML_CODE = """
         let activeContext = null;
 
         function toggleSidebar() { 
-            let sb = document.getElementById('sidebar');
-            sb.classList.toggle('open'); 
+            document.getElementById('sidebar').classList.toggle('open'); 
+        }
+
+        function toggleMenuCategory(subId) {
+            let sub = document.getElementById(subId);
+            let btn = sub.previousElementSibling;
+            sub.classList.toggle('hidden');
+            btn.classList.toggle('active');
+        }
+
+        function goHome() {
+            activeContext = null;
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('dashboard-view').classList.remove('hidden');
+            document.getElementById('chat-view').classList.add('hidden');
+            document.getElementById('char-form').classList.add('hidden');
+            document.getElementById('group-form').classList.add('hidden');
+            document.getElementById('settings-form').classList.add('hidden');
+            document.getElementById('top-actions').classList.add('hidden');
+            document.getElementById('top-title').innerText = "✨ Aura";
         }
 
         function toggleFullScreen() {
@@ -318,10 +430,18 @@ HTML_CODE = """
             renderSidebar();
         }
 
-        function previewImage(input) {
+        function previewCharImage(input) {
             if (input.files && input.files[0]) {
                 let reader = new FileReader();
                 reader.onload = (e) => document.getElementById('avatar-img-preview').src = e.target.result;
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function previewGroupImage(input) {
+            if (input.files && input.files[0]) {
+                let reader = new FileReader();
+                reader.onload = (e) => document.getElementById('group-avatar-preview').src = e.target.result;
                 reader.readAsDataURL(input.files[0]);
             }
         }
@@ -337,11 +457,29 @@ HTML_CODE = """
             document.getElementById('char-memories').value = '';
             document.getElementById('avatar-img-preview').src = 'https://api.dicebear.com/7.x/bottts/svg?seed=' + Date.now();
             document.getElementById('char-form-title').innerText = 'Create New Companion';
+            document.getElementById('char-delete-btn').classList.add('hidden');
             showForm('char-form');
         }
 
+        function openNewGroupForm() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('group-id').value = '';
+            document.getElementById('group-title').value = '';
+            document.getElementById('group-context').value = '';
+            document.getElementById('group-directives').value = '';
+            document.getElementById('group-avatar-preview').src = 'https://api.dicebear.com/7.x/shapes/svg?seed=' + Date.now();
+            document.getElementById('group-form-title').innerText = 'Create Group Chat';
+            document.getElementById('group-delete-btn').classList.add('hidden');
+            showForm('group-form');
+        }
+
+        function handleEditClick() {
+            if(!activeContext) return;
+            if(activeContext.type === 'char') editCurrentCharacter();
+            else if(activeContext.type === 'group') editCurrentGroup();
+        }
+
         function editCurrentCharacter() {
-            if(!activeContext || activeContext.type !== 'char') return;
             let c = characters.find(item => item.id === activeContext.id);
             if(!c) return;
 
@@ -354,7 +492,47 @@ HTML_CODE = """
             document.getElementById('char-memories').value = c.memories || '';
             document.getElementById('avatar-img-preview').src = c.avatar;
             document.getElementById('char-form-title').innerText = 'Modify Companion';
+            document.getElementById('char-delete-btn').classList.remove('hidden');
             showForm('char-form');
+        }
+
+        function editCurrentGroup() {
+            let g = groups.find(item => item.id === activeContext.id);
+            if(!g) return;
+
+            document.getElementById('group-id').value = g.id;
+            document.getElementById('group-title').value = g.title || '';
+            document.getElementById('group-context').value = g.context || '';
+            document.getElementById('group-directives').value = g.directives || '';
+            document.getElementById('group-avatar-preview').src = g.avatar || 'https://api.dicebear.com/7.x/shapes/svg?seed=' + g.id;
+            document.getElementById('group-form-title').innerText = 'Modify Group Settings';
+            document.getElementById('group-delete-btn').classList.remove('hidden');
+            
+            showForm('group-form');
+        }
+
+        function deleteCurrentCharacter() {
+            let id = document.getElementById('char-id').value;
+            if(!id) return;
+
+            if(confirm("Are you sure? This character and all chat history will be permanently deleted!")) {
+                characters = characters.filter(c => c.id !== id);
+                delete chatHistories[id];
+                saveState();
+                goHome();
+            }
+        }
+
+        function deleteCurrentGroup() {
+            let id = document.getElementById('group-id').value;
+            if(!id) return;
+
+            if(confirm("Are you sure? This group room and its history will be deleted!")) {
+                groups = groups.filter(g => g.id !== id);
+                delete chatHistories[id];
+                saveState();
+                goHome();
+            }
         }
 
         function openPinnedMemoryModal() {
@@ -406,7 +584,7 @@ HTML_CODE = """
 
             groupList.innerHTML = groups.map(g => `
                 <button class="item-btn ${activeContext?.id === g.id ? 'active':''}" onclick="openChat('group', '${g.id}')">
-                    <i class="fa-solid fa-users"></i>
+                    <img src="${g.avatar || 'https://api.dicebear.com/7.x/shapes/svg?seed=' + g.id}" />
                     <span>${g.title}</span>
                 </button>
             `).join('');
@@ -437,9 +615,12 @@ HTML_CODE = """
 
         function renderGroupSelector() {
             let container = document.getElementById('group-char-selector');
+            let currentGroup = groups.find(g => g.id === document.getElementById('group-id').value);
+            let selectedIds = currentGroup ? currentGroup.memberIds : [];
+
             container.innerHTML = characters.map(c => `
-                <label style="display:flex; align-items:center; gap:8px; background:#121215; padding:8px; border-radius:6px;">
-                    <input type="checkbox" value="${c.id}" class="group-char-checkbox" style="width:auto;">
+                <label style="display:flex; align-items:center; gap:8px; background:#121215; padding:8px; border-radius:6px; cursor:pointer;">
+                    <input type="checkbox" value="${c.id}" ${selectedIds.includes(c.id) ? 'checked':''} class="group-char-checkbox" style="width:auto;">
                     <img src="${c.avatar}" style="width:24px; height:24px; border-radius:50%;"/>
                     ${c.name}
                 </label>
@@ -447,14 +628,21 @@ HTML_CODE = """
         }
 
         function saveGroup() {
+            let groupId = document.getElementById('group-id').value || 'group_' + Date.now();
             let title = document.getElementById('group-title').value || 'Group Chat';
+            let context = document.getElementById('group-context').value || '';
+            let directives = document.getElementById('group-directives').value || '';
+            let avatar = document.getElementById('group-avatar-preview').src;
             let selectedChars = Array.from(document.querySelectorAll('.group-char-checkbox:checked')).map(cb => cb.value);
             
             if(selectedChars.length < 2) return alert('Select at least 2 characters!');
 
-            let groupId = 'group_' + Date.now();
-            groups.push({ id: groupId, title, memberIds: selectedChars });
-            
+            let groupObj = { id: groupId, title, context, directives, avatar, memberIds: selectedChars };
+
+            let existingIdx = groups.findIndex(g => g.id === groupId);
+            if(existingIdx >= 0) groups[existingIdx] = groupObj;
+            else groups.push(groupObj);
+
             saveState();
             openChat('group', groupId);
         }
@@ -468,6 +656,9 @@ HTML_CODE = """
             document.getElementById('settings-form').classList.add('hidden');
             document.getElementById('chat-view').classList.remove('hidden');
             document.getElementById('top-actions').classList.remove('hidden');
+
+            if(type === 'group') document.getElementById('pin-mem-btn').classList.add('hidden');
+            else document.getElementById('pin-mem-btn').classList.remove('hidden');
 
             renderSidebar();
             
@@ -583,7 +774,7 @@ HTML_CODE = """
             if(data.suggestion) {
                 input.value = data.suggestion;
             }
-            input.placeholder = "Type a message...";
+            input.placeholder = "Message...";
         }
 
         async function continueAiReply() {
@@ -605,6 +796,7 @@ HTML_CODE = """
                 payload.character = characters.find(c => c.id === activeContext.id);
             } else {
                 let group = groups.find(g => g.id === activeContext.id);
+                payload.group = group;
                 payload.members = characters.filter(c => group.memberIds.includes(c.id));
             }
 
@@ -765,13 +957,17 @@ Roleplay naturally as {c['name']}. Stay in character. Use asterisks for actions 
         responses.append({"sender": c['name'], "text": reply_text, "avatar": c['avatar']})
 
     else:
+        group = data["group"]
         members = data["members"]
         for char in members[:2]:
             system_prompt = f"""
-You are in a group chat as {char['name']}.
-User: {user_name} ({user_bio})
-Relationship: {char.get('relationship', 'Friend')}
-Backstory: {char.get('backstory', '')}
+You are in a group chat named "{group.get('title', 'Group Chat')}" as {char['name']}.
+Group Setting/Context: {group.get('context', '')}
+Group Directives: {group.get('directives', '')}
+
+User Profile: {user_name} ({user_bio})
+Relationship with User: {char.get('relationship', 'Friend')}
+Character Backstory: {char.get('backstory', '')}
 
 Respond briefly from {char['name']}'s perspective. Use asterisks for actions like *laughs*.
             """
