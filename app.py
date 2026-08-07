@@ -13,6 +13,7 @@ HTML_CODE = """
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Aura - AI Companions</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         
@@ -168,32 +169,28 @@ HTML_CODE = """
         }
         .avatar-thumb-wrapper img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* Interactive Avatar Editor Modal */
+        /* Interactive Cropper.js Avatar Modal */
         .avatar-modal-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+            background: rgba(0,0,0,0.88); backdrop-filter: blur(8px);
             z-index: 200; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; padding: 20px;
+            align-items: center; justify-content: center; padding: 16px;
         }
         .avatar-modal-card {
-            width: 100%; max-width: 320px; background: #121215;
+            width: 100%; max-width: 360px; background: #121215;
+            border: 1px solid #27272a; border-radius: 20px; padding: 16px;
+            display: flex; flex-direction: column; align-items: center; gap: 14px;
+        }
+        .cropper-container-box {
+            width: 100%; height: 260px; background: #000; border-radius: 12px;
+            overflow: hidden; border: 1px solid #27272a; position: relative;
+        }
+
+        /* Generic Backup Options Modal */
+        .modal-card {
+            width: 100%; max-width: 340px; background: #121215;
             border: 1px solid #27272a; border-radius: 20px; padding: 20px;
-            display: flex; flex-direction: column; align-items: center; gap: 16px;
-        }
-        .avatar-crop-view {
-            width: 140px; height: 140px; border-radius: 50%; overflow: hidden;
-            border: 3px solid #a855f7; background: #000; display: flex;
-            justify-content: center; align-items: center; position: relative;
-            box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
-        }
-        .avatar-crop-view img {
-            width: 100%; height: 100%; object-fit: cover;
-            transition: transform 0.1s ease;
-        }
-        .slider-control { width: 100%; display: flex; flex-direction: column; gap: 6px; }
-        .slider-control label { font-size: 0.75rem; color: #a1a1aa; display: flex; justify-content: space-between; }
-        .slider-control input[type="range"] {
-            width: 100%; accent-color: #a855f7; cursor: pointer;
+            display: flex; flex-direction: column; gap: 12px; max-height: 80vh; overflow-y: auto;
         }
 
         .submit-btn { width: 100%; padding: 11px; background: #9333ea; color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 0.9rem; margin-top: 8px; }
@@ -327,14 +324,14 @@ HTML_CODE = """
                 <input type="hidden" id="char-id">
                 
                 <div class="form-group">
-                    <label>Avatar Picture (Tap to Edit & Zoom)</label>
-                    <div class="avatar-edit-trigger" onclick="openAvatarModal('char')">
+                    <label>Avatar Picture (Pinch & Drag Cropper)</label>
+                    <div class="avatar-edit-trigger" onclick="openAvatarCropperModal('char')">
                         <div class="avatar-thumb-wrapper">
                             <img id="avatar-img-preview" src="https://api.dicebear.com/7.x/bottts/svg?seed=default">
                         </div>
                         <div>
-                            <strong style="font-size:0.85rem; color:#f4f4f5; display:block;">Change / Scale Avatar</strong>
-                            <span style="font-size:0.75rem; color:#a1a1aa;">Tap to crop, scale or replace image</span>
+                            <strong style="font-size:0.85rem; color:#f4f4f5; display:block;">Pinch & Drag Crop Avatar</strong>
+                            <span style="font-size:0.75rem; color:#a1a1aa;">Set high-res 512px reference image</span>
                         </div>
                     </div>
                 </div>
@@ -379,14 +376,14 @@ HTML_CODE = """
                 <input type="hidden" id="group-id">
 
                 <div class="form-group">
-                    <label>Group Icon (Tap to Edit & Zoom)</label>
-                    <div class="avatar-edit-trigger" onclick="openAvatarModal('group')">
+                    <label>Group Icon (Pinch & Drag Cropper)</label>
+                    <div class="avatar-edit-trigger" onclick="openAvatarCropperModal('group')">
                         <div class="avatar-thumb-wrapper">
                             <img id="group-avatar-preview" src="https://api.dicebear.com/7.x/shapes/svg?seed=group">
                         </div>
                         <div>
-                            <strong style="font-size:0.85rem; color:#f4f4f5; display:block;">Change / Scale Group Icon</strong>
-                            <span style="font-size:0.75rem; color:#a1a1aa;">Tap to crop, scale or replace icon</span>
+                            <strong style="font-size:0.85rem; color:#f4f4f5; display:block;">Pinch & Drag Crop Group Icon</strong>
+                            <span style="font-size:0.75rem; color:#a1a1aa;">Tap to crop or upload icon</span>
                         </div>
                     </div>
                 </div>
@@ -420,14 +417,14 @@ HTML_CODE = """
                 <h3 style="margin-bottom: 14px; color: #ffffff;">User Persona & Settings</h3>
                 
                 <div class="form-group">
-                    <label>Your Avatar Picture (Tap to Edit & Zoom)</label>
-                    <div class="avatar-edit-trigger" onclick="openAvatarModal('user')">
+                    <label>Your Avatar Picture (Pinch & Drag Cropper)</label>
+                    <div class="avatar-edit-trigger" onclick="openAvatarCropperModal('user')">
                         <div class="avatar-thumb-wrapper">
                             <img id="user-avatar-preview" src="https://api.dicebear.com/7.x/identicon/svg?seed=user">
                         </div>
                         <div>
-                            <strong style="font-size:0.85rem; color:#f4f4f5; display:block;">Change / Scale Your Avatar</strong>
-                            <span style="font-size:0.75rem; color:#a1a1aa;">Tap to crop, scale or upload photo</span>
+                            <strong style="font-size:0.85rem; color:#f4f4f5; display:block;">Pinch & Drag Crop Your Avatar</strong>
+                            <span style="font-size:0.75rem; color:#a1a1aa;">Tap to adjust or upload photo</span>
                         </div>
                     </div>
                 </div>
@@ -447,8 +444,8 @@ HTML_CODE = """
                 <hr style="border-color:#27272a; margin: 16px 0;">
 
                 <div class="form-group">
-                    <label>Export Data Backup (.json)</label>
-                    <button class="submit-btn" style="background:#27272a; margin-top:0;" onclick="exportData()"><i class="fa-solid fa-download"></i> Backup Data</button>
+                    <label>Data Backup & Export</label>
+                    <button class="submit-btn" style="background:#27272a; margin-top:0;" onclick="openBackupOptionsModal()"><i class="fa-solid fa-download"></i> Selective Backup Data</button>
                 </div>
                 <div class="form-group" style="margin-top: 10px;">
                     <label>Import Data</label>
@@ -457,30 +454,46 @@ HTML_CODE = """
             </div>
         </div>
 
-        <!-- Avatar Editor Modal -->
-        <div id="avatar-modal" class="avatar-modal-overlay hidden">
+        <!-- Pinch & Drag Cropper.js Modal Overlay -->
+        <div id="cropper-modal" class="avatar-modal-overlay hidden">
             <div class="avatar-modal-card">
-                <h4 style="color:#ffffff; font-size:1rem;">Adjust & Scale Avatar</h4>
+                <h4 style="color:#ffffff; font-size:1rem;">Crop & Adjust Avatar (512x512)</h4>
                 
-                <div class="avatar-crop-view">
-                    <img id="modal-avatar-img" src="">
+                <div class="cropper-container-box">
+                    <img id="cropper-target-img" src="" style="max-width:100%;">
                 </div>
 
-                <div class="slider-control">
-                    <label><span>Zoom / Scale</span><span id="zoom-val-label">1.0x</span></label>
-                    <input type="range" id="avatar-zoom-slider" min="1" max="2.5" step="0.05" value="1" oninput="updateAvatarZoom(this.value)">
-                </div>
-
-                <input type="file" id="modal-file-input" accept="image/*" class="hidden" onchange="loadNewModalImage(this)">
+                <input type="file" id="cropper-file-input" accept="image/*" class="hidden" onchange="loadNewCropperImage(this)">
 
                 <div style="display:flex; gap:8px; width:100%;">
-                    <button class="sub-create-btn" style="flex:1; background:#27272a;" onclick="document.getElementById('modal-file-input').click()"><i class="fa-solid fa-image"></i> Replace</button>
-                    <button class="sub-create-btn" style="flex:1; background:#9333ea;" onclick="applyAvatarModal()">Done</button>
+                    <button class="sub-create-btn" style="flex:1; background:#27272a;" onclick="document.getElementById('cropper-file-input').click()"><i class="fa-solid fa-image"></i> Upload</button>
+                    <button class="sub-create-btn" style="flex:1; background:#9333ea;" onclick="applyCroppedAvatar()">Done</button>
                 </div>
             </div>
         </div>
 
+        <!-- Selective Backup Chooser Modal -->
+        <div id="backup-modal" class="avatar-modal-overlay hidden">
+            <div class="modal-card">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h4 style="color:#ffffff; font-size:1rem;">Select Data to Backup</h4>
+                    <button class="toggle-btn" onclick="document.getElementById('backup-modal').classList.add('hidden')"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <p style="font-size:0.78rem; color:#a1a1aa;">Choose full app backup or export a specific character's bio & chat history.</p>
+
+                <button class="sub-create-btn" style="background:#9333ea; padding:10px; font-size:0.88rem;" onclick="exportFullData()"><i class="fa-solid fa-box-archive"></i> Export Entire App Data</button>
+
+                <hr style="border-color:#27272a; margin: 4px 0;">
+
+                <div style="font-size:0.75rem; color:#71717a; font-weight:700; text-transform:uppercase;">Individual Characters</div>
+                <div id="backup-char-list" style="display:flex; flex-direction:column; gap:6px;"></div>
+            </div>
+        </div>
+
     </div>
+
+    <!-- Cropper.js JS Script CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
     <script>
         let characters = JSON.parse(localStorage.getItem('aura_chars') || '[]');
@@ -489,9 +502,9 @@ HTML_CODE = """
         let userPersona = JSON.parse(localStorage.getItem('aura_user') || '{"name":"User", "bio":"", "avatar":"https://api.dicebear.com/7.x/identicon/svg?seed=user"}');
         let activeContext = null;
 
-        // Avatar Modal State
+        /* Cropper State */
+        let cropperInstance = null;
         let currentEditingAvatarType = null; // 'char', 'group', or 'user'
-        let currentAvatarScale = 1;
 
         function toggleSidebar() { 
             document.getElementById('sidebar').classList.toggle('open'); 
@@ -532,8 +545,8 @@ HTML_CODE = """
             renderSidebar();
         }
 
-        /* Avatar Interactive Editor Modal Functions */
-        function openAvatarModal(type) {
+        /* Pinch & Drag Cropper.js Implementation */
+        function openAvatarCropperModal(type) {
             currentEditingAvatarType = type;
             let currentSrc = '';
             
@@ -541,61 +554,112 @@ HTML_CODE = """
             else if(type === 'group') currentSrc = document.getElementById('group-avatar-preview').src;
             else if(type === 'user') currentSrc = document.getElementById('user-avatar-preview').src;
 
-            document.getElementById('modal-avatar-img').src = currentSrc;
-            document.getElementById('avatar-zoom-slider').value = 1;
-            updateAvatarZoom(1);
-            document.getElementById('avatar-modal').classList.remove('hidden');
+            let imgElem = document.getElementById('cropper-target-img');
+            imgElem.src = currentSrc;
+
+            document.getElementById('cropper-modal').classList.remove('hidden');
+
+            if(cropperInstance) cropperInstance.destroy();
+            
+            cropperInstance = new Cropper(imgElem, {
+                aspectRatio: 1,
+                viewMode: 1,
+                dragMode: 'move',
+                autoCropArea: 0.9,
+                restore: false,
+                guides: false,
+                center: true,
+                highlight: false,
+                cropBoxMovable: true,
+                cropBoxResizable: true,
+                toggleDragModeOnDblclick: false
+            });
         }
 
-        function updateAvatarZoom(val) {
-            currentAvatarScale = val;
-            document.getElementById('modal-avatar-img').style.transform = `scale(${val})`;
-            document.getElementById('zoom-val-label').innerText = parseFloat(val).toFixed(2) + 'x';
-        }
-
-        function loadNewModalImage(input) {
+        function loadNewCropperImage(input) {
             if (input.files && input.files[0]) {
                 let reader = new FileReader();
                 reader.onload = (e) => {
-                    document.getElementById('modal-avatar-img').src = e.target.result;
-                    document.getElementById('avatar-zoom-slider').value = 1;
-                    updateAvatarZoom(1);
+                    if(cropperInstance) cropperInstance.destroy();
+                    let imgElem = document.getElementById('cropper-target-img');
+                    imgElem.src = e.target.result;
+                    cropperInstance = new Cropper(imgElem, {
+                        aspectRatio: 1,
+                        viewMode: 1,
+                        dragMode: 'move',
+                        autoCropArea: 0.9,
+                        restore: false,
+                        guides: false,
+                        center: true,
+                        highlight: false
+                    });
                 };
                 reader.readAsDataURL(input.files[0]);
             }
         }
 
-        function applyAvatarModal() {
-            let modalImg = document.getElementById('modal-avatar-img');
-            
-            let canvas = document.createElement('canvas');
-            let ctx = canvas.getContext('2d');
-            canvas.width = 200;
-            canvas.height = 200;
+        function applyCroppedAvatar() {
+            if(!cropperInstance) return;
 
-            let img = new Image();
-            img.crossOrigin = "anonymous";
-            img.onload = function() {
-                ctx.clearRect(0, 0, 200, 200);
-                let scale = currentAvatarScale;
-                let sw = canvas.width / scale;
-                let sh = canvas.height / scale;
-                let sx = (canvas.width - sw) / 2;
-                let sy = (canvas.height - sh) / 2;
+            // Generate High-Res 512x512 JPEG (Optimized 0.82 Quality for AI Reference Image)
+            let canvas = cropperInstance.getCroppedCanvas({ width: 512, height: 512 });
+            let finalDataUrl = canvas.toDataURL('image/jpeg', 0.82);
 
-                ctx.drawImage(img, sx, sy, sw, sh, 0, 0, 200, 200);
-                let finalDataUrl = canvas.toDataURL('image/png');
+            if (currentEditingAvatarType === 'char') {
+                document.getElementById('avatar-img-preview').src = finalDataUrl;
+            } else if (currentEditingAvatarType === 'group') {
+                document.getElementById('group-avatar-preview').src = finalDataUrl;
+            } else if (currentEditingAvatarType === 'user') {
+                document.getElementById('user-avatar-preview').src = finalDataUrl;
+            }
 
-                if (currentEditingAvatarType === 'char') {
-                    document.getElementById('avatar-img-preview').src = finalDataUrl;
-                } else if (currentEditingAvatarType === 'group') {
-                    document.getElementById('group-avatar-preview').src = finalDataUrl;
-                } else if (currentEditingAvatarType === 'user') {
-                    document.getElementById('user-avatar-preview').src = finalDataUrl;
-                }
-                document.getElementById('avatar-modal').classList.add('hidden');
+            cropperInstance.destroy();
+            cropperInstance = null;
+            document.getElementById('cropper-modal').classList.add('hidden');
+        }
+
+        /* Selective Character Backup Modal */
+        function openBackupOptionsModal() {
+            let container = document.getElementById('backup-char-list');
+            if(characters.length === 0) {
+                container.innerHTML = `<div style="font-size:0.8rem; color:#71717a; padding:6px;">No characters created yet.</div>`;
+            } else {
+                container.innerHTML = characters.map(c => `
+                    <button class="item-btn" style="background:#18181b; padding:8px 10px;" onclick="exportSingleCharacterData('${c.id}')">
+                        <img src="${c.avatar}" style="width:28px; height:28px; border-radius:50%;" />
+                        <span>${c.name} (Export JSON)</span>
+                    </button>
+                `).join('');
+            }
+            document.getElementById('backup-modal').classList.remove('hidden');
+        }
+
+        function exportSingleCharacterData(charId) {
+            let c = characters.find(item => item.id === charId);
+            if(!c) return;
+
+            let charBackup = {
+                type: 'single_character_backup',
+                character: c,
+                chatHistory: chatHistories[charId] || []
             };
-            img.src = modalImg.src;
+
+            let blob = new Blob([JSON.stringify(charBackup, null, 2)], { type: 'application/json' });
+            let a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `${c.name}_Backup_${Date.now()}.json`;
+            a.click();
+            document.getElementById('backup-modal').classList.add('hidden');
+        }
+
+        function exportFullData() {
+            let backupData = { characters, groups, chatHistories, userPersona };
+            let blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+            let a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'Aura_Full_Backup_' + Date.now() + '.json';
+            a.click();
+            document.getElementById('backup-modal').classList.add('hidden');
         }
 
         function openNewCharForm() {
@@ -988,15 +1052,6 @@ HTML_CODE = """
             renderMessages();
         }
 
-        function exportData() {
-            let backupData = { characters, groups, chatHistories, userPersona };
-            let blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
-            let a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = 'Aura_Backup_' + Date.now() + '.json';
-            a.click();
-        }
-
         function importData(input) {
             let file = input.files[0];
             if(!file) return;
@@ -1005,12 +1060,24 @@ HTML_CODE = """
             reader.onload = function(e) {
                 try {
                     let imported = JSON.parse(e.target.result);
-                    if(imported.characters) characters = imported.characters;
-                    if(imported.groups) groups = imported.groups;
-                    if(imported.chatHistories) chatHistories = imported.chatHistories;
-                    if(imported.userPersona) userPersona = imported.userPersona;
-                    saveState();
-                    alert('Data imported successfully!');
+                    
+                    if(imported.type === 'single_character_backup') {
+                        let c = imported.character;
+                        let existingIdx = characters.findIndex(item => item.id === c.id);
+                        if(existingIdx >= 0) characters[existingIdx] = c;
+                        else characters.push(c);
+
+                        chatHistories[c.id] = imported.chatHistory || [];
+                        saveState();
+                        alert(`Character "${c.name}" imported successfully!`);
+                    } else {
+                        if(imported.characters) characters = imported.characters;
+                        if(imported.groups) groups = imported.groups;
+                        if(imported.chatHistories) chatHistories = imported.chatHistories;
+                        if(imported.userPersona) userPersona = imported.userPersona;
+                        saveState();
+                        alert('Full app data imported successfully!');
+                    }
                     location.reload();
                 } catch(err) {
                     alert('Invalid JSON File!');
