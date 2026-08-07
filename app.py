@@ -94,9 +94,9 @@ def chat():
         "Content-Type": "application/json"
     }
     
-    # Using Llama 3.2 Free Model
+    # Using DeepSeek Free Model
     payload = {
-        "model": "meta-llama/llama-3.2-1b-instruct:free",
+        "model": "deepseek/deepseek-r1:free",
         "messages": [
             {
                 "role": "system", 
@@ -107,7 +107,7 @@ def chat():
     }
     
     try:
-        res = requests.post("https://openrouter.ai/api/v1/chat/completions", json=payload, headers=headers, timeout=15)
+        res = requests.post("https://openrouter.ai/api/v1/chat/completions", json=payload, headers=headers, timeout=20)
         data = res.json()
         
         if "choices" in data and len(data["choices"]) > 0:
