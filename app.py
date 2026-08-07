@@ -84,7 +84,6 @@ def chat():
     user_msg = request.json.get("message", "")
     api_key = os.environ.get("OPENROUTER_API_KEY")
 
-    # Check if API Key exists
     if not api_key:
         return jsonify({"reply": "Error: OPENROUTER_API_KEY missing in Render environment variables!"})
 
@@ -94,9 +93,9 @@ def chat():
         "Content-Type": "application/json"
     }
     
-    # Using DeepSeek Free Model
+    # 100% Free Google Gemma Model
     payload = {
-        "model": "deepseek/deepseek-r1:free",
+        "model": "google/gemma-2-9b-it:free",
         "messages": [
             {
                 "role": "system", 
