@@ -23,12 +23,19 @@ HTML_CODE = """
             --border-color: #27272a;
             --text-main: #f4f4f5;
             --text-sub: #a1a1aa;
-            --accent-purple: #9333ea;
+            --accent-purple: #a855f7;
             --accent-pink: #ec4899;
             --action-text: #f472b6;
             --user-msg-bg: linear-gradient(135deg, #9333ea, #ec4899);
             --ai-msg-bg: #121215;
             --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            
+            /* Sidebar Theme Variables (Dynamic) */
+            --sidebar-bg: #09090b;
+            --sidebar-border: #27272a;
+            --sidebar-text: #f4f4f5;
+            --sidebar-btn-bg: #121215;
+            --sidebar-btn-hover: #27272a;
         }
 
         [data-theme="light"] {
@@ -42,6 +49,13 @@ HTML_CODE = """
             --action-text: #be185d;
             --ai-msg-bg: #ffffff;
             --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+
+            /* Sidebar Light Theme Overrides */
+            --sidebar-bg: #ffffff;
+            --sidebar-border: #e4e4e7;
+            --sidebar-text: #09090b;
+            --sidebar-btn-bg: #f4f4f5;
+            --sidebar-btn-hover: #e4e4e7;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -78,31 +92,31 @@ HTML_CODE = """
         .top-title { font-weight: 700; font-size: 1rem; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
         .icon-btn { background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; }
 
-        /* PERMANENT DARK SIDEBAR (Remains Dark even in Light Mode) */
+        /* DYNAMIC SIDEBAR (Adapts to Light / Dark Mode) */
         .sidebar { 
             position: absolute; top: 0; left: 0; width: 85%; height: 100%; 
-            background: #09090b !important; 
-            color: #f4f4f5 !important;
-            border-right: 1px solid #27272a; display: flex; flex-direction: column; 
-            transition: transform 0.3s ease; z-index: 100; transform: translateX(-100%); pointer-events: none; 
+            background: var(--sidebar-bg); 
+            color: var(--sidebar-text);
+            border-right: 1px solid var(--sidebar-border); display: flex; flex-direction: column; 
+            transition: transform 0.3s ease, background 0.3s; z-index: 100; transform: translateX(-100%); pointer-events: none; 
         }
         .sidebar.open { transform: translateX(0); pointer-events: auto; }
-        .sidebar-header { padding: 16px; font-size: 1.2rem; font-weight: 800; color: #ec4899; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #18181b; }
-        .header-actions { display: flex; align-items: center; gap: 8px; }
-        .fullscreen-icon-btn { background: #18181b; border: 1px solid #27272a; color: #ec4899; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
+        .sidebar-header { padding: 14px 16px; font-size: 1.2rem; font-weight: 800; color: var(--accent-pink); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--sidebar-border); }
+        .header-actions { display: flex; align-items: center; gap: 6px; }
+        .sidebar-icon-btn { background: var(--sidebar-btn-bg); border: 1px solid var(--sidebar-border); color: var(--sidebar-text); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.88rem; }
 
         .nav-section { padding: 12px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
 
         /* Accordion Menu */
-        .menu-category-btn { width: 100%; padding: 12px 14px; background: #121215; border: 1px solid #27272a; color: #f4f4f5; border-radius: 10px; text-align: left; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-size: 0.92rem; font-weight: 600; }
-        .menu-category-btn i.cat-icon { color: #ec4899; font-size: 1rem; margin-right: 10px; }
-        .menu-category-btn .arrow-icon { font-size: 0.8rem; color: #71717a; transition: transform 0.2s ease; }
+        .menu-category-btn { width: 100%; padding: 12px 14px; background: var(--sidebar-btn-bg); border: 1px solid var(--sidebar-border); color: var(--sidebar-text); border-radius: 10px; text-align: left; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-size: 0.92rem; font-weight: 600; }
+        .menu-category-btn i.cat-icon { color: var(--accent-pink); font-size: 1rem; margin-right: 10px; }
+        .menu-category-btn .arrow-icon { font-size: 0.8rem; color: var(--text-sub); transition: transform 0.2s ease; }
         .menu-category-btn.active .arrow-icon { transform: rotate(180deg); }
 
         .submenu-container { padding: 6px 0 6px 12px; display: flex; flex-direction: column; gap: 4px; }
         
-        .item-btn { width: 100%; padding: 9px 12px; background: transparent; border: none; color: #a1a1aa; border-radius: 8px; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 0.88rem; }
-        .item-btn:hover, .item-btn.active { background: #27272a; color: #fff; }
+        .item-btn { width: 100%; padding: 9px 12px; background: transparent; border: none; color: var(--text-sub); border-radius: 8px; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 0.88rem; }
+        .item-btn:hover, .item-btn.active { background: var(--sidebar-btn-hover); color: var(--sidebar-text); }
         .item-btn img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
 
         .sub-create-btn { width: 100%; padding: 9px; background: linear-gradient(135deg, #9333ea, #ec4899); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.82rem; display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 4px; }
@@ -113,7 +127,7 @@ HTML_CODE = """
 
         /* Dashboard */
         .dashboard { flex: 1; padding: 24px 16px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; }
-        .dash-logo { width: 80px; height: 80px; margin-bottom: 12px; }
+        .dash-logo { width: 80px; height: 80px; margin-bottom: 12px; filter: drop-shadow(0 0 10px rgba(236,72,153,0.4)); }
         .dash-title { font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin-bottom: 6px; }
         .dash-sub { font-size: 0.85rem; color: var(--text-sub); text-align: center; margin-bottom: 24px; }
         
@@ -135,8 +149,11 @@ HTML_CODE = """
         .message .sender-name { font-size: 0.7rem; color: var(--text-sub); margin-bottom: 3px; font-weight: 600; }
         
         .action-text { color: var(--action-text); font-style: italic; font-weight: 500; }
-        .edit-link { font-size: 0.68rem; color: var(--text-sub); text-decoration: underline; cursor: pointer; display: inline-block; margin-top: 4px; }
-        .edit-link:hover { color: var(--accent-pink); }
+        
+        /* Subtle Link Container inside Bubble */
+        .bubble-controls { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+        .edit-link, .continue-bubble-btn { font-size: 0.68rem; color: var(--text-sub); text-decoration: underline; cursor: pointer; opacity: 0.65; transition: opacity 0.2s; }
+        .edit-link:hover, .continue-bubble-btn:hover { opacity: 1; color: var(--accent-pink); }
 
         /* Typing Dots */
         .typing-dots { display: flex; gap: 4px; align-items: center; padding: 4px 0; }
@@ -177,7 +194,9 @@ HTML_CODE = """
         .wand-inbox-btn:hover, .wand-inbox-btn:active { opacity: 1; transform: scale(1.15); }
 
         .input-area button.send-btn { height: 38px; padding: 0 14px; background: linear-gradient(135deg, #9333ea, #ec4899); color: #ffffff; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .tool-btn { background: var(--bg-input) !important; color: var(--accent-pink) !important; border: 1px solid var(--border-color) !important; padding: 0 10px !important; font-size: 0.85rem; border-radius: 10px !important; height: 38px; }
+        
+        /* Camera Button for Future Img2Img */
+        .tool-btn { background: var(--bg-input) !important; color: var(--accent-pink) !important; border: 1px solid var(--border-color) !important; padding: 0 10px !important; font-size: 0.95rem; border-radius: 10px !important; height: 38px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
         /* Form Styles */
         .form-container { padding: 16px; overflow-y: auto; flex: 1; width: 100%; }
@@ -233,29 +252,32 @@ HTML_CODE = """
 
         .hidden { display: none !important; }
 
-        /* Custom SVG Logo Component Styling */
-        .aura-logo-svg { width: 28px; height: 28px; }
+        /* Highly Saturated & Crisp SVG Logo Component Styling */
+        .aura-logo-svg { width: 28px; height: 28px; filter: drop-shadow(0 0 6px rgba(236,72,153,0.5)); }
     </style>
 </head>
 <body data-theme="dark">
 
-    <!-- Inline SVG Logo Template -->
+    <!-- Inline High-Contrast Saturated SVG Logo Template -->
     <svg class="hidden">
         <defs>
-            <linearGradient id="roleGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#c084fc"/>
-                <stop offset="100%" stop-color="#ec4899"/>
+            <linearGradient id="roleGradVibrant" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#a855f7"/>
+                <stop offset="50%" stop-color="#ec4899"/>
+                <stop offset="100%" stop-color="#f43f5e"/>
             </linearGradient>
             <g id="aura-brand-icon">
-                <path d="M 20 6 C 50 6, 75 30, 65 70 C 55 110, 20 120, 0 80 C -15 50 -10 6 20 6 Z" fill="url(#roleGrad1)" opacity="0.9"/>
-                <path d="M 45 30 C 0 30, -20 60, -5 100 C 10 135, 50 140, 70 110 C 85 70, 75 30, 45 30 Z" fill="#ec4899" opacity="0.75"/>
+                <!-- Base Glow Contour -->
+                <path d="M 20 6 C 50 6, 75 30, 65 70 C 55 110, 20 120, 0 80 C -15 50 -10 6 20 6 Z" fill="url(#roleGradVibrant)" stroke="#ffffff" stroke-width="3" opacity="0.95"/>
+                <path d="M 45 30 C 0 30, -20 60, -5 100 C 10 135, 50 140, 70 110 C 85 70, 75 30, 45 30 Z" fill="#ec4899" stroke="#9333ea" stroke-width="2.5" opacity="0.85"/>
+                <!-- Central Bright Sparkle -->
                 <path d="M 30 -5 Q 30 15 50 15 Q 30 15 30 35 Q 30 15 10 15 Q 30 15 30 -5 Z" fill="#ffffff"/>
             </g>
         </defs>
     </svg>
 
     <div class="app-container">
-        <!-- Sidebar Navigation (PERMANENT DARK) -->
+        <!-- Sidebar Navigation (DYNAMIC LIGHT / DARK THEME) -->
         <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <span style="display:flex; align-items:center; gap:8px;">
@@ -263,8 +285,9 @@ HTML_CODE = """
                     Aura
                 </span>
                 <div class="header-actions">
-                    <button class="fullscreen-icon-btn" onclick="toggleFullScreen()" title="Fullscreen Mode"><i class="fa-solid fa-expand"></i></button>
-                    <button class="toggle-btn" style="color:#f4f4f5;" onclick="toggleSidebar()"><i class="fa-solid fa-xmark"></i></button>
+                    <button class="sidebar-icon-btn" onclick="toggleAppTheme()" id="sidebar-theme-btn" title="Toggle Light/Dark Mode"><i class="fa-solid fa-moon"></i></button>
+                    <button class="sidebar-icon-btn" onclick="toggleFullScreen()" title="Fullscreen Mode"><i class="fa-solid fa-expand"></i></button>
+                    <button class="sidebar-icon-btn" onclick="toggleSidebar()" title="Close Sidebar"><i class="fa-solid fa-xmark"></i></button>
                 </div>
             </div>
 
@@ -311,10 +334,8 @@ HTML_CODE = """
                 </div>
             </div>
             
-            <!-- Header Actions & Theme Toggle -->
+            <!-- Header Action Controls -->
             <div style="display: flex; gap: 6px; align-items: center;">
-                <button class="icon-btn" onclick="toggleAppTheme()" id="theme-toggle-btn" title="Toggle Light/Dark Mode"><i class="fa-solid fa-moon"></i></button>
-                
                 <div id="top-actions" class="hidden" style="display: flex; gap: 6px;">
                     <button class="icon-btn" id="pin-mem-btn" onclick="openPinnedMemoryModal()" title="Pin Memory"><i class="fa-solid fa-thumbtack"></i></button>
                     <button class="icon-btn" onclick="handleEditClick()" title="Edit Companion / Group"><i class="fa-solid fa-wrench"></i></button>
@@ -369,11 +390,14 @@ HTML_CODE = """
             <div id="chat-view" class="hidden">
                 <div class="chat-messages" id="message-container"></div>
                 <div class="input-area">
-                    <button class="tool-btn" onclick="continueAiReply()" title="Continue AI Reply">&gt;&gt;</button>
+                    <!-- Photo Generation Button Placeholder for Future Img2Img -->
+                    <button class="tool-btn" onclick="alert('Image Generation Feature coming up next!')" title="Generate AI Image">🤳</button>
+                    
                     <div class="input-wrapper">
                         <input type="text" id="chat-input" placeholder="Message..." onkeypress="if(event.key==='Enter') sendMsg()">
                         <button class="wand-inbox-btn" onclick="suggestUserMessage()" title="Magic Auto-Suggest">🪄</button>
                     </div>
+                    
                     <button class="send-btn" onclick="sendMsg()"><i class="fa-solid fa-paper-plane"></i></button>
                 </div>
             </div>
@@ -577,11 +601,13 @@ HTML_CODE = """
         }
 
         function updateThemeToggleIcon() {
-            let btn = document.getElementById('theme-toggle-btn');
-            if(currentTheme === 'dark') {
-                btn.innerHTML = '<i class="fa-solid fa-moon"></i>';
-            } else {
-                btn.innerHTML = '<i class="fa-solid fa-sun" style="color:#eab308;"></i>';
+            let btn = document.getElementById('sidebar-theme-btn');
+            if(btn) {
+                if(currentTheme === 'dark') {
+                    btn.innerHTML = '<i class="fa-solid fa-moon"></i>';
+                } else {
+                    btn.innerHTML = '<i class="fa-solid fa-sun" style="color:#eab308;"></i>';
+                }
             }
         }
 
@@ -975,6 +1001,10 @@ HTML_CODE = """
                 let isUser = m.sender === 'You';
                 let userImg = userPersona.avatar || 'https://api.dicebear.com/7.x/identicon/svg?seed=user';
                 let avatar = isUser ? userImg : m.avatar;
+                
+                // Show continue button only inside AI Chat Bubbles
+                let continueBtnHtml = !isUser ? `<span class="continue-bubble-btn" onclick="continueAiReply()" title="Continue message">&gt;&gt; continue</span>` : '';
+
                 return `
                     <div class="message ${isUser ? 'user':'ai'}">
                         <img class="avatar" src="${avatar}" />
@@ -982,7 +1012,10 @@ HTML_CODE = """
                             <div class="sender-name">${m.sender}</div>
                             <div class="content">
                                 ${formatText(m.text)}
-                                <div><span class="edit-link" onclick="tweakMsg(${idx})">edit</span></div>
+                                <div class="bubble-controls">
+                                    <span class="edit-link" onclick="tweakMsg(${idx})">edit</span>
+                                    ${continueBtnHtml}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1024,7 +1057,12 @@ HTML_CODE = """
             
             for (let i = 0; i < words.length; i++) {
                 let currentSubText = words.slice(0, i + 1).join(' ');
-                contentDiv.innerHTML = formatText(currentSubText) + `<div><span class="edit-link" onclick="tweakMsg(${chatHistories[activeContext.id].length})">edit</span></div>`;
+                contentDiv.innerHTML = formatText(currentSubText) + `
+                    <div class="bubble-controls">
+                        <span class="edit-link" onclick="tweakMsg(${chatHistories[activeContext.id].length})">edit</span>
+                        <span class="continue-bubble-btn" onclick="continueAiReply()">&gt;&gt; continue</span>
+                    </div>
+                `;
                 container.scrollTop = container.scrollHeight;
                 await new Promise(resolve => setTimeout(resolve, 30));
             }
@@ -1188,8 +1226,9 @@ Based on the chat history, write a short, natural, in-character next message tha
 Return ONLY the text/action response. Do not add quotes or explanations.
     """
 
+    # Ghostwriter uses last 10 messages for auto-suggest
     messages = [{"role": "system", "content": system_prompt}]
-    for m in data.get("history", [])[-6:]:
+    for m in data.get("history", [])[-10:]:
         messages.append({"role": "user" if m["sender"] != "You" else "assistant", "content": f"{m['sender']}: {m['text']}"})
 
     try:
@@ -1242,7 +1281,9 @@ Roleplay naturally as {c['name']}. Stay in character. Use asterisks for actions 
             system_prompt += "\nUser pressed Continue. Extend your previous reply seamlessly."
 
         messages = [{"role": "system", "content": system_prompt}]
-        for m in data["history"][-8:]:
+        
+        # MEMORY BOOSTER: Upgraded from 8 to LAST 50 MESSAGES for deep context retention
+        for m in data["history"][-50:]:
             role = "user" if m["sender"] == "You" or m["sender"] == user_name else "assistant"
             messages.append({"role": role, "content": m["text"]})
 
@@ -1271,7 +1312,9 @@ Respond briefly from {char['name']}'s perspective. Use asterisks for actions lik
             """
 
             messages = [{"role": "system", "content": system_prompt}]
-            for m in data["history"][-8:]:
+            
+            # MEMORY BOOSTER FOR GROUPS: Last 50 Messages
+            for m in data["history"][-50:]:
                 messages.append({"role": "user", "content": f"{m['sender']}: {m['text']}"})
 
             res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={
