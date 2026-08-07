@@ -15,50 +15,87 @@ HTML_CODE = """
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <style>
+        :root {
+            /* Default Dark Theme Colors */
+            --bg-main: #050508;
+            --bg-surface: #121215;
+            --bg-input: #09090b;
+            --border-color: #27272a;
+            --text-main: #f4f4f5;
+            --text-sub: #a1a1aa;
+            --accent-purple: #9333ea;
+            --accent-pink: #ec4899;
+            --action-text: #f472b6;
+            --user-msg-bg: linear-gradient(135deg, #9333ea, #ec4899);
+            --ai-msg-bg: #121215;
+            --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        [data-theme="light"] {
+            /* Light Theme Colors */
+            --bg-main: #f4f4f5;
+            --bg-surface: #ffffff;
+            --bg-input: #ffffff;
+            --border-color: #e4e4e7;
+            --text-main: #09090b;
+            --text-sub: #52525b;
+            --action-text: #be185d;
+            --ai-msg-bg: #ffffff;
+            --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         
         html, body { 
             height: 100dvh; 
             width: 100vw; 
             background: #000000; 
-            color: #f4f4f5; 
+            color: var(--text-main); 
             overflow: hidden; 
             display: flex; 
             justify-content: center; 
             align-items: center; 
+            transition: background 0.3s, color 0.3s;
         }
 
         .app-container {
             width: 100%; 
             max-width: 440px; 
             height: 100dvh;
-            background: #09090b; 
+            background: var(--bg-main); 
             display: flex; 
             flex-direction: column; 
             position: relative;
             overflow: hidden; 
-            border: 1px solid #27272a;
+            border: 1px solid var(--border-color);
+            transition: background 0.3s;
         }
         @media (min-width: 500px) { .app-container { height: 94dvh; border-radius: 20px; } }
 
         /* Top Bar */
-        .top-bar { height: 52px; min-height: 52px; background: #121215; border-bottom: 1px solid #27272a; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; z-index: 10; }
-        .toggle-btn { background: transparent; border: none; color: #f4f4f5; font-size: 1.2rem; cursor: pointer; }
-        .top-title { font-weight: 700; font-size: 1rem; color: #ffffff; display: flex; align-items: center; gap: 8px; }
-        .icon-btn { background: #27272a; border: none; color: #f4f4f5; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; }
+        .top-bar { height: 52px; min-height: 52px; background: var(--bg-surface); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 16px; z-index: 10; transition: background 0.3s; }
+        .toggle-btn { background: transparent; border: none; color: var(--text-main); font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .top-title { font-weight: 700; font-size: 1rem; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+        .icon-btn { background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; }
 
-        /* Sidebar Navigation Overlay */
-        .sidebar { position: absolute; top: 0; left: 0; width: 85%; height: 100%; background: #121215; border-right: 1px solid #27272a; display: flex; flex-direction: column; transition: transform 0.3s ease; z-index: 100; transform: translateX(-100%); pointer-events: none; }
+        /* PERMANENT DARK SIDEBAR (Remains Dark even in Light Mode) */
+        .sidebar { 
+            position: absolute; top: 0; left: 0; width: 85%; height: 100%; 
+            background: #09090b !important; 
+            color: #f4f4f5 !important;
+            border-right: 1px solid #27272a; display: flex; flex-direction: column; 
+            transition: transform 0.3s ease; z-index: 100; transform: translateX(-100%); pointer-events: none; 
+        }
         .sidebar.open { transform: translateX(0); pointer-events: auto; }
-        .sidebar-header { padding: 16px; font-size: 1.2rem; font-weight: 800; color: #a855f7; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #18181b; }
-        .header-actions { display: flex; align-items: center; gap: 12px; }
-        .fullscreen-icon-btn { background: #27272a; border: 1px solid #3f3f46; color: #a855f7; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
+        .sidebar-header { padding: 16px; font-size: 1.2rem; font-weight: 800; color: #ec4899; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #18181b; }
+        .header-actions { display: flex; align-items: center; gap: 8px; }
+        .fullscreen-icon-btn { background: #18181b; border: 1px solid #27272a; color: #ec4899; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
 
         .nav-section { padding: 12px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
 
         /* Accordion Menu */
-        .menu-category-btn { width: 100%; padding: 12px 14px; background: #18181b; border: 1px solid #27272a; color: #f4f4f5; border-radius: 10px; text-align: left; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-size: 0.92rem; font-weight: 600; }
-        .menu-category-btn i.cat-icon { color: #a855f7; font-size: 1rem; margin-right: 10px; }
+        .menu-category-btn { width: 100%; padding: 12px 14px; background: #121215; border: 1px solid #27272a; color: #f4f4f5; border-radius: 10px; text-align: left; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-size: 0.92rem; font-weight: 600; }
+        .menu-category-btn i.cat-icon { color: #ec4899; font-size: 1rem; margin-right: 10px; }
         .menu-category-btn .arrow-icon { font-size: 0.8rem; color: #71717a; transition: transform 0.2s ease; }
         .menu-category-btn.active .arrow-icon { transform: rotate(180deg); }
 
@@ -68,7 +105,7 @@ HTML_CODE = """
         .item-btn:hover, .item-btn.active { background: #27272a; color: #fff; }
         .item-btn img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
 
-        .sub-create-btn { width: 100%; padding: 9px; background: #9333ea; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.82rem; display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 4px; }
+        .sub-create-btn { width: 100%; padding: 9px; background: linear-gradient(135deg, #9333ea, #ec4899); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.82rem; display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 4px; }
         .sub-create-btn.blue { background: #2563eb; }
 
         /* Workspace */
@@ -76,59 +113,59 @@ HTML_CODE = """
 
         /* Dashboard */
         .dashboard { flex: 1; padding: 24px 16px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; }
-        .dash-logo { font-size: 2.8rem; color: #a855f7; margin-bottom: 12px; }
-        .dash-title { font-size: 1.5rem; font-weight: 800; color: #ffffff; margin-bottom: 6px; }
-        .dash-sub { font-size: 0.85rem; color: #a1a1aa; text-align: center; margin-bottom: 24px; }
+        .dash-logo { width: 80px; height: 80px; margin-bottom: 12px; }
+        .dash-title { font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin-bottom: 6px; }
+        .dash-sub { font-size: 0.85rem; color: var(--text-sub); text-align: center; margin-bottom: 24px; }
         
-        .dash-card { width: 100%; background: #121215; border: 1px solid #27272a; padding: 14px 16px; border-radius: 12px; display: flex; align-items: center; gap: 14px; margin-bottom: 12px; cursor: pointer; }
-        .dash-card i { font-size: 1.2rem; color: #a855f7; }
-        .dash-card strong { display: block; color: #ffffff; font-size: 0.92rem; }
-        .dash-card span { font-size: 0.75rem; color: #a1a1aa; }
+        .dash-card { width: 100%; background: var(--bg-surface); border: 1px solid var(--border-color); padding: 14px 16px; border-radius: 14px; display: flex; align-items: center; gap: 14px; margin-bottom: 12px; cursor: pointer; box-shadow: var(--card-shadow); transition: transform 0.2s; }
+        .dash-card:active { transform: scale(0.98); }
+        .dash-card i { font-size: 1.3rem; color: var(--accent-pink); }
+        .dash-card strong { display: block; color: var(--text-main); font-size: 0.92rem; }
+        .dash-card span { font-size: 0.75rem; color: var(--text-sub); }
 
         /* Chat Room */
         #chat-view { flex: 1; display: flex; flex-direction: column; height: 100%; overflow: hidden; }
         .chat-messages { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; -webkit-overflow-scrolling: touch; }
         .message { display: flex; gap: 10px; max-width: 88%; position: relative; }
         .message.user { align-self: flex-end; flex-direction: row-reverse; }
-        .message .avatar { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; background: #27272a; flex-shrink: 0; }
-        .message .content { background: #121215; border: 1px solid #27272a; padding: 10px 14px; border-radius: 14px; font-size: 0.9rem; line-height: 1.45; color: #ffffff; word-break: break-word; }
-        .message.user .content { background: #9333ea; border: none; color: #ffffff; border-bottom-right-radius: 2px; }
+        .message .avatar { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; background: var(--border-color); flex-shrink: 0; }
+        .message .content { background: var(--ai-msg-bg); border: 1px solid var(--border-color); padding: 10px 14px; border-radius: 14px; font-size: 0.9rem; line-height: 1.45; color: var(--text-main); word-break: break-word; box-shadow: var(--card-shadow); }
+        .message.user .content { background: var(--user-msg-bg); border: none; color: #ffffff; border-bottom-right-radius: 2px; }
         .message.ai .content { border-bottom-left-radius: 2px; }
-        .message .sender-name { font-size: 0.7rem; color: #a1a1aa; margin-bottom: 3px; font-weight: 600; }
+        .message .sender-name { font-size: 0.7rem; color: var(--text-sub); margin-bottom: 3px; font-weight: 600; }
         
-        .action-text { color: #a1a1aa; font-style: italic; }
-        .edit-link { font-size: 0.68rem; color: #71717a; text-decoration: underline; cursor: pointer; display: inline-block; margin-top: 4px; }
-        .edit-link:hover { color: #c084fc; }
+        .action-text { color: var(--action-text); font-style: italic; font-weight: 500; }
+        .edit-link { font-size: 0.68rem; color: var(--text-sub); text-decoration: underline; cursor: pointer; display: inline-block; margin-top: 4px; }
+        .edit-link:hover { color: var(--accent-pink); }
 
         /* Typing Dots */
         .typing-dots { display: flex; gap: 4px; align-items: center; padding: 4px 0; }
-        .typing-dots span { width: 5px; height: 5px; background: #a855f7; border-radius: 50%; animation: pulse 1.2s infinite ease-in-out; }
+        .typing-dots span { width: 5px; height: 5px; background: var(--accent-pink); border-radius: 50%; animation: pulse 1.2s infinite ease-in-out; }
         .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
         .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
         @keyframes pulse { 0%, 100% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.1); } }
 
         /* Input Area & Transparent In-Box Magic Wand */
-        .input-area { padding: 10px 12px; border-top: 1px solid #1c1c21; background: #121215; display: flex; gap: 8px; width: 100%; align-items: center; }
+        .input-area { padding: 10px 12px; border-top: 1px solid var(--border-color); background: var(--bg-surface); display: flex; gap: 8px; width: 100%; align-items: center; }
         .input-wrapper { position: relative; flex: 1; display: flex; align-items: center; }
         .input-wrapper input { 
             width: 100%; 
-            background: #09090b; 
-            border: 1px solid #27272a; 
+            background: var(--bg-input); 
+            border: 1px solid var(--border-color); 
             padding: 10px 38px 10px 12px; 
             border-radius: 20px; 
-            color: #ffffff; 
+            color: var(--text-main); 
             outline: none; 
             font-size: 0.88rem; 
         }
-        .input-wrapper input:focus { border-color: #3f3f46; }
 
         .wand-inbox-btn { 
             position: absolute; 
             right: 10px; 
             background: transparent; 
             border: none; 
-            color: #ffffff; 
-            opacity: 0.45; 
+            color: var(--accent-pink); 
+            opacity: 0.6; 
             font-size: 0.95rem; 
             cursor: pointer; 
             transition: opacity 0.2s, transform 0.2s;
@@ -137,16 +174,16 @@ HTML_CODE = """
             justify-content: center;
             padding: 4px;
         }
-        .wand-inbox-btn:hover, .wand-inbox-btn:active { opacity: 1; transform: scale(1.15); color: #c084fc; }
+        .wand-inbox-btn:hover, .wand-inbox-btn:active { opacity: 1; transform: scale(1.15); }
 
-        .input-area button.send-btn { height: 38px; padding: 0 14px; background: #9333ea; color: #ffffff; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .tool-btn { background: #27272a !important; color: #a855f7 !important; border: 1px solid #3f3f46 !important; padding: 0 10px !important; font-size: 0.85rem; border-radius: 10px !important; height: 38px; }
+        .input-area button.send-btn { height: 38px; padding: 0 14px; background: linear-gradient(135deg, #9333ea, #ec4899); color: #ffffff; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .tool-btn { background: var(--bg-input) !important; color: var(--accent-pink) !important; border: 1px solid var(--border-color) !important; padding: 0 10px !important; font-size: 0.85rem; border-radius: 10px !important; height: 38px; }
 
         /* Form Styles */
         .form-container { padding: 16px; overflow-y: auto; flex: 1; width: 100%; }
         .form-group { margin-bottom: 14px; }
-        .form-group label { display: block; margin-bottom: 4px; font-size: 0.8rem; color: #a1a1aa; font-weight: 600; }
-        .form-group input, .form-group textarea { width: 100%; background: #121215; border: 1px solid #27272a; padding: 10px; border-radius: 8px; color: #ffffff; outline: none; font-size: 0.88rem; }
+        .form-group label { display: block; margin-bottom: 4px; font-size: 0.8rem; color: var(--text-sub); font-weight: 600; }
+        .form-group input, .form-group textarea { width: 100%; background: var(--bg-surface); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; color: var(--text-main); outline: none; font-size: 0.88rem; }
         .form-group textarea { height: 75px; resize: vertical; }
 
         /* Interactive Avatar Clickable Component */
@@ -154,17 +191,15 @@ HTML_CODE = """
             display: flex;
             align-items: center;
             gap: 12px;
-            background: #121215;
-            border: 1px solid #27272a;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
             padding: 10px 14px;
             border-radius: 12px;
             cursor: pointer;
-            transition: border-color 0.2s;
         }
-        .avatar-edit-trigger:hover { border-color: #a855f7; }
         .avatar-thumb-wrapper {
             width: 54px; height: 54px; border-radius: 50%; overflow: hidden;
-            border: 2px solid #a855f7; flex-shrink: 0; background: #27272a;
+            border: 2px solid var(--accent-pink); flex-shrink: 0; background: var(--border-color);
             display: flex; justify-content: center; align-items: center;
         }
         .avatar-thumb-wrapper img { width: 100%; height: 100%; object-fit: cover; }
@@ -179,7 +214,7 @@ HTML_CODE = """
         .avatar-modal-card {
             width: 100%; max-width: 360px; background: #121215;
             border: 1px solid #27272a; border-radius: 20px; padding: 16px;
-            display: flex; flex-direction: column; align-items: center; gap: 14px;
+            display: flex; flex-direction: column; align-items: center; gap: 14px; color: #ffffff;
         }
         .cropper-container-box {
             width: 100%; height: 260px; background: #000; border-radius: 12px;
@@ -188,37 +223,56 @@ HTML_CODE = """
 
         /* Generic Backup Options Modal */
         .modal-card {
-            width: 100%; max-width: 340px; background: #121215;
-            border: 1px solid #27272a; border-radius: 20px; padding: 20px;
-            display: flex; flex-direction: column; gap: 12px; max-height: 80vh; overflow-y: auto;
+            width: 100%; max-width: 340px; background: var(--bg-surface);
+            border: 1px solid var(--border-color); border-radius: 20px; padding: 20px;
+            display: flex; flex-direction: column; gap: 12px; max-height: 80vh; overflow-y: auto; color: var(--text-main);
         }
 
-        .submit-btn { width: 100%; padding: 11px; background: #9333ea; color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 0.9rem; margin-top: 8px; }
+        .submit-btn { width: 100%; padding: 11px; background: linear-gradient(135deg, #9333ea, #ec4899); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 0.9rem; margin-top: 8px; }
         .delete-btn { background: #ef4444 !important; margin-top: 10px; }
 
         .hidden { display: none !important; }
+
+        /* Custom SVG Logo Component Styling */
+        .aura-logo-svg { width: 28px; height: 28px; }
     </style>
 </head>
-<body>
+<body data-theme="dark">
+
+    <!-- Inline SVG Logo Template -->
+    <svg class="hidden">
+        <defs>
+            <linearGradient id="roleGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#c084fc"/>
+                <stop offset="100%" stop-color="#ec4899"/>
+            </linearGradient>
+            <g id="aura-brand-icon">
+                <path d="M 20 6 C 50 6, 75 30, 65 70 C 55 110, 20 120, 0 80 C -15 50 -10 6 20 6 Z" fill="url(#roleGrad1)" opacity="0.9"/>
+                <path d="M 45 30 C 0 30, -20 60, -5 100 C 10 135, 50 140, 70 110 C 85 70, 75 30, 45 30 Z" fill="#ec4899" opacity="0.75"/>
+                <path d="M 30 -5 Q 30 15 50 15 Q 30 15 30 35 Q 30 15 10 15 Q 30 15 30 -5 Z" fill="#ffffff"/>
+            </g>
+        </defs>
+    </svg>
 
     <div class="app-container">
-        <!-- Sidebar Navigation -->
+        <!-- Sidebar Navigation (PERMANENT DARK) -->
         <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <span>✨ Aura</span>
+                <span style="display:flex; align-items:center; gap:8px;">
+                    <svg viewBox="-40 -20 140 180" class="aura-logo-svg"><use href="#aura-brand-icon"/></svg>
+                    Aura
+                </span>
                 <div class="header-actions">
                     <button class="fullscreen-icon-btn" onclick="toggleFullScreen()" title="Fullscreen Mode"><i class="fa-solid fa-expand"></i></button>
-                    <button class="toggle-btn" onclick="toggleSidebar()"><i class="fa-solid fa-xmark"></i></button>
+                    <button class="toggle-btn" style="color:#f4f4f5;" onclick="toggleSidebar()"><i class="fa-solid fa-xmark"></i></button>
                 </div>
             </div>
 
             <div class="nav-section">
-                <!-- Menu 1: Home -->
                 <button class="menu-category-btn" onclick="goHome()">
                     <span><i class="fa-solid fa-house cat-icon"></i> Home</span>
                 </button>
 
-                <!-- Menu 2: Characters -->
                 <div>
                     <button class="menu-category-btn" onclick="toggleMenuCategory('chars-sub')">
                         <span><i class="fa-solid fa-users-viewfinder cat-icon"></i> Characters</span>
@@ -230,7 +284,6 @@ HTML_CODE = """
                     </div>
                 </div>
 
-                <!-- Menu 3: Groups -->
                 <div>
                     <button class="menu-category-btn" onclick="toggleMenuCategory('groups-sub')">
                         <span><i class="fa-solid fa-people-group cat-icon"></i> Groups</span>
@@ -242,7 +295,6 @@ HTML_CODE = """
                     </div>
                 </div>
 
-                <!-- Menu 4: Settings -->
                 <button class="menu-category-btn" onclick="showForm('settings-form')">
                     <span><i class="fa-solid fa-sliders cat-icon"></i> Settings & Backup</span>
                 </button>
@@ -253,14 +305,22 @@ HTML_CODE = """
         <div class="top-bar">
             <div style="display: flex; align-items: center; gap: 10px;">
                 <button class="toggle-btn" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
-                <div class="top-title" id="top-title">✨ Aura</div>
+                <div class="top-title" id="top-title">
+                    <svg viewBox="-40 -20 140 180" class="aura-logo-svg"><use href="#aura-brand-icon"/></svg>
+                    Aura
+                </div>
             </div>
-            <!-- Dynamic Actions Header -->
-            <div id="top-actions" class="hidden" style="display: flex; gap: 6px;">
-                <button class="icon-btn" id="pin-mem-btn" onclick="openPinnedMemoryModal()" title="Pin Memory"><i class="fa-solid fa-thumbtack"></i></button>
-                <button class="icon-btn" onclick="handleEditClick()" title="Edit Companion / Group"><i class="fa-solid fa-wrench"></i></button>
-                <button class="icon-btn" onclick="regenerateLastResponse()" title="Regenerate"><i class="fa-solid fa-rotate-right"></i></button>
-                <button class="icon-btn" onclick="clearCurrentChat()" title="Clear Chat"><i class="fa-solid fa-trash"></i></button>
+            
+            <!-- Header Actions & Theme Toggle -->
+            <div style="display: flex; gap: 6px; align-items: center;">
+                <button class="icon-btn" onclick="toggleAppTheme()" id="theme-toggle-btn" title="Toggle Light/Dark Mode"><i class="fa-solid fa-moon"></i></button>
+                
+                <div id="top-actions" class="hidden" style="display: flex; gap: 6px;">
+                    <button class="icon-btn" id="pin-mem-btn" onclick="openPinnedMemoryModal()" title="Pin Memory"><i class="fa-solid fa-thumbtack"></i></button>
+                    <button class="icon-btn" onclick="handleEditClick()" title="Edit Companion / Group"><i class="fa-solid fa-wrench"></i></button>
+                    <button class="icon-btn" onclick="regenerateLastResponse()" title="Regenerate"><i class="fa-solid fa-rotate-right"></i></button>
+                    <button class="icon-btn" onclick="clearCurrentChat()" title="Clear Chat"><i class="fa-solid fa-trash"></i></button>
+                </div>
             </div>
         </div>
 
@@ -268,9 +328,9 @@ HTML_CODE = """
         <div class="workspace">
             <!-- Dashboard View -->
             <div id="dashboard-view" class="dashboard">
-                <div class="dash-logo"><i class="fa-solid fa-sparkles"></i></div>
+                <svg viewBox="-40 -20 140 180" class="dash-logo"><use href="#aura-brand-icon"/></svg>
                 <h2 class="dash-title">Welcome to Aura</h2>
-                <p class="dash-sub">Your personal AI companion platform.</p>
+                <p class="dash-sub">Your personal AI companion & roleplay platform.</p>
                 
                 <div class="dash-card" onclick="openNewCharForm()">
                     <i class="fa-solid fa-user-plus"></i>
@@ -320,7 +380,7 @@ HTML_CODE = """
 
             <!-- Character Creation / Edit Form -->
             <div id="char-form" class="form-container hidden">
-                <h3 style="margin-bottom: 14px; color: #ffffff;" id="char-form-title">Create Companion</h3>
+                <h3 style="margin-bottom: 14px;" id="char-form-title">Create Companion</h3>
                 <input type="hidden" id="char-id">
                 
                 <div class="form-group">
@@ -330,8 +390,8 @@ HTML_CODE = """
                             <img id="avatar-img-preview" src="https://api.dicebear.com/7.x/bottts/svg?seed=default">
                         </div>
                         <div>
-                            <strong style="font-size:0.85rem; color:#f4f4f5; display:block;">Pinch & Drag Crop Avatar</strong>
-                            <span style="font-size:0.75rem; color:#a1a1aa;">Set high-res 512px reference image</span>
+                            <strong style="font-size:0.85rem; display:block;">Pinch & Drag Crop Avatar</strong>
+                            <span style="font-size:0.75rem; color:var(--text-sub);">Set high-res 512px reference image</span>
                         </div>
                     </div>
                 </div>
@@ -372,7 +432,7 @@ HTML_CODE = """
 
             <!-- Group Chat Creation & Editing Form -->
             <div id="group-form" class="form-container hidden">
-                <h3 style="margin-bottom: 14px; color: #ffffff;" id="group-form-title">Create Group Chat</h3>
+                <h3 style="margin-bottom: 14px;" id="group-form-title">Create Group Chat</h3>
                 <input type="hidden" id="group-id">
 
                 <div class="form-group">
@@ -382,8 +442,8 @@ HTML_CODE = """
                             <img id="group-avatar-preview" src="https://api.dicebear.com/7.x/shapes/svg?seed=group">
                         </div>
                         <div>
-                            <strong style="font-size:0.85rem; color:#f4f4f5; display:block;">Pinch & Drag Crop Group Icon</strong>
-                            <span style="font-size:0.75rem; color:#a1a1aa;">Tap to crop or upload icon</span>
+                            <strong style="font-size:0.85rem; display:block;">Pinch & Drag Crop Group Icon</strong>
+                            <span style="font-size:0.75rem; color:var(--text-sub);">Tap to crop or upload icon</span>
                         </div>
                     </div>
                 </div>
@@ -414,7 +474,7 @@ HTML_CODE = """
 
             <!-- User Persona & Backup Form -->
             <div id="settings-form" class="form-container hidden">
-                <h3 style="margin-bottom: 14px; color: #ffffff;">User Persona & Settings</h3>
+                <h3 style="margin-bottom: 14px;">User Persona & Settings</h3>
                 
                 <div class="form-group">
                     <label>Your Avatar Picture (Pinch & Drag Cropper)</label>
@@ -423,8 +483,8 @@ HTML_CODE = """
                             <img id="user-avatar-preview" src="https://api.dicebear.com/7.x/identicon/svg?seed=user">
                         </div>
                         <div>
-                            <strong style="font-size:0.85rem; color:#f4f4f5; display:block;">Pinch & Drag Crop Your Avatar</strong>
-                            <span style="font-size:0.75rem; color:#a1a1aa;">Tap to adjust or upload photo</span>
+                            <strong style="font-size:0.85rem; display:block;">Pinch & Drag Crop Your Avatar</strong>
+                            <span style="font-size:0.75rem; color:var(--text-sub);">Tap to adjust or upload photo</span>
                         </div>
                     </div>
                 </div>
@@ -441,11 +501,11 @@ HTML_CODE = """
 
                 <button class="submit-btn" onclick="saveUserPersona()">Save Persona</button>
 
-                <hr style="border-color:#27272a; margin: 16px 0;">
+                <hr style="border-color:var(--border-color); margin: 16px 0;">
 
                 <div class="form-group">
                     <label>Data Backup & Export</label>
-                    <button class="submit-btn" style="background:#27272a; margin-top:0;" onclick="openBackupOptionsModal()"><i class="fa-solid fa-download"></i> Selective Backup Data</button>
+                    <button class="submit-btn" style="background:var(--bg-surface); border:1px solid var(--border-color); color:var(--text-main); margin-top:0;" onclick="openBackupOptionsModal()"><i class="fa-solid fa-download"></i> Selective Backup Data</button>
                 </div>
                 <div class="form-group" style="margin-top: 10px;">
                     <label>Import Data</label>
@@ -457,7 +517,7 @@ HTML_CODE = """
         <!-- Pinch & Drag Cropper.js Modal Overlay -->
         <div id="cropper-modal" class="avatar-modal-overlay hidden">
             <div class="avatar-modal-card">
-                <h4 style="color:#ffffff; font-size:1rem;">Crop & Adjust Avatar (512x512)</h4>
+                <h4 style="font-size:1rem;">Crop & Adjust Avatar (512x512)</h4>
                 
                 <div class="cropper-container-box">
                     <img id="cropper-target-img" src="" style="max-width:100%;">
@@ -476,23 +536,22 @@ HTML_CODE = """
         <div id="backup-modal" class="avatar-modal-overlay hidden">
             <div class="modal-card">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h4 style="color:#ffffff; font-size:1rem;">Select Data to Backup</h4>
-                    <button class="toggle-btn" onclick="document.getElementById('backup-modal').classList.add('hidden')"><i class="fa-solid fa-xmark"></i></button>
+                    <h4 style="font-size:1rem;">Select Data to Backup</h4>
+                    <button class="toggle-btn" style="color:var(--text-main);" onclick="document.getElementById('backup-modal').classList.add('hidden')"><i class="fa-solid fa-xmark"></i></button>
                 </div>
-                <p style="font-size:0.78rem; color:#a1a1aa;">Choose full app backup or export a specific character's bio & chat history.</p>
+                <p style="font-size:0.78rem; color:var(--text-sub);">Choose full app backup or export a specific character's bio & chat history.</p>
 
-                <button class="sub-create-btn" style="background:#9333ea; padding:10px; font-size:0.88rem;" onclick="exportFullData()"><i class="fa-solid fa-box-archive"></i> Export Entire App Data</button>
+                <button class="sub-create-btn" style="padding:10px; font-size:0.88rem;" onclick="exportFullData()"><i class="fa-solid fa-box-archive"></i> Export Entire App Data</button>
 
-                <hr style="border-color:#27272a; margin: 4px 0;">
+                <hr style="border-color:var(--border-color); margin: 4px 0;">
 
-                <div style="font-size:0.75rem; color:#71717a; font-weight:700; text-transform:uppercase;">Individual Characters</div>
+                <div style="font-size:0.75rem; color:var(--text-sub); font-weight:700; text-transform:uppercase;">Individual Characters</div>
                 <div id="backup-char-list" style="display:flex; flex-direction:column; gap:6px;"></div>
             </div>
         </div>
 
     </div>
 
-    <!-- Cropper.js JS Script CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
     <script>
@@ -500,11 +559,31 @@ HTML_CODE = """
         let groups = JSON.parse(localStorage.getItem('aura_groups') || '[]');
         let chatHistories = JSON.parse(localStorage.getItem('aura_chats') || '{}');
         let userPersona = JSON.parse(localStorage.getItem('aura_user') || '{"name":"User", "bio":"", "avatar":"https://api.dicebear.com/7.x/identicon/svg?seed=user"}');
+        let currentTheme = localStorage.getItem('aura_theme') || 'dark';
         let activeContext = null;
 
-        /* Cropper State */
         let cropperInstance = null;
-        let currentEditingAvatarType = null; // 'char', 'group', or 'user'
+        let currentEditingAvatarType = null;
+
+        // Apply Theme on Initial Load
+        document.body.setAttribute('data-theme', currentTheme);
+        updateThemeToggleIcon();
+
+        function toggleAppTheme() {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.body.setAttribute('data-theme', currentTheme);
+            localStorage.setItem('aura_theme', currentTheme);
+            updateThemeToggleIcon();
+        }
+
+        function updateThemeToggleIcon() {
+            let btn = document.getElementById('theme-toggle-btn');
+            if(currentTheme === 'dark') {
+                btn.innerHTML = '<i class="fa-solid fa-moon"></i>';
+            } else {
+                btn.innerHTML = '<i class="fa-solid fa-sun" style="color:#eab308;"></i>';
+            }
+        }
 
         function toggleSidebar() { 
             document.getElementById('sidebar').classList.toggle('open'); 
@@ -526,7 +605,7 @@ HTML_CODE = """
             document.getElementById('group-form').classList.add('hidden');
             document.getElementById('settings-form').classList.add('hidden');
             document.getElementById('top-actions').classList.add('hidden');
-            document.getElementById('top-title').innerText = "✨ Aura";
+            document.getElementById('top-title').innerHTML = `<svg viewBox="-40 -20 140 180" class="aura-logo-svg"><use href="#aura-brand-icon"/></svg> Aura`;
         }
 
         function toggleFullScreen() {
@@ -545,7 +624,6 @@ HTML_CODE = """
             renderSidebar();
         }
 
-        /* Pinch & Drag Cropper.js Implementation */
         function openAvatarCropperModal(type) {
             currentEditingAvatarType = type;
             let currentSrc = '';
@@ -601,7 +679,6 @@ HTML_CODE = """
         function applyCroppedAvatar() {
             if(!cropperInstance) return;
 
-            // Generate High-Res 512x512 JPEG (Optimized 0.82 Quality for AI Reference Image)
             let canvas = cropperInstance.getCroppedCanvas({ width: 512, height: 512 });
             let finalDataUrl = canvas.toDataURL('image/jpeg', 0.82);
 
@@ -618,14 +695,13 @@ HTML_CODE = """
             document.getElementById('cropper-modal').classList.add('hidden');
         }
 
-        /* Selective Character Backup Modal */
         function openBackupOptionsModal() {
             let container = document.getElementById('backup-char-list');
             if(characters.length === 0) {
-                container.innerHTML = `<div style="font-size:0.8rem; color:#71717a; padding:6px;">No characters created yet.</div>`;
+                container.innerHTML = `<div style="font-size:0.8rem; color:var(--text-sub); padding:6px;">No characters created yet.</div>`;
             } else {
                 container.innerHTML = characters.map(c => `
-                    <button class="item-btn" style="background:#18181b; padding:8px 10px;" onclick="exportSingleCharacterData('${c.id}')">
+                    <button class="item-btn" style="background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main); padding:8px 10px;" onclick="exportSingleCharacterData('${c.id}')">
                         <img src="${c.avatar}" style="width:28px; height:28px; border-radius:50%;" />
                         <span>${c.name} (Export JSON)</span>
                     </button>
@@ -779,7 +855,7 @@ HTML_CODE = """
             document.getElementById('top-actions').classList.add('hidden');
             document.getElementById(formId).classList.remove('hidden');
 
-            document.getElementById('top-title').innerText = "✨ Aura";
+            document.getElementById('top-title').innerHTML = `<svg viewBox="-40 -20 140 180" class="aura-logo-svg"><use href="#aura-brand-icon"/></svg> Aura`;
 
             if(formId === 'settings-form') {
                 document.getElementById('user-name').value = userPersona.name || '';
@@ -837,7 +913,7 @@ HTML_CODE = """
             let selectedIds = currentGroup ? currentGroup.memberIds : [];
 
             container.innerHTML = characters.map(c => `
-                <label style="display:flex; align-items:center; gap:8px; background:#121215; padding:8px; border-radius:6px; cursor:pointer;">
+                <label style="display:flex; align-items:center; gap:8px; background:var(--bg-surface); padding:8px; border-radius:6px; cursor:pointer;">
                     <input type="checkbox" value="${c.id}" ${selectedIds.includes(c.id) ? 'checked':''} class="group-char-checkbox" style="width:auto;">
                     <img src="${c.avatar}" style="width:24px; height:24px; border-radius:50%;"/>
                     ${c.name}
