@@ -266,12 +266,14 @@ HTML_CODE = """
             </div>
         </div>
 
+        <!-- Lightbox Overlay with Blob Download & Delete -->
         <div id="lightbox-modal" class="lightbox-overlay hidden">
             <div style="width:100%; display:flex; justify-content:flex-end;"><button class="toggle-btn" style="color:#ffffff; font-size:1.5rem;" onclick="document.getElementById('lightbox-modal').classList.add('hidden')"><i class="fa-solid fa-xmark"></i></button></div>
             <img id="lightbox-target-img" class="lightbox-img" src="">
             <div class="lightbox-actions">
                 <button class="lightbox-btn" onclick="downloadLightboxImage()"><i class="fa-solid fa-download"></i></button>
                 <button class="lightbox-btn primary" onclick="regenerateLightboxImage()"><i class="fa-solid fa-rotate-right"></i></button>
+                <button class="lightbox-btn" style="background:#ef4444; border:none;" onclick="deleteCurrentGalleryImage()"><i class="fa-solid fa-trash"></i></button>
             </div>
         </div>
 
@@ -333,7 +335,7 @@ HTML_CODE = """
             document.getElementById('gallery-red-dot').classList.add('hidden');
             let container = document.getElementById('gallery-grid-container');
             let list = galleries[activeContext.id] || [];
-            container.innerHTML = list.length === 0 ? '<div style="grid-column:span 2; padding:20px; text-align:center;">No photos yet.</div>' : list.map(item => `<div class="gallery-item" onclick="openLightbox('${item.url}', '${item.prompt}')"><img src="${item.url}" /></div>`).join('');
+            container.innerHTML = list.length === 0 ? '<div style="grid-column:span 2; padding:20px; text-align:center; color:var(--text-sub);">No photos yet.</div>' : list.map(item => `<div class="gallery-item" onclick="openLightbox('${item.url}', '${item.prompt}')"><img src="${item.url}" /></div>`).join('');
             document.getElementById('chat-view').classList.add('hidden');
             document.getElementById('gallery-view').classList.remove('hidden');
         }
@@ -344,13 +346,35 @@ HTML_CODE = """
             document.getElementById('lightbox-modal').classList.remove('hidden');
         }
 
-        function downloadLightboxImage() {
-            let a = document.createElement('a'); a.href = activeLightboxImgUrl; a.download = 'Aura_Photo.jpg'; a.click();
+        async function downloadLightboxImage() {
+            if(!activeLightboxImgUrl) return;
+            try {
+                const response = await fetch(activeLightboxImgUrl);
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none'; a.href = url; a.download = `Aura_Photo_${Date.now()}.jpg`;
+                document.body.appendChild(a); a.click();
+                window.URL.revokeObjectURL(url); document.body.removeChild(a);
+            } catch (e) {
+                alert("Download failed. Long press the image to save manually.");
+            }
+        }
+
+        function deleteCurrentGalleryImage() {
+            if(!activeContext || !activeLightboxImgUrl) return;
+            let charId = activeContext.id;
+            if(galleries[charId]) {
+                galleries[charId] = galleries[charId].filter(item => item.url !== activeLightboxImgUrl);
+                saveState();
+            }
+            document.getElementById('lightbox-modal').classList.add('hidden');
+            openCharacterGallery();
         }
 
         async function regenerateLightboxImage() {
             if(!activeLightboxPrompt || !activeContext) return;
-            alert('Regenerating...');
+            alert('Regenerating photo...');
             let res = await fetch('/api/generate-image', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({charId: activeContext.id, character: characters.find(c => c.id === activeContext.id), userPrompt: activeLightboxPrompt})});
             let data = await res.json();
             if(data.imageUrl) { openLightbox(data.imageUrl, data.prompt); saveToCharacterGallery(activeContext.id, data.imageUrl, data.prompt); }
@@ -376,7 +400,6 @@ HTML_CODE = """
 
         // --- CORE CHAT LOGIC ---
         async function typeWriterEffect(sender, fullText, avatar, image = null, prompt = null) {
-            let container = document.getElementById('message-container');
             let msg = { sender, text: fullText, avatar };
             if(image) { msg.image = image; msg.prompt = prompt; }
             chatHistories[activeContext.id].push(msg);
@@ -419,7 +442,7 @@ HTML_CODE = """
 
         // --- AVATAR & MISC ---
         function openAvatarCropperModal(type) { currentEditingAvatarType = type; document.getElementById('cropper-modal').classList.remove('hidden'); }
-        function applyCroppedAvatar() { /* ... crop logic ... */ document.getElementById('cropper-modal').classList.add('hidden'); }
+        function applyCroppedAvatar() { document.getElementById('cropper-modal').classList.add('hidden'); }
         renderSidebar();
     </script>
 </body>
@@ -435,7 +458,16 @@ def enhance_prompt():
     api_key = os.environ.get("GROQ_API_KEY")
     c = data.get("character", {})
     raw = data.get("keywords", "")
-    system_prompt = f"Role: AI Photo Architect. Character: {c.get('name', 'Person')}. User keywords: '{raw}'. Expand to: photorealistic, raw photo, highly detailed skin, 8k, cinematic lighting, dslr, 85mm lens. Output ONLY the master prompt."
+    
+    system_prompt = f"""
+Role: Professional Realism AI Prompt Architect.
+Character: {c.get('name', 'Person')}, Appearance: {c.get('appearance', '')}
+User keywords: '{raw}'
+
+Expand this into a master photorealistic prompt.
+CRITICAL ENFORCEMENT: Include "candid photograph, 35mm film, grainy, natural skin pores, realistic depth of field, sharp focus on eyes, soft cinematic natural light, raw detail, 8k".
+Output ONLY the final master prompt.
+    """
     res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={"model": "llama-3.1-8b-instant", "messages": [{"role": "system", "content": system_prompt}]}, headers={"Authorization": f"Bearer {api_key.strip()}", "Content-Type": "application/json"}).json()
     return jsonify({"masterPrompt": res["choices"][0]["message"]["content"].strip()})
 
@@ -443,10 +475,19 @@ def enhance_prompt():
 def generate_image():
     data = request.json
     c = data.get("character", {})
-    user_prompt = data.get("userPrompt", "smiling")
-    full_prompt = f"photorealistic raw selfie of {c.get('name', 'character')}, {user_prompt}, 8k, highly detailed skin texture, cinematic lighting, dslr"
-    encoded = urllib.parse.quote(full_prompt)
-    image_url = f"https://image.pollinations.ai/prompt/{encoded}?width=1080&height=1440&nologo=true&seed={random.randint(1000, 999999)}&model=flux"
+    user_prompt = data.get("userPrompt", "candid shot")
+
+    # Realism & Camera Physics Prompt (Gemini-style quality)
+    raw_prompt = f"candid photograph of {c.get('name', 'person')}, {c.get('appearance', '')}, {user_prompt}, shot on 35mm film, grainy, natural skin pores, realistic depth of field, sharp focus on eyes, soft cinematic natural light, authentic, unretouched, raw detail, 8k"
+    negative = "cartoon, anime, 3d render, doll, plastic skin, airbrushed, smooth, polished, filter, glowing skin, artificial, drawing, illustration, glossy, stretched"
+
+    encoded_p = urllib.parse.quote(raw_prompt)
+    encoded_n = urllib.parse.quote(negative)
+    seed = random.randint(1000, 999999)
+
+    # 1024x1792 (Native 9:16 portrait ratio - zero stretching)
+    image_url = f"https://image.pollinations.ai/prompt/{encoded_p}?negative={encoded_n}&width=1024&height=1792&nologo=true&seed={seed}&model=flux"
+
     return jsonify({"imageUrl": image_url, "prompt": user_prompt})
 
 @app.route("/api/advanced-chat", methods=["POST"])
@@ -454,11 +495,11 @@ def advanced_chat():
     data = request.json
     api_key = os.environ.get("GROQ_API_KEY")
     c = data["character"]
-    last_user_msg = data["history"][-1]["text"].lower()
-    photo_requested = any(kw in last_user_msg for kw in ["photo", "pic", "picture", "selfie", "bhejo"])
-    
-    system_prompt = f"Roleplay as {c['name']}. Context: {c.get('backstory', '')}. User asked for photo: {photo_requested}. If photo requested, respond 'Here is the photo' and return logic."
-    
+    last_user_msg = data["history"][-1]["text"].lower() if data["history"] else ""
+    photo_requested = any(kw in last_user_msg for kw in ["photo", "pic", "picture", "selfie", "bhejo", "vejo", "dikhao"])
+
+    system_prompt = f"You are {c['name']}, {c.get('backstory', '')}. Stay in character. If asked for a photo, agree naturally."
+
     messages = [{"role": "system", "content": system_prompt}]
     for m in data["history"][-50:]:
         messages.append({"role": "user" if m["sender"] == "You" else "assistant", "content": m["text"]})
@@ -466,12 +507,17 @@ def advanced_chat():
     res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={"model": "llama-3.1-8b-instant", "messages": messages}, headers={"Authorization": f"Bearer {api_key.strip()}", "Content-Type": "application/json"}).json()
     reply = res["choices"][0]["message"]["content"]
     resp = {"sender": c['name'], "text": reply, "avatar": c['avatar']}
-    
+
     if photo_requested:
-        encoded = urllib.parse.quote(f"photorealistic selfie of {c['name']}, 8k, dslr")
-        resp["image"] = f"https://image.pollinations.ai/prompt/{encoded}?width=1080&height=1440&nologo=true&seed={random.randint(1000,999999)}"
-        resp["prompt"] = "selfie"
-        
+        auto_prompt = f"raw candid photo of {c['name']}, {c.get('appearance', '')}, natural skin texture, visible pores, unedited, shot on 35mm film, authentic, natural lighting"
+        neg_prompt = "cartoon, anime, plastic, smoothed skin, doll, 3d, airbrushed, glossy, stretched"
+        encoded_p = urllib.parse.quote(auto_prompt)
+        encoded_n = urllib.parse.quote(neg_prompt)
+
+        resp["image"] = f"https://image.pollinations.ai/prompt/{encoded_p}?negative={encoded_n}&width=1024&height=1792&nologo=true&seed={random.randint(1000,999999)}&model=flux"
+        resp["prompt"] = "candid shot"
+
     return jsonify({"responses": [resp]})
 
-if __name__ == "__main__": app.run(host="0.0.0.0", port=10000)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000)
