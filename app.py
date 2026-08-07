@@ -141,8 +141,8 @@ HTML_CODE = """
         .action-text { color: var(--action-text); font-style: italic; font-weight: 500; }
         
         .bubble-controls { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
-        .edit-link, .continue-bubble-btn, .tts-btn { font-size: 0.68rem; color: var(--text-sub); text-decoration: underline; cursor: pointer; opacity: 0.65; transition: opacity 0.2s; }
-        .edit-link:hover, .continue-bubble-btn:hover, .tts-btn:hover { opacity: 1; color: var(--accent-pink); }
+        .edit-link, .continue-bubble-btn { font-size: 0.68rem; color: var(--text-sub); text-decoration: underline; cursor: pointer; opacity: 0.65; transition: opacity 0.2s; }
+        .edit-link:hover, .continue-bubble-btn:hover { opacity: 1; color: var(--accent-pink); }
 
         .input-area { padding: 10px 12px; border-top: 1px solid var(--border-color); background: var(--bg-surface); display: flex; gap: 8px; width: 100%; align-items: center; }
         .input-wrapper { position: relative; flex: 1; display: flex; align-items: center; }
@@ -352,7 +352,7 @@ HTML_CODE = """
             <div id="chat-view" class="hidden">
                 <div class="chat-messages" id="message-container"></div>
                 <div class="input-area">
-                    <button class="tool-btn" onclick="alert('Photo generation feature paused.')" title="Photo">🤳</button>
+                    <button class="tool-btn" onclick="alert('Photo feature paused.')" title="Photo">🤳</button>
                     <div class="input-wrapper">
                         <input type="text" id="chat-input" placeholder="Message..." onkeypress="if(event.key==='Enter') sendMsg()">
                         <button class="wand-inbox-btn" onclick="suggestUserMessage()" title="Magic Reply">🪄</button>
@@ -766,7 +766,8 @@ HTML_CODE = """
                 backstory: document.getElementById('char-backstory').value,
                 directives: document.getElementById('char-directives').value,
                 memories: document.getElementById('char-memories').value,
-                avatar: document.getElementById('avatar-img-preview').src
+                avatar: document.getElementById('avatar-img-preview').src,
+                affinity: 50
             };
 
             let existingIdx = characters.findIndex(c => c.id === id);
@@ -833,25 +834,20 @@ HTML_CODE = """
             document.getElementById('chat-view').classList.remove('hidden');
             document.getElementById('top-actions').classList.remove('hidden');
 
-            if(type === 'group') document.getElementById('pin-mem-btn').classList.add('hidden');
-            else document.getElementById('pin-mem-btn').classList.remove('hidden');
+            if(type === 'group') {
+                document.getElementById('pin-mem-btn').classList.add('hidden');
+                let g = groups.find(item => item.id === id);
+                document.getElementById('top-title').innerText = g ? g.title : 'Group Chat';
+            } else {
+                document.getElementById('pin-mem-btn').classList.remove('hidden');
+                let c = characters.find(item => item.id === id);
+                let aff = c ? (c.affinity || 50) : 50;
+                let label = aff >= 80 ? 'Deep Bond ❤️' : (aff >= 50 ? 'Warm 😊' : 'Distant 💔');
+                document.getElementById('top-title').innerHTML = `${c ? c.name : 'Chat'} <span style="font-size:0.65rem; padding:2px 6px; background:rgba(236,72,153,0.15); border:1px solid var(--accent-pink); color:var(--accent-pink); border-radius:10px; margin-left:4px;">${label} (${aff}%)</span>`;
+            }
 
             renderSidebar();
-
-            let name = type === 'char' ? characters.find(c => c.id === id)?.name : groups.find(g => g.id === id)?.title;
-            document.getElementById('top-title').innerText = name || 'Chat';
-
             renderMessages();
-        }
-
-        function speakMessage(text) {
-            let cleanText = text.replace(/\*(.*?)\*/g, '');
-            if('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                let utterance = new SpeechSynthesisUtterance(cleanText);
-                utterance.rate = 1.0;
-                window.speechSynthesis.speak(utterance);
-            }
         }
 
         function formatText(text) {
@@ -875,7 +871,6 @@ HTML_CODE = """
                                 ${formatText(m.text)}
                                 <div class="bubble-controls">
                                     <span class="edit-link" onclick="tweakMsg(${idx})">edit</span>
-                                    ${!isUser ? `<span class="tts-btn" onclick="speakMessage('${m.text.replace(/'/g, "\\'")}')">🔊 listen</span>` : ''}
                                     ${!isUser ? `<span class="continue-bubble-btn" onclick="continueAiReply()">&gt;&gt; continue</span>` : ''}
                                 </div>
                             </div>
@@ -964,6 +959,14 @@ HTML_CODE = """
             if(data.responses) {
                 for (let r of data.responses) {
                     chatHistories[activeContext.id].push({ sender: r.sender, text: r.text, avatar: r.avatar });
+
+                    if(r.newAffinity !== undefined && activeContext.type === 'char') {
+                        let charObj = characters.find(c => c.id === activeContext.id);
+                        if(charObj) {
+                            charObj.affinity = r.newAffinity;
+                            document.getElementById('top-title').innerHTML = `${charObj.name} <span style="font-size:0.65rem; padding:2px 6px; background:rgba(236,72,153,0.15); border:1px solid var(--accent-pink); color:var(--accent-pink); border-radius:10px; margin-left:4px;">${r.affinityLabel} (${r.newAffinity}%)</span>`;
+                        }
+                    }
                     saveState();
                     renderMessages();
                 }
@@ -1007,7 +1010,7 @@ def suggest_reply():
 
     headers = {"Authorization": f"Bearer {api_key.strip()}", "Content-Type": "application/json"}
     user_info = data.get("userPersona", {})
-    
+
     system_prompt = f"""
 You are ghostwriting for {user_info.get('name', 'User')}. Bio: {user_info.get('bio', '')}.
 Generate the next short, natural Hinglish text reply for the user based on history.
@@ -1023,7 +1026,7 @@ Return ONLY text.
             "model": "llama-3.1-8b-instant",
             "messages": messages
         }, headers=headers).json()
-        
+
         return jsonify({"suggestion": res["choices"][0]["message"]["content"].strip('"')})
     except:
         return jsonify({"suggestion": "Arey batao, kya haal hai?"})
@@ -1049,6 +1052,30 @@ def advanced_chat():
 
     if data["type"] == "char":
         c = data["character"]
+        current_affinity = c.get("affinity", 50)
+
+        last_user_msg = data["history"][-1]["text"] if data["history"] else ""
+        delta = 1
+        positive_words = ["love", "pyar", "achha", "sweet", "thanks", "dost", "like", "cute", "care", "pyaar"]
+        negative_words = ["hate", "chup", "bad", "rude", "pagal", "shut up", "irritating"]
+
+        if any(w in last_user_msg.lower() for w in positive_words):
+            delta = 3
+        elif any(w in last_user_msg.lower() for w in negative_words):
+            delta = -4
+
+        new_affinity = max(0, min(100, current_affinity + delta))
+
+        if new_affinity >= 80:
+            mood_str = "Deep Bond ❤️"
+            behavior_note = "Be deeply affectionate, caring, playful, and express strong emotional connection."
+        elif new_affinity >= 50:
+            mood_str = "Warm 😊"
+            behavior_note = "Be warm, friendly, supportive, and comfortable like a close buddy."
+        else:
+            mood_str = "Distant 💔"
+            behavior_note = "Be slightly distant, formal, and give short replies as bond is low."
+
         system_prompt = f"""
 Name: {c['name']}
 Relationship: {c.get('relationship', 'Friend')}
@@ -1056,30 +1083,42 @@ Appearance: {c.get('appearance', '')}
 Backstory: {c.get('backstory', '')}
 Directives: {c.get('directives', '')}
 Memories: {c.get('memories', '')}
+Current Relationship Bond: {new_affinity}/100 ({mood_str})
+Behavior Guidance: {behavior_note}
 
 User Profile: {user_name} ({user_bio})
 
 CRITICAL HINGLISH RULE:
 - Talk strictly in natural, casual Hinglish (Roman Hindi + simple English mixed, like WhatsApp texting).
-- Never use high-level, corporate, or complex English.
-- Use casual words like "aaj", "phir", "batao", "sahi hai", "thik hai", "waise", "yaar".
-- Use asterisks for actions like *smiles and sits down*.
+- Never use complex or corporate English.
+- Use everyday words like "aaj", "phir", "batao", "sahi hai", "thik hai", "waise", "yaar".
+- Express actions in asterisks, e.g., *smiles and sits down*.
 """
         if data.get("isContinue"):
             system_prompt += "\nUser pressed Continue. Extend your last response seamlessly."
 
         messages = [{"role": "system", "content": system_prompt}]
-        for m in data["history"][-50:]:
+        for m in data["history"][-25:]:
             role = "user" if m["sender"] == "You" or m["sender"] == user_name else "assistant"
             messages.append({"role": role, "content": m["text"]})
 
-        res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={
-            "model": "llama-3.1-8b-instant",
-            "messages": messages
-        }, headers=headers).json()
+        try:
+            res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={
+                "model": "llama-3.1-8b-instant",
+                "messages": messages
+            }, headers=headers).json()
 
-        reply_text = res["choices"][0]["message"]["content"]
-        responses.append({"sender": c['name'], "text": reply_text, "avatar": c['avatar']})
+            reply_text = res["choices"][0]["message"]["content"]
+        except Exception as e:
+            reply_text = "*Smiles* Kuch technical glitch ho gaya lagta hai!"
+
+        responses.append({
+            "sender": c['name'], 
+            "text": reply_text, 
+            "avatar": c['avatar'],
+            "newAffinity": new_affinity,
+            "affinityLabel": mood_str
+        })
 
     else:
         group = data["group"]
@@ -1095,7 +1134,7 @@ Talk briefly in casual Hinglish (Roman Hindi/English mixed). Use asterisks for a
             """
 
             messages = [{"role": "system", "content": system_prompt}]
-            for m in data["history"][-50:]:
+            for m in data["history"][-25:]:
                 messages.append({"role": "user", "content": f"{m['sender']}: {m['text']}"})
 
             res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={
