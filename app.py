@@ -92,7 +92,7 @@ HTML_CODE = """
             transform: scale(0.96) !important;
         }
 
-        /* Top Bar (Reference Match with Purple/Pink Accent Line) */
+        /* Top Bar & Header Glow Fix */
         .top-bar { 
             height: 56px; 
             min-height: 56px; 
@@ -104,11 +104,12 @@ HTML_CODE = """
             justify-content: space-between; 
             padding: 0 16px; 
             z-index: 10; 
+            box-shadow: 0 4px 20px rgba(168, 85, 247, 0.12);
             transition: background 0.3s; 
         }
         
-        .toggle-btn { background: transparent; border: none; color: var(--text-main); font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .top-title { font-weight: 700; font-size: 1rem; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+        .toggle-btn { background: transparent; border: none; color: var(--text-main); font-size: 1.25rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .top-title { font-weight: 700; font-size: 1rem; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
         .icon-btn { background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); width: 34px; height: 34px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; }
 
         /* Sidebar Drawer */
@@ -140,11 +141,11 @@ HTML_CODE = """
         .sub-create-btn { width: 100%; padding: 10px; background: linear-gradient(135deg, #9333ea, #ec4899); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 4px; }
         .sub-create-btn.blue { background: linear-gradient(135deg, #2563eb, #3b82f6); }
 
-        .workspace { flex: 1; display: flex; flex-direction: column; height: calc(100% - 56px); position: relative; overflow: hidden; }
+        .workspace { flex: 1; display: flex; flex-direction: column; height: 100%; position: relative; overflow: hidden; }
 
-        /* Dashboard Layout (Reference Match Style) */
-        .dashboard { flex: 1; padding: 24px 16px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; }
-        .dash-logo { width: 70px; height: 70px; margin-bottom: 10px; filter: drop-shadow(0 0 12px rgba(236,72,153,0.5)); }
+        /* Dashboard Layout */
+        .dashboard { flex: 1; padding: 24px 16px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .dash-logo { width: 72px; height: 72px; margin-bottom: 12px; filter: drop-shadow(0 0 14px rgba(236,72,153,0.5)); }
         .dash-title { font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin-bottom: 4px; }
         .dash-sub { font-size: 0.85rem; color: var(--text-sub); text-align: center; margin-bottom: 24px; }
         
@@ -156,7 +157,7 @@ HTML_CODE = """
         #chat-view { flex: 1; display: flex; flex-direction: column; height: 100%; overflow: hidden; }
         .chat-messages { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; -webkit-overflow-scrolling: touch; }
         
-        /* Flicker-free message styling (No backdrop-filter on active bubble stream) */
+        /* Flicker-free message styling */
         .message { display: flex; gap: 10px; max-width: 88%; position: relative; will-change: transform; }
         .message.user { align-self: flex-end; flex-direction: row-reverse; }
         .message .avatar { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; background: var(--border-color); flex-shrink: 0; }
@@ -276,22 +277,22 @@ HTML_CODE = """
         .memory-tag-chip i:hover { opacity: 1; }
 
         .hidden { display: none !important; }
-        .aura-logo-svg { width: 30px; height: 30px; filter: drop-shadow(0 0 6px rgba(236, 72, 153, 0.5)); }
+        .aura-logo-svg { width: 32px; height: 32px; flex-shrink: 0; filter: drop-shadow(0 0 8px rgba(236, 72, 153, 0.5)); }
     </style>
 </head>
 <body data-theme="dark">
 
-    <!-- Option 1 Logo Definition (Ring + Spark) -->
+    <!-- Custom Logo SVG Definition -->
     <svg class="hidden">
         <defs>
-            <linearGradient id="auraOption1Grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <linearGradient id="auraLogoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stop-color="#a855f7"/>
                 <stop offset="100%" stop-color="#ec4899"/>
             </linearGradient>
             <g id="aura-brand-icon">
-                <circle cx="50" cy="50" r="38" fill="none" stroke="url(#auraOption1Grad)" stroke-width="10"/>
-                <path d="M 50 18 Q 32 50 50 82 Q 68 50 50 18 Z" fill="url(#auraOption1Grad)"/>
-                <circle cx="50" cy="50" r="8" fill="#ffffff"/>
+                <circle cx="50" cy="50" r="38" fill="none" stroke="url(#auraLogoGrad)" stroke-width="10"/>
+                <path d="M 50 18 L 70 72 L 58 72 L 53 58 L 47 58 L 42 72 L 30 72 Z M 48 45 L 50 34 L 52 45 Z" fill="url(#auraLogoGrad)"/>
+                <path d="M 59 62 L 68 76 Q 72 82 78 78 L 74 68 Z" fill="url(#auraLogoGrad)"/>
             </g>
         </defs>
     </svg>
@@ -300,7 +301,7 @@ HTML_CODE = """
         <!-- Sidebar Navigation -->
         <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <span style="display:flex; align-items:center; gap:8px;">
+                <span style="display:flex; align-items:center; gap:10px;">
                     <svg viewBox="0 0 100 100" class="aura-logo-svg"><use href="#aura-brand-icon"/></svg>
                     Aura
                 </span>
@@ -344,8 +345,8 @@ HTML_CODE = """
             </div>
         </div>
 
-        <!-- Top Bar -->
-        <div class="top-bar">
+        <!-- Top Bar (Only visible in chat) -->
+        <div class="top-bar hidden" id="top-bar">
             <div style="display: flex; align-items: center; gap: 10px;">
                 <button class="toggle-btn" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
                 <div class="top-title" id="top-title">
@@ -355,7 +356,7 @@ HTML_CODE = """
             </div>
             
             <div style="display: flex; gap: 6px; align-items: center;">
-                <div id="top-actions" class="hidden" style="display: flex; gap: 6px;">
+                <div id="top-actions" style="display: flex; gap: 6px;">
                     <button class="icon-btn" id="pin-mem-btn" onclick="openPinnedMemoryModal()" title="Pin Memory"><i class="fa-solid fa-thumbtack"></i></button>
                     <button class="icon-btn" onclick="handleEditClick()" title="Edit Companion"><i class="fa-solid fa-wrench"></i></button>
                     <button class="icon-btn" onclick="regenerateLastResponse()" title="Regenerate"><i class="fa-solid fa-rotate-right"></i></button>
@@ -368,6 +369,9 @@ HTML_CODE = """
         <div class="workspace">
             <!-- Dashboard View -->
             <div id="dashboard-view" class="dashboard">
+                <div style="position: absolute; top: 16px; left: 16px;">
+                    <button class="icon-btn" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+                </div>
                 <svg viewBox="0 0 100 100" class="dash-logo"><use href="#aura-brand-icon"/></svg>
                 <h2 class="dash-title">Welcome to Aura</h2>
                 <p class="dash-sub">Your secure personal AI companion space.</p>
@@ -584,13 +588,12 @@ HTML_CODE = """
         function goHome() {
             activeContext = null;
             document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('top-bar').classList.add('hidden');
             document.getElementById('dashboard-view').classList.remove('hidden');
             document.getElementById('chat-view').classList.add('hidden');
             document.getElementById('char-form').classList.add('hidden');
             document.getElementById('group-form').classList.add('hidden');
             document.getElementById('settings-form').classList.add('hidden');
-            document.getElementById('top-actions').classList.add('hidden');
-            document.getElementById('top-title').innerHTML = `<svg viewBox="0 0 100 100" class="aura-logo-svg"><use href="#aura-brand-icon"/></svg> Aura`;
         }
 
         function saveState() {
@@ -732,6 +735,7 @@ HTML_CODE = """
 
         function openNewCharForm() {
             document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('top-bar').classList.add('hidden');
             document.getElementById('char-id').value = '';
             document.getElementById('char-name').value = '';
             document.getElementById('char-rel').value = '';
@@ -747,6 +751,7 @@ HTML_CODE = """
 
         function openNewGroupForm() {
             document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('top-bar').classList.add('hidden');
             document.getElementById('group-id').value = '';
             document.getElementById('group-title').value = '';
             document.getElementById('group-context').value = '';
@@ -766,6 +771,7 @@ HTML_CODE = """
         function editCurrentCharacter() {
             let c = characters.find(item => item.id === activeContext.id);
             if(!c) return;
+            document.getElementById('top-bar').classList.add('hidden');
             document.getElementById('char-id').value = c.id;
             document.getElementById('char-name').value = c.name;
             document.getElementById('char-rel').value = c.relationship || '';
@@ -782,6 +788,7 @@ HTML_CODE = """
         function editCurrentGroup() {
             let g = groups.find(item => item.id === activeContext.id);
             if(!g) return;
+            document.getElementById('top-bar').classList.add('hidden');
             document.getElementById('group-id').value = g.id;
             document.getElementById('group-title').value = g.title || '';
             document.getElementById('group-context').value = g.context || '';
@@ -826,15 +833,13 @@ HTML_CODE = """
 
         function showForm(formId) {
             document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('top-bar').classList.add('hidden');
             document.getElementById('dashboard-view').classList.add('hidden');
             document.getElementById('chat-view').classList.add('hidden');
             document.getElementById('char-form').classList.add('hidden');
             document.getElementById('group-form').classList.add('hidden');
             document.getElementById('settings-form').classList.add('hidden');
-            document.getElementById('top-actions').classList.add('hidden');
             document.getElementById(formId).classList.remove('hidden');
-
-            document.getElementById('top-title').innerHTML = `<svg viewBox="0 0 100 100" class="aura-logo-svg"><use href="#aura-brand-icon"/></svg> Aura`;
 
             if(formId === 'settings-form') {
                 document.getElementById('user-name').value = userPersona.name || '';
@@ -935,18 +940,18 @@ HTML_CODE = """
             document.getElementById('group-form').classList.add('hidden');
             document.getElementById('settings-form').classList.add('hidden');
             document.getElementById('chat-view').classList.remove('hidden');
-            document.getElementById('top-actions').classList.remove('hidden');
+            document.getElementById('top-bar').classList.remove('hidden');
 
             if(type === 'group') {
                 document.getElementById('pin-mem-btn').classList.add('hidden');
                 let g = groups.find(item => item.id === id);
-                document.getElementById('top-title').innerText = g ? g.title : 'Group Chat';
+                document.getElementById('top-title').innerHTML = `<svg viewBox="0 0 100 100" class="aura-logo-svg"><use href="#aura-brand-icon"/></svg> ${g ? g.title : 'Group Chat'}`;
             } else {
                 document.getElementById('pin-mem-btn').classList.remove('hidden');
                 let c = characters.find(item => item.id === id);
                 let aff = c ? (c.affinity || 50) : 50;
                 let label = aff >= 80 ? 'Deep Bond ❤️' : (aff >= 50 ? 'Warm 😊' : 'Distant 💔');
-                document.getElementById('top-title').innerHTML = `${c ? c.name : 'Chat'} <span style="font-size:0.65rem; padding:2px 6px; background:rgba(236,72,153,0.15); border:1px solid var(--accent-pink); color:var(--accent-pink); border-radius:10px; margin-left:4px;">${label} (${aff}%)</span>`;
+                document.getElementById('top-title').innerHTML = `<svg viewBox="0 0 100 100" class="aura-logo-svg"><use href="#aura-brand-icon"/></svg> ${c ? c.name : 'Chat'} <span style="font-size:0.62rem; padding:2px 6px; background:rgba(236,72,153,0.15); border:1px solid var(--accent-pink); color:var(--accent-pink); border-radius:10px; margin-left:4px;">${label} (${aff}%)</span>`;
             }
 
             renderSidebar();
@@ -1145,7 +1150,7 @@ HTML_CODE = """
                         let charObj = characters.find(c => c.id === activeContext.id);
                         if(charObj) {
                             charObj.affinity = r.newAffinity;
-                            document.getElementById('top-title').innerHTML = `${charObj.name} <span style="font-size:0.65rem; padding:2px 6px; background:rgba(236,72,153,0.15); border:1px solid var(--accent-pink); color:var(--accent-pink); border-radius:10px; margin-left:4px;">${r.affinityLabel} (${r.newAffinity}%)</span>`;
+                            document.getElementById('top-title').innerHTML = `<svg viewBox="0 0 100 100" class="aura-logo-svg"><use href="#aura-brand-icon"/></svg> ${charObj.name} <span style="font-size:0.62rem; padding:2px 6px; background:rgba(236,72,153,0.15); border:1px solid var(--accent-pink); color:var(--accent-pink); border-radius:10px; margin-left:4px;">${r.affinityLabel} (${r.newAffinity}%)</span>`;
                         }
                     }
                     streamWordByWord(r.sender, r.text, r.avatar);
