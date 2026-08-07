@@ -74,16 +74,14 @@ HTML_CODE = """
         .message.user .content { background: var(--user-msg-bg); border: none; color: #ffffff; border-bottom-right-radius: 2px; }
         .message.ai .content { border-bottom-left-radius: 2px; }
         .message .sender-name { font-size: 0.7rem; color: var(--text-sub); margin-bottom: 3px; font-weight: 600; }
-        .chat-img-attachment { width: 100%; max-width: 240px; border-radius: 10px; margin-top: 6px; cursor: pointer; border: 1px solid var(--border-color); display: block; }
+        
+        /* Chat Image Box Non-Stretched */
+        .chat-img-attachment { width: 100%; max-width: 240px; aspect-ratio: 3/4; object-fit: cover; border-radius: 10px; margin-top: 6px; cursor: pointer; border: 1px solid var(--border-color); display: block; }
+        
         .action-text { color: var(--action-text); font-style: italic; font-weight: 500; }
         .bubble-controls { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
         .edit-link, .continue-bubble-btn { font-size: 0.68rem; color: var(--text-sub); text-decoration: underline; cursor: pointer; opacity: 0.65; transition: opacity 0.2s; }
         .edit-link:hover, .continue-bubble-btn:hover { opacity: 1; color: var(--accent-pink); }
-        .typing-dots { display: flex; gap: 4px; align-items: center; padding: 4px 0; }
-        .typing-dots span { width: 5px; height: 5px; background: var(--accent-pink); border-radius: 50%; animation: pulse 1.2s infinite ease-in-out; }
-        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
-        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes pulse { 0%, 100% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.1); } }
         .input-area { padding: 10px 12px; border-top: 1px solid var(--border-color); background: var(--bg-surface); display: flex; gap: 8px; width: 100%; align-items: center; }
         .input-wrapper { position: relative; flex: 1; display: flex; align-items: center; }
         .input-wrapper input { width: 100%; background: var(--bg-input); border: 1px solid var(--border-color); padding: 10px 38px 10px 12px; border-radius: 20px; color: var(--text-main); outline: none; font-size: 0.88rem; }
@@ -98,16 +96,17 @@ HTML_CODE = """
         .avatar-edit-trigger { display: flex; align-items: center; gap: 12px; background: var(--bg-surface); border: 1px solid var(--border-color); padding: 10px 14px; border-radius: 12px; cursor: pointer; }
         .avatar-thumb-wrapper { width: 54px; height: 54px; border-radius: 50%; overflow: hidden; border: 2px solid var(--accent-pink); flex-shrink: 0; background: var(--border-color); display: flex; justify-content: center; align-items: center; }
         .avatar-thumb-wrapper img { width: 100%; height: 100%; object-fit: cover; }
-        .avatar-modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.88); backdrop-filter: blur(8px); z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px; }
-        .avatar-modal-card { width: 100%; max-width: 360px; background: #121215; border: 1px solid #27272a; border-radius: 20px; padding: 16px; display: flex; flex-direction: column; align-items: center; gap: 14px; color: #ffffff; }
-        .cropper-container-box { width: 100%; height: 260px; background: #000; border-radius: 12px; overflow: hidden; border: 1px solid #27272a; position: relative; }
-        .lightbox-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.92); backdrop-filter: blur(10px); z-index: 300; display: flex; flex-direction: column; justify-content: space-between; padding: 20px 16px; align-items: center; }
-        .lightbox-img { max-width: 95%; max-height: 75vh; border-radius: 16px; object-fit: contain; border: 1px solid #27272a; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
-        .lightbox-actions { display: flex; gap: 12px; width: 100%; max-width: 340px; margin-bottom: 20px; }
-        .lightbox-btn { flex: 1; padding: 12px; background: #121215; border: 1px solid #27272a; color: #ffffff; border-radius: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.88rem; }
+        
+        /* Lightbox Fixes */
+        .lightbox-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.92); backdrop-filter: blur(10px); z-index: 300; display: flex; flex-direction: column; justify-content: space-between; padding: 16px 12px; align-items: center; }
+        .lightbox-img { width: auto; max-width: 95%; max-height: 68vh; object-fit: contain; border-radius: 14px; border: 1px solid #27272a; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        .lightbox-actions { display: flex; gap: 8px; width: 100%; max-width: 360px; margin-bottom: 10px; justify-content: space-between; }
+        .lightbox-btn { flex: 1; padding: 12px 6px; background: #121215; border: 1px solid #27272a; color: #ffffff; border-radius: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.8rem; }
         .lightbox-btn.primary { background: linear-gradient(135deg, #9333ea, #ec4899); border: none; }
+        .lightbox-btn.danger { background: #ef4444; border: none; color: white; }
+
         .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
-        .gallery-item { position: relative; border-radius: 12px; overflow: hidden; height: 160px; border: 1px solid var(--border-color); cursor: pointer; }
+        .gallery-item { position: relative; border-radius: 12px; overflow: hidden; aspect-ratio: 3/4; border: 1px solid var(--border-color); cursor: pointer; }
         .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
         .hidden { display: none !important; }
         .aura-logo-svg { width: 28px; height: 28px; filter: drop-shadow(0 0 6px rgba(236,72,153,0.5)); }
@@ -135,9 +134,9 @@ HTML_CODE = """
                     <svg viewBox="-40 -20 140 180" class="aura-logo-svg"><use href="#aura-brand-icon"/></svg> Aura
                 </span>
                 <div class="header-actions">
-                    <button class="sidebar-icon-btn" onclick="toggleAppTheme()" id="sidebar-theme-btn" title="Toggle Light/Dark Mode"><i class="fa-solid fa-moon"></i></button>
-                    <button class="sidebar-icon-btn" onclick="toggleFullScreen()" title="Fullscreen Mode"><i class="fa-solid fa-expand"></i></button>
-                    <button class="sidebar-icon-btn" onclick="toggleSidebar()" title="Close Sidebar"><i class="fa-solid fa-xmark"></i></button>
+                    <button class="sidebar-icon-btn" onclick="toggleAppTheme()" id="sidebar-theme-btn"><i class="fa-solid fa-moon"></i></button>
+                    <button class="sidebar-icon-btn" onclick="toggleFullScreen()"><i class="fa-solid fa-expand"></i></button>
+                    <button class="sidebar-icon-btn" onclick="toggleSidebar()"><i class="fa-solid fa-xmark"></i></button>
                 </div>
             </div>
             <div class="nav-section">
@@ -169,11 +168,11 @@ HTML_CODE = """
             </div>
             <div style="display: flex; gap: 6px; align-items: center;">
                 <div id="top-actions" class="hidden" style="display: flex; gap: 6px;">
-                    <button class="icon-btn" id="gallery-btn" onclick="openCharacterGallery()" title="Photo Gallery">🖼️<span id="gallery-red-dot" class="notification-dot hidden"></span></button>
-                    <button class="icon-btn" id="pin-mem-btn" onclick="openPinnedMemoryModal()" title="Pin Memory"><i class="fa-solid fa-thumbtack"></i></button>
-                    <button class="icon-btn" onclick="handleEditClick()" title="Edit Companion / Group"><i class="fa-solid fa-wrench"></i></button>
-                    <button class="icon-btn" onclick="regenerateLastResponse()" title="Regenerate"><i class="fa-solid fa-rotate-right"></i></button>
-                    <button class="icon-btn" onclick="clearCurrentChat()" title="Clear Chat"><i class="fa-solid fa-trash"></i></button>
+                    <button class="icon-btn" id="gallery-btn" onclick="openCharacterGallery()">🖼️<span id="gallery-red-dot" class="notification-dot hidden"></span></button>
+                    <button class="icon-btn" id="pin-mem-btn" onclick="openPinnedMemoryModal()"><i class="fa-solid fa-thumbtack"></i></button>
+                    <button class="icon-btn" onclick="handleEditClick()"><i class="fa-solid fa-wrench"></i></button>
+                    <button class="icon-btn" onclick="regenerateLastResponse()"><i class="fa-solid fa-rotate-right"></i></button>
+                    <button class="icon-btn" onclick="clearCurrentChat()"><i class="fa-solid fa-trash"></i></button>
                 </div>
             </div>
         </div>
@@ -185,16 +184,15 @@ HTML_CODE = """
                 <p class="dash-sub">Your personal AI companion & roleplay platform.</p>
                 <div class="dash-card" onclick="openNewCharForm()"><i class="fa-solid fa-user-plus"></i><div><strong>Create AI Companion</strong><span>Custom backstory & relationship</span></div></div>
                 <div class="dash-card" onclick="openNewGroupForm()"><i class="fa-solid fa-users"></i><div><strong>Create Group Room</strong><span>Chat with multiple characters</span></div></div>
-                <div class="dash-card" onclick="showForm('settings-form')"><i class="fa-solid fa-sliders"></i><div><strong>Persona & Settings</strong><span>Edit your profile, backup & restore</span></div></div>
-                <div class="dash-card" onclick="toggleFullScreen()"><i class="fa-solid fa-expand"></i><div><strong>📱 Enter Fullscreen Mode</strong><span>Best experience on mobile devices</span></div></div>
+                <div class="dash-card" onclick="showForm('settings-form')"><i class="fa-solid fa-sliders"></i><div><strong>Persona & Settings</strong><span>Edit profile & backup</span></div></div>
             </div>
             <div id="chat-view" class="hidden">
                 <div class="chat-messages" id="message-container"></div>
                 <div class="input-area">
-                    <button class="tool-btn" onclick="openManualImageModal()" title="Generate AI Image">🤳</button>
+                    <button class="tool-btn" onclick="openManualImageModal()">🤳</button>
                     <div class="input-wrapper">
                         <input type="text" id="chat-input" placeholder="Message..." onkeypress="if(event.key==='Enter') sendMsg()">
-                        <button class="wand-inbox-btn" onclick="suggestUserMessage()" title="Magic Auto-Suggest">🪄</button>
+                        <button class="wand-inbox-btn" onclick="suggestUserMessage()">🪄</button>
                     </div>
                     <button class="send-btn" onclick="sendMsg()"><i class="fa-solid fa-paper-plane"></i></button>
                 </div>
@@ -202,51 +200,11 @@ HTML_CODE = """
             <div id="char-form" class="form-container hidden">
                 <h3 style="margin-bottom: 14px;" id="char-form-title">Create Companion</h3>
                 <input type="hidden" id="char-id">
-                <div class="form-group">
-                    <label>Avatar Picture</label>
-                    <div class="avatar-edit-trigger" onclick="openAvatarCropperModal('char')">
-                        <div class="avatar-thumb-wrapper"><img id="avatar-img-preview" src="https://api.dicebear.com/7.x/bottts/svg?seed=default"></div>
-                        <div><strong>Crop Avatar</strong><span>High-res 512px ref</span></div>
-                    </div>
-                </div>
                 <div class="form-group"><label>Name</label><input type="text" id="char-name"></div>
                 <div class="form-group"><label>Relationship</label><input type="text" id="char-rel"></div>
                 <div class="form-group"><label>Appearance</label><input type="text" id="char-app"></div>
                 <div class="form-group"><label>Backstory</label><textarea id="char-backstory"></textarea></div>
-                <div class="form-group"><label>Directives</label><textarea id="char-directives"></textarea></div>
-                <div class="form-group"><label>Memories</label><textarea id="char-memories"></textarea></div>
                 <button class="submit-btn" onclick="saveCharacter()">Save</button>
-                <button class="submit-btn delete-btn" id="char-delete-btn" onclick="deleteCurrentCharacter()">Delete</button>
-            </div>
-            <div id="group-form" class="form-container hidden">
-                <h3 style="margin-bottom: 14px;" id="group-form-title">Create Group Chat</h3>
-                <input type="hidden" id="group-id">
-                <div class="form-group">
-                    <label>Group Icon</label>
-                    <div class="avatar-edit-trigger" onclick="openAvatarCropperModal('group')">
-                        <div class="avatar-thumb-wrapper"><img id="group-avatar-preview" src="https://api.dicebear.com/7.x/shapes/svg?seed=group"></div>
-                        <div><strong>Crop Icon</strong><span>Click to crop</span></div>
-                    </div>
-                </div>
-                <div class="form-group"><label>Name</label><input type="text" id="group-title"></div>
-                <div class="form-group"><label>Context</label><textarea id="group-context"></textarea></div>
-                <div class="form-group"><label>Directives</label><textarea id="group-directives"></textarea></div>
-                <div class="form-group"><label>Members</label><div id="group-char-selector"></div></div>
-                <button class="submit-btn" style="background:#2563eb;" onclick="saveGroup()">Save</button>
-                <button class="submit-btn delete-btn" id="group-delete-btn" onclick="deleteCurrentGroup()">Delete</button>
-            </div>
-            <div id="settings-form" class="form-container hidden">
-                <h3>Settings</h3>
-                <div class="form-group">
-                    <label>Your Avatar</label>
-                    <div class="avatar-edit-trigger" onclick="openAvatarCropperModal('user')">
-                        <div class="avatar-thumb-wrapper"><img id="user-avatar-preview" src="https://api.dicebear.com/7.x/identicon/svg?seed=user"></div>
-                        <div><strong>Crop Avatar</strong><span>Click to crop</span></div>
-                    </div>
-                </div>
-                <div class="form-group"><label>Name</label><input type="text" id="user-name"></div>
-                <div class="form-group"><label>Bio</label><textarea id="user-bio"></textarea></div>
-                <button class="submit-btn" onclick="saveUserPersona()">Save</button>
             </div>
             <div id="gallery-view" class="form-container hidden">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
@@ -266,76 +224,46 @@ HTML_CODE = """
             </div>
         </div>
 
-        <!-- Lightbox Overlay with Blob Download & Delete -->
+        <!-- Lightbox Overlay with Fixed Delete Button -->
         <div id="lightbox-modal" class="lightbox-overlay hidden">
-            <div style="width:100%; display:flex; justify-content:flex-end;"><button class="toggle-btn" style="color:#ffffff; font-size:1.5rem;" onclick="document.getElementById('lightbox-modal').classList.add('hidden')"><i class="fa-solid fa-xmark"></i></button></div>
+            <div style="width:100%; display:flex; justify-content:flex-end; padding:4px;">
+                <button class="toggle-btn" style="color:#ffffff; font-size:1.8rem;" onclick="document.getElementById('lightbox-modal').classList.add('hidden')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
             <img id="lightbox-target-img" class="lightbox-img" src="">
             <div class="lightbox-actions">
-                <button class="lightbox-btn" onclick="downloadLightboxImage()"><i class="fa-solid fa-download"></i></button>
-                <button class="lightbox-btn primary" onclick="regenerateLightboxImage()"><i class="fa-solid fa-rotate-right"></i></button>
-                <button class="lightbox-btn" style="background:#ef4444; border:none;" onclick="deleteCurrentGalleryImage()"><i class="fa-solid fa-trash"></i></button>
-            </div>
-        </div>
-
-        <div id="cropper-modal" class="avatar-modal-overlay hidden">
-            <div class="avatar-modal-card">
-                <h4 style="font-size:1rem;">Crop Avatar</h4>
-                <div class="cropper-container-box"><img id="cropper-target-img" src="" style="max-width:100%;"></div>
-                <input type="file" id="cropper-file-input" accept="image/*" class="hidden" onchange="loadNewCropperImage(this)">
-                <div style="display:flex; gap:8px; width:100%;">
-                    <button class="sub-create-btn" style="flex:1; background:#27272a;" onclick="document.getElementById('cropper-file-input').click()">Upload</button>
-                    <button class="sub-create-btn" style="flex:1;" onclick="applyCroppedAvatar()">Done</button>
-                </div>
+                <button class="lightbox-btn" onclick="downloadLightboxImage()"><i class="fa-solid fa-download"></i> Save</button>
+                <button class="lightbox-btn primary" onclick="regenerateLightboxImage()"><i class="fa-solid fa-rotate-right"></i> Retry</button>
+                <button class="lightbox-btn danger" onclick="deleteCurrentGalleryImage()"><i class="fa-solid fa-trash"></i> Delete</button>
             </div>
         </div>
     </div>
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <script>
         let characters = JSON.parse(localStorage.getItem('aura_chars') || '[]');
         let groups = JSON.parse(localStorage.getItem('aura_groups') || '[]');
         let chatHistories = JSON.parse(localStorage.getItem('aura_chats') || '{}');
         let galleries = JSON.parse(localStorage.getItem('aura_galleries') || '{}');
-        let userPersona = JSON.parse(localStorage.getItem('aura_user') || '{"name":"User", "bio":"", "avatar":"https://api.dicebear.com/7.x/identicon/svg?seed=user"}');
-        let currentTheme = localStorage.getItem('aura_theme') || 'dark';
+        let userPersona = JSON.parse(localStorage.getItem('aura_user') || '{"name":"User", "bio":""}');
         let activeContext = null;
-        let activeLightboxImgUrl = ''; let activeLightboxPrompt = ''; let cropperInstance = null; let currentEditingAvatarType = null;
-
-        document.body.setAttribute('data-theme', currentTheme);
-        updateThemeToggleIcon();
-
-        function toggleAppTheme() {
-            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            document.body.setAttribute('data-theme', currentTheme);
-            localStorage.setItem('aura_theme', currentTheme);
-            updateThemeToggleIcon();
-        }
-
-        function updateThemeToggleIcon() {
-            let btn = document.getElementById('sidebar-theme-btn');
-            if(btn) btn.innerHTML = currentTheme === 'dark' ? '<i class="fa-solid fa-moon"></i>' : '<i class="fa-solid fa-sun" style="color:#eab308;"></i>';
-        }
+        let activeLightboxImgUrl = ''; let activeLightboxPrompt = '';
 
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
-        function goHome() { activeContext = null; document.getElementById('sidebar').classList.remove('open'); document.getElementById('dashboard-view').classList.remove('hidden'); document.getElementById('chat-view').classList.add('hidden'); document.getElementById('char-form').classList.add('hidden'); document.getElementById('group-form').classList.add('hidden'); document.getElementById('settings-form').classList.add('hidden'); document.getElementById('gallery-view').classList.add('hidden'); document.getElementById('top-actions').classList.add('hidden'); }
-        function toggleFullScreen() { if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
-        function saveState() { localStorage.setItem('aura_chars', JSON.stringify(characters)); localStorage.setItem('aura_groups', JSON.stringify(groups)); localStorage.setItem('aura_chats', JSON.stringify(chatHistories)); localStorage.setItem('aura_galleries', JSON.stringify(galleries)); localStorage.setItem('aura_user', JSON.stringify(userPersona)); renderSidebar(); }
+        function goHome() { activeContext = null; document.getElementById('sidebar').classList.remove('open'); document.getElementById('dashboard-view').classList.remove('hidden'); document.getElementById('chat-view').classList.add('hidden'); document.getElementById('char-form').classList.add('hidden'); document.getElementById('gallery-view').classList.add('hidden'); document.getElementById('top-actions').classList.add('hidden'); }
+        function saveState() { localStorage.setItem('aura_chars', JSON.stringify(characters)); localStorage.setItem('aura_groups', JSON.stringify(groups)); localStorage.setItem('aura_chats', JSON.stringify(chatHistories)); localStorage.setItem('aura_galleries', JSON.stringify(galleries)); renderSidebar(); }
         
-        // --- PHOTO & GALLERY FUNCTIONS ---
         function saveToCharacterGallery(charId, imgUrl, promptText) {
             if(!galleries[charId]) galleries[charId] = [];
             galleries[charId].unshift({ id: 'img_' + Date.now(), url: imgUrl, prompt: promptText });
             saveState();
-            let dot = document.getElementById('gallery-red-dot');
-            if(dot) dot.classList.remove('hidden');
+            document.getElementById('gallery-red-dot')?.classList.remove('hidden');
         }
 
         function openCharacterGallery() {
             if(!activeContext || activeContext.type !== 'char') return;
-            document.getElementById('gallery-red-dot').classList.add('hidden');
+            document.getElementById('gallery-red-dot')?.classList.add('hidden');
             let container = document.getElementById('gallery-grid-container');
             let list = galleries[activeContext.id] || [];
-            container.innerHTML = list.length === 0 ? '<div style="grid-column:span 2; padding:20px; text-align:center; color:var(--text-sub);">No photos yet.</div>' : list.map(item => `<div class="gallery-item" onclick="openLightbox('${item.url}', '${item.prompt}')"><img src="${item.url}" /></div>`).join('');
+            container.innerHTML = list.length === 0 ? '<div style="grid-column:span 2; padding:20px; text-align:center;">No photos yet.</div>' : list.map(item => `<div class="gallery-item" onclick="openLightbox('${item.url}', '${item.prompt}')"><img src="${item.url}" /></div>`).join('');
             document.getElementById('chat-view').classList.add('hidden');
             document.getElementById('gallery-view').classList.remove('hidden');
         }
@@ -344,21 +272,6 @@ HTML_CODE = """
             activeLightboxImgUrl = imgUrl; activeLightboxPrompt = promptText;
             document.getElementById('lightbox-target-img').src = imgUrl;
             document.getElementById('lightbox-modal').classList.remove('hidden');
-        }
-
-        async function downloadLightboxImage() {
-            if(!activeLightboxImgUrl) return;
-            try {
-                const response = await fetch(activeLightboxImgUrl);
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.style.display = 'none'; a.href = url; a.download = `Aura_Photo_${Date.now()}.jpg`;
-                document.body.appendChild(a); a.click();
-                window.URL.revokeObjectURL(url); document.body.removeChild(a);
-            } catch (e) {
-                alert("Download failed. Long press the image to save manually.");
-            }
         }
 
         function deleteCurrentGalleryImage() {
@@ -372,21 +285,16 @@ HTML_CODE = """
             openCharacterGallery();
         }
 
-        async function regenerateLightboxImage() {
-            if(!activeLightboxPrompt || !activeContext) return;
-            alert('Regenerating photo...');
-            let res = await fetch('/api/generate-image', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({charId: activeContext.id, character: characters.find(c => c.id === activeContext.id), userPrompt: activeLightboxPrompt})});
-            let data = await res.json();
-            if(data.imageUrl) { openLightbox(data.imageUrl, data.prompt); saveToCharacterGallery(activeContext.id, data.imageUrl, data.prompt); }
-        }
-
-        function openManualImageModal() { document.getElementById('image-gen-modal').classList.remove('hidden'); }
-        
-        async function enhancePromptWithWand() {
-            let input = document.getElementById('manual-prompt-input');
-            let res = await fetch('/api/enhance-prompt', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({keywords: input.value, character: characters.find(c => c.id === activeContext.id)})});
-            let data = await res.json();
-            if(data.masterPrompt) input.value = data.masterPrompt;
+        async function downloadLightboxImage() {
+            if(!activeLightboxImgUrl) return;
+            try {
+                const res = await fetch(activeLightboxImgUrl);
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url; a.download = `Photo_${Date.now()}.jpg`;
+                document.body.appendChild(a); a.click();
+                window.URL.revokeObjectURL(url); document.body.removeChild(a);
+            } catch(e) { alert("Download failed"); }
         }
 
         async function submitManualImageGen() {
@@ -398,7 +306,6 @@ HTML_CODE = """
             if(data.imageUrl) { typeWriterEffect(c.name, `*Here is the photo!*`, c.avatar, data.imageUrl, data.prompt); saveToCharacterGallery(activeContext.id, data.imageUrl, data.prompt); }
         }
 
-        // --- CORE CHAT LOGIC ---
         async function typeWriterEffect(sender, fullText, avatar, image = null, prompt = null) {
             let msg = { sender, text: fullText, avatar };
             if(image) { msg.image = image; msg.prompt = prompt; }
@@ -412,37 +319,28 @@ HTML_CODE = """
             container.innerHTML = history.map((m, idx) => {
                 let isUser = m.sender === 'You';
                 return `<div class="message ${isUser ? 'user':'ai'}">
-                    <img class="avatar" src="${isUser ? userPersona.avatar : m.avatar}" />
                     <div class="content">
-                        ${m.text.replace(/\*(.*?)\*/g, '<span class="action-text">*$1*</span>')}
+                        ${m.text}
                         ${m.image ? `<img src="${m.image}" class="chat-img-attachment" onclick="openLightbox('${m.image}', '${m.prompt}')" />` : ''}
-                        <div class="bubble-controls"><span class="edit-link" onclick="tweakMsg(${idx})">edit</span>${!isUser ? `<span class="continue-bubble-btn" onclick="continueAiReply()">&gt;&gt; continue</span>` : ''}</div>
                     </div>
                 </div>`;
             }).join('');
             container.scrollTop = container.scrollHeight;
         }
 
-        async function sendMsg() {
-            let input = document.getElementById('chat-input');
-            if(!input.value.trim()) return;
-            chatHistories[activeContext.id].push({ sender: 'You', text: input.value });
-            input.value = '';
+        function renderSidebar() {
+            document.getElementById('char-list').innerHTML = characters.map(c => `<button class="item-btn" onclick="openChat('char', '${c.id}')"><span>${c.name}</span></button>`).join('');
+        }
+
+        function openChat(type, id) {
+            activeContext = { type, id };
+            document.getElementById('dashboard-view').classList.add('hidden');
+            document.getElementById('gallery-view').classList.add('hidden');
+            document.getElementById('chat-view').classList.remove('hidden');
+            document.getElementById('top-actions').classList.remove('hidden');
             renderMessages();
-            fetchAIResponse();
         }
 
-        async function fetchAIResponse(isContinue = false) {
-            let res = await fetch('/api/advanced-chat', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({type: activeContext.type, contextId: activeContext.id, userPersona, isContinue, history: chatHistories[activeContext.id], character: characters.find(c => c.id === activeContext.id)})});
-            let data = await res.json();
-            if(data.responses) {
-                data.responses.forEach(r => typeWriterEffect(r.sender, r.text, r.avatar, r.image, r.prompt));
-            }
-        }
-
-        // --- AVATAR & MISC ---
-        function openAvatarCropperModal(type) { currentEditingAvatarType = type; document.getElementById('cropper-modal').classList.remove('hidden'); }
-        function applyCroppedAvatar() { document.getElementById('cropper-modal').classList.add('hidden'); }
         renderSidebar();
     </script>
 </body>
@@ -452,72 +350,22 @@ HTML_CODE = """
 @app.route("/")
 def home(): return render_template_string(HTML_CODE)
 
-@app.route("/api/enhance-prompt", methods=["POST"])
-def enhance_prompt():
-    data = request.json
-    api_key = os.environ.get("GROQ_API_KEY")
-    c = data.get("character", {})
-    raw = data.get("keywords", "")
-    
-    system_prompt = f"""
-Role: Professional Realism AI Prompt Architect.
-Character: {c.get('name', 'Person')}, Appearance: {c.get('appearance', '')}
-User keywords: '{raw}'
-
-Expand this into a master photorealistic prompt.
-CRITICAL ENFORCEMENT: Include "candid photograph, 35mm film, grainy, natural skin pores, realistic depth of field, sharp focus on eyes, soft cinematic natural light, raw detail, 8k".
-Output ONLY the final master prompt.
-    """
-    res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={"model": "llama-3.1-8b-instant", "messages": [{"role": "system", "content": system_prompt}]}, headers={"Authorization": f"Bearer {api_key.strip()}", "Content-Type": "application/json"}).json()
-    return jsonify({"masterPrompt": res["choices"][0]["message"]["content"].strip()})
-
 @app.route("/api/generate-image", methods=["POST"])
 def generate_image():
     data = request.json
     c = data.get("character", {})
-    user_prompt = data.get("userPrompt", "candid shot")
+    user_prompt = data.get("userPrompt", "candid photo")
 
-    # Realism & Camera Physics Prompt (Gemini-style quality)
-    raw_prompt = f"candid photograph of {c.get('name', 'person')}, {c.get('appearance', '')}, {user_prompt}, shot on 35mm film, grainy, natural skin pores, realistic depth of field, sharp focus on eyes, soft cinematic natural light, authentic, unretouched, raw detail, 8k"
-    negative = "cartoon, anime, 3d render, doll, plastic skin, airbrushed, smooth, polished, filter, glowing skin, artificial, drawing, illustration, glossy, stretched"
+    # Real human prompt + 768x1024 native non-stretched 4:3 aspect ratio
+    raw_prompt = f"candid photograph of {c.get('name', 'person')}, {c.get('appearance', '')}, {user_prompt}, realistic skin texture, natural lighting, 35mm film detail, unedited"
+    negative = "cartoon, anime, 3d render, doll, plastic skin, airbrushed, smooth, stretched, distorted proportions"
 
     encoded_p = urllib.parse.quote(raw_prompt)
     encoded_n = urllib.parse.quote(negative)
-    seed = random.randint(1000, 999999)
 
-    # 1024x1792 (Native 9:16 portrait ratio - zero stretching)
-    image_url = f"https://image.pollinations.ai/prompt/{encoded_p}?negative={encoded_n}&width=1024&height=1792&nologo=true&seed={seed}&model=flux"
+    # Fixed 768x1024 Dimensions
+    image_url = f"https://image.pollinations.ai/prompt/{encoded_p}?negative={encoded_n}&width=768&height=1024&nologo=true&seed={random.randint(1000, 999999)}&model=turbo"
 
     return jsonify({"imageUrl": image_url, "prompt": user_prompt})
 
-@app.route("/api/advanced-chat", methods=["POST"])
-def advanced_chat():
-    data = request.json
-    api_key = os.environ.get("GROQ_API_KEY")
-    c = data["character"]
-    last_user_msg = data["history"][-1]["text"].lower() if data["history"] else ""
-    photo_requested = any(kw in last_user_msg for kw in ["photo", "pic", "picture", "selfie", "bhejo", "vejo", "dikhao"])
-
-    system_prompt = f"You are {c['name']}, {c.get('backstory', '')}. Stay in character. If asked for a photo, agree naturally."
-
-    messages = [{"role": "system", "content": system_prompt}]
-    for m in data["history"][-50:]:
-        messages.append({"role": "user" if m["sender"] == "You" else "assistant", "content": m["text"]})
-
-    res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={"model": "llama-3.1-8b-instant", "messages": messages}, headers={"Authorization": f"Bearer {api_key.strip()}", "Content-Type": "application/json"}).json()
-    reply = res["choices"][0]["message"]["content"]
-    resp = {"sender": c['name'], "text": reply, "avatar": c['avatar']}
-
-    if photo_requested:
-        auto_prompt = f"raw candid photo of {c['name']}, {c.get('appearance', '')}, natural skin texture, visible pores, unedited, shot on 35mm film, authentic, natural lighting"
-        neg_prompt = "cartoon, anime, plastic, smoothed skin, doll, 3d, airbrushed, glossy, stretched"
-        encoded_p = urllib.parse.quote(auto_prompt)
-        encoded_n = urllib.parse.quote(neg_prompt)
-
-        resp["image"] = f"https://image.pollinations.ai/prompt/{encoded_p}?negative={encoded_n}&width=1024&height=1792&nologo=true&seed={random.randint(1000,999999)}&model=flux"
-        resp["prompt"] = "candid shot"
-
-    return jsonify({"responses": [resp]})
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+if __name__ == "__main__": app.run(host="0.0.0.0", port=10000)
