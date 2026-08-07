@@ -1,6 +1,8 @@
 import os
 import requests
 import json
+import urllib.parse
+import random
 from flask import Flask, request, jsonify, render_template_string
 
 app = Flask(__name__)
@@ -16,7 +18,6 @@ HTML_CODE = """
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <style>
         :root {
-            /* Default Dark Theme Colors */
             --bg-main: #050508;
             --bg-surface: #121215;
             --bg-input: #09090b;
@@ -30,7 +31,6 @@ HTML_CODE = """
             --ai-msg-bg: #121215;
             --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
             
-            /* Sidebar Theme Variables (Dynamic) */
             --sidebar-bg: #09090b;
             --sidebar-border: #27272a;
             --sidebar-text: #f4f4f5;
@@ -39,7 +39,6 @@ HTML_CODE = """
         }
 
         [data-theme="light"] {
-            /* Light Theme Colors */
             --bg-main: #f4f4f5;
             --bg-surface: #ffffff;
             --bg-input: #ffffff;
@@ -50,7 +49,6 @@ HTML_CODE = """
             --ai-msg-bg: #ffffff;
             --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 
-            /* Sidebar Light Theme Overrides */
             --sidebar-bg: #ffffff;
             --sidebar-border: #e4e4e7;
             --sidebar-text: #09090b;
@@ -61,28 +59,15 @@ HTML_CODE = """
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         
         html, body { 
-            height: 100dvh; 
-            width: 100vw; 
-            background: #000000; 
-            color: var(--text-main); 
-            overflow: hidden; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
+            height: 100dvh; width: 100vw; background: #000000; color: var(--text-main); 
+            overflow: hidden; display: flex; justify-content: center; align-items: center; 
             transition: background 0.3s, color 0.3s;
         }
 
         .app-container {
-            width: 100%; 
-            max-width: 440px; 
-            height: 100dvh;
-            background: var(--bg-main); 
-            display: flex; 
-            flex-direction: column; 
-            position: relative;
-            overflow: hidden; 
-            border: 1px solid var(--border-color);
-            transition: background 0.3s;
+            width: 100%; max-width: 440px; height: 100dvh; background: var(--bg-main); 
+            display: flex; flex-direction: column; position: relative; overflow: hidden; 
+            border: 1px solid var(--border-color); transition: background 0.3s;
         }
         @media (min-width: 500px) { .app-container { height: 94dvh; border-radius: 20px; } }
 
@@ -90,13 +75,15 @@ HTML_CODE = """
         .top-bar { height: 52px; min-height: 52px; background: var(--bg-surface); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 16px; z-index: 10; transition: background 0.3s; }
         .toggle-btn { background: transparent; border: none; color: var(--text-main); font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .top-title { font-weight: 700; font-size: 1rem; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
-        .icon-btn { background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; }
+        .icon-btn { background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; position: relative; }
 
-        /* DYNAMIC SIDEBAR (Adapts to Light / Dark Mode) */
+        /* Red Notification Dot for Gallery */
+        .notification-dot { position: absolute; top: 2px; right: 2px; width: 8px; height: 8px; background: #ef4444; border-radius: 50%; border: 1.5px solid var(--bg-surface); }
+
+        /* Dynamic Sidebar */
         .sidebar { 
             position: absolute; top: 0; left: 0; width: 85%; height: 100%; 
-            background: var(--sidebar-bg); 
-            color: var(--sidebar-text);
+            background: var(--sidebar-bg); color: var(--sidebar-text);
             border-right: 1px solid var(--sidebar-border); display: flex; flex-direction: column; 
             transition: transform 0.3s ease, background 0.3s; z-index: 100; transform: translateX(-100%); pointer-events: none; 
         }
@@ -107,7 +94,6 @@ HTML_CODE = """
 
         .nav-section { padding: 12px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
 
-        /* Accordion Menu */
         .menu-category-btn { width: 100%; padding: 12px 14px; background: var(--sidebar-btn-bg); border: 1px solid var(--sidebar-border); color: var(--sidebar-text); border-radius: 10px; text-align: left; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-size: 0.92rem; font-weight: 600; }
         .menu-category-btn i.cat-icon { color: var(--accent-pink); font-size: 1rem; margin-right: 10px; }
         .menu-category-btn .arrow-icon { font-size: 0.8rem; color: var(--text-sub); transition: transform 0.2s ease; }
@@ -148,9 +134,10 @@ HTML_CODE = """
         .message.ai .content { border-bottom-left-radius: 2px; }
         .message .sender-name { font-size: 0.7rem; color: var(--text-sub); margin-bottom: 3px; font-weight: 600; }
         
+        /* Inline Chat Image Styles */
+        .chat-img-attachment { width: 100%; max-width: 240px; border-radius: 10px; margin-top: 6px; cursor: pointer; border: 1px solid var(--border-color); display: block; }
+
         .action-text { color: var(--action-text); font-style: italic; font-weight: 500; }
-        
-        /* Subtle Link Container inside Bubble */
         .bubble-controls { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
         .edit-link, .continue-bubble-btn { font-size: 0.68rem; color: var(--text-sub); text-decoration: underline; cursor: pointer; opacity: 0.65; transition: opacity 0.2s; }
         .edit-link:hover, .continue-bubble-btn:hover { opacity: 1; color: var(--accent-pink); }
@@ -162,40 +149,23 @@ HTML_CODE = """
         .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
         @keyframes pulse { 0%, 100% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.1); } }
 
-        /* Input Area & Transparent In-Box Magic Wand */
+        /* Input Area & Magic Wand */
         .input-area { padding: 10px 12px; border-top: 1px solid var(--border-color); background: var(--bg-surface); display: flex; gap: 8px; width: 100%; align-items: center; }
         .input-wrapper { position: relative; flex: 1; display: flex; align-items: center; }
         .input-wrapper input { 
-            width: 100%; 
-            background: var(--bg-input); 
-            border: 1px solid var(--border-color); 
-            padding: 10px 38px 10px 12px; 
-            border-radius: 20px; 
-            color: var(--text-main); 
-            outline: none; 
-            font-size: 0.88rem; 
+            width: 100%; background: var(--bg-input); border: 1px solid var(--border-color); 
+            padding: 10px 38px 10px 12px; border-radius: 20px; color: var(--text-main); 
+            outline: none; font-size: 0.88rem; 
         }
 
         .wand-inbox-btn { 
-            position: absolute; 
-            right: 10px; 
-            background: transparent; 
-            border: none; 
-            color: var(--accent-pink); 
-            opacity: 0.6; 
-            font-size: 0.95rem; 
-            cursor: pointer; 
-            transition: opacity 0.2s, transform 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 4px;
+            position: absolute; right: 10px; background: transparent; border: none; 
+            color: var(--accent-pink); opacity: 0.6; font-size: 0.95rem; cursor: pointer; 
+            transition: opacity 0.2s, transform 0.2s; display: flex; align-items: center; justify-content: center; padding: 4px;
         }
         .wand-inbox-btn:hover, .wand-inbox-btn:active { opacity: 1; transform: scale(1.15); }
 
         .input-area button.send-btn { height: 38px; padding: 0 14px; background: linear-gradient(135deg, #9333ea, #ec4899); color: #ffffff; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        
-        /* Camera Button for Future Img2Img */
         .tool-btn { background: var(--bg-input) !important; color: var(--accent-pink) !important; border: 1px solid var(--border-color) !important; padding: 0 10px !important; font-size: 0.95rem; border-radius: 10px !important; height: 38px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
         /* Form Styles */
@@ -206,59 +176,38 @@ HTML_CODE = """
         .form-group textarea { height: 75px; resize: vertical; }
 
         /* Interactive Avatar Clickable Component */
-        .avatar-edit-trigger {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: var(--bg-surface);
-            border: 1px solid var(--border-color);
-            padding: 10px 14px;
-            border-radius: 12px;
-            cursor: pointer;
-        }
-        .avatar-thumb-wrapper {
-            width: 54px; height: 54px; border-radius: 50%; overflow: hidden;
-            border: 2px solid var(--accent-pink); flex-shrink: 0; background: var(--border-color);
-            display: flex; justify-content: center; align-items: center;
-        }
+        .avatar-edit-trigger { display: flex; align-items: center; gap: 12px; background: var(--bg-surface); border: 1px solid var(--border-color); padding: 10px 14px; border-radius: 12px; cursor: pointer; }
+        .avatar-thumb-wrapper { width: 54px; height: 54px; border-radius: 50%; overflow: hidden; border: 2px solid var(--accent-pink); flex-shrink: 0; background: var(--border-color); display: flex; justify-content: center; align-items: center; }
         .avatar-thumb-wrapper img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* Interactive Cropper.js Avatar Modal */
-        .avatar-modal-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.88); backdrop-filter: blur(8px);
-            z-index: 200; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; padding: 16px;
-        }
-        .avatar-modal-card {
-            width: 100%; max-width: 360px; background: #121215;
-            border: 1px solid #27272a; border-radius: 20px; padding: 16px;
-            display: flex; flex-direction: column; align-items: center; gap: 14px; color: #ffffff;
-        }
-        .cropper-container-box {
-            width: 100%; height: 260px; background: #000; border-radius: 12px;
-            overflow: hidden; border: 1px solid #27272a; position: relative;
-        }
+        /* Modal Overlays */
+        .avatar-modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.88); backdrop-filter: blur(8px); z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px; }
+        .avatar-modal-card { width: 100%; max-width: 360px; background: #121215; border: 1px solid #27272a; border-radius: 20px; padding: 16px; display: flex; flex-direction: column; align-items: center; gap: 14px; color: #ffffff; }
+        .cropper-container-box { width: 100%; height: 260px; background: #000; border-radius: 12px; overflow: hidden; border: 1px solid #27272a; position: relative; }
 
-        /* Generic Backup Options Modal */
-        .modal-card {
-            width: 100%; max-width: 340px; background: var(--bg-surface);
-            border: 1px solid var(--border-color); border-radius: 20px; padding: 20px;
-            display: flex; flex-direction: column; gap: 12px; max-height: 80vh; overflow-y: auto; color: var(--text-main);
-        }
+        .modal-card { width: 100%; max-width: 340px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 12px; max-height: 80vh; overflow-y: auto; color: var(--text-main); }
 
         .submit-btn { width: 100%; padding: 11px; background: linear-gradient(135deg, #9333ea, #ec4899); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 0.9rem; margin-top: 8px; }
         .delete-btn { background: #ef4444 !important; margin-top: 10px; }
 
-        .hidden { display: none !important; }
+        /* Fullscreen Image Lightbox Overlay */
+        .lightbox-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.92); backdrop-filter: blur(10px); z-index: 300; display: flex; flex-direction: column; justify-content: space-between; padding: 20px 16px; align-items: center; }
+        .lightbox-img { max-width: 95%; max-height: 75vh; border-radius: 16px; object-fit: contain; border: 1px solid #27272a; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        .lightbox-actions { display: flex; gap: 12px; width: 100%; max-width: 340px; margin-bottom: 20px; }
+        .lightbox-btn { flex: 1; padding: 12px; background: #121215; border: 1px solid #27272a; color: #ffffff; border-radius: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.88rem; }
+        .lightbox-btn.primary { background: linear-gradient(135deg, #9333ea, #ec4899); border: none; }
 
-        /* Highly Saturated & Crisp SVG Logo Component Styling */
+        /* Gallery Grid */
+        .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
+        .gallery-item { position: relative; border-radius: 12px; overflow: hidden; height: 160px; border: 1px solid var(--border-color); cursor: pointer; }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
+
+        .hidden { display: none !important; }
         .aura-logo-svg { width: 28px; height: 28px; filter: drop-shadow(0 0 6px rgba(236,72,153,0.5)); }
     </style>
 </head>
 <body data-theme="dark">
 
-    <!-- Inline High-Contrast Saturated SVG Logo Template -->
     <svg class="hidden">
         <defs>
             <linearGradient id="roleGradVibrant" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -267,17 +216,15 @@ HTML_CODE = """
                 <stop offset="100%" stop-color="#f43f5e"/>
             </linearGradient>
             <g id="aura-brand-icon">
-                <!-- Base Glow Contour -->
                 <path d="M 20 6 C 50 6, 75 30, 65 70 C 55 110, 20 120, 0 80 C -15 50 -10 6 20 6 Z" fill="url(#roleGradVibrant)" stroke="#ffffff" stroke-width="3" opacity="0.95"/>
                 <path d="M 45 30 C 0 30, -20 60, -5 100 C 10 135, 50 140, 70 110 C 85 70, 75 30, 45 30 Z" fill="#ec4899" stroke="#9333ea" stroke-width="2.5" opacity="0.85"/>
-                <!-- Central Bright Sparkle -->
                 <path d="M 30 -5 Q 30 15 50 15 Q 30 15 30 35 Q 30 15 10 15 Q 30 15 30 -5 Z" fill="#ffffff"/>
             </g>
         </defs>
     </svg>
 
     <div class="app-container">
-        <!-- Sidebar Navigation (DYNAMIC LIGHT / DARK THEME) -->
+        <!-- Sidebar Navigation -->
         <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <span style="display:flex; align-items:center; gap:8px;">
@@ -334,9 +281,9 @@ HTML_CODE = """
                 </div>
             </div>
             
-            <!-- Header Action Controls -->
             <div style="display: flex; gap: 6px; align-items: center;">
                 <div id="top-actions" class="hidden" style="display: flex; gap: 6px;">
+                    <button class="icon-btn" id="gallery-btn" onclick="openCharacterGallery()" title="Photo Gallery">🖼️<span id="gallery-red-dot" class="notification-dot hidden"></span></button>
                     <button class="icon-btn" id="pin-mem-btn" onclick="openPinnedMemoryModal()" title="Pin Memory"><i class="fa-solid fa-thumbtack"></i></button>
                     <button class="icon-btn" onclick="handleEditClick()" title="Edit Companion / Group"><i class="fa-solid fa-wrench"></i></button>
                     <button class="icon-btn" onclick="regenerateLastResponse()" title="Regenerate"><i class="fa-solid fa-rotate-right"></i></button>
@@ -345,14 +292,14 @@ HTML_CODE = """
             </div>
         </div>
 
-        <!-- Main Workspace Area -->
+        <!-- Main Workspace -->
         <div class="workspace">
             <!-- Dashboard View -->
             <div id="dashboard-view" class="dashboard">
                 <svg viewBox="-40 -20 140 180" class="dash-logo"><use href="#aura-brand-icon"/></svg>
                 <h2 class="dash-title">Welcome to Aura</h2>
                 <p class="dash-sub">Your personal AI companion & roleplay platform.</p>
-                
+
                 <div class="dash-card" onclick="openNewCharForm()">
                     <i class="fa-solid fa-user-plus"></i>
                     <div>
@@ -390,14 +337,13 @@ HTML_CODE = """
             <div id="chat-view" class="hidden">
                 <div class="chat-messages" id="message-container"></div>
                 <div class="input-area">
-                    <!-- Photo Generation Button Placeholder for Future Img2Img -->
-                    <button class="tool-btn" onclick="alert('Image Generation Feature coming up next!')" title="Generate AI Image">🤳</button>
-                    
+                    <button class="tool-btn" onclick="openManualImageModal()" title="Generate AI Image">🤳</button>
+
                     <div class="input-wrapper">
                         <input type="text" id="chat-input" placeholder="Message..." onkeypress="if(event.key==='Enter') sendMsg()">
                         <button class="wand-inbox-btn" onclick="suggestUserMessage()" title="Magic Auto-Suggest">🪄</button>
                     </div>
-                    
+
                     <button class="send-btn" onclick="sendMsg()"><i class="fa-solid fa-paper-plane"></i></button>
                 </div>
             </div>
@@ -406,7 +352,7 @@ HTML_CODE = """
             <div id="char-form" class="form-container hidden">
                 <h3 style="margin-bottom: 14px;" id="char-form-title">Create Companion</h3>
                 <input type="hidden" id="char-id">
-                
+
                 <div class="form-group">
                     <label>Avatar Picture (Pinch & Drag Cropper)</label>
                     <div class="avatar-edit-trigger" onclick="openAvatarCropperModal('char')">
@@ -454,7 +400,7 @@ HTML_CODE = """
                 <button class="submit-btn delete-btn" id="char-delete-btn" onclick="deleteCurrentCharacter()">Delete Companion</button>
             </div>
 
-            <!-- Group Chat Creation & Editing Form -->
+            <!-- Group Form -->
             <div id="group-form" class="form-container hidden">
                 <h3 style="margin-bottom: 14px;" id="group-form-title">Create Group Chat</h3>
                 <input type="hidden" id="group-id">
@@ -496,10 +442,10 @@ HTML_CODE = """
                 <button class="submit-btn delete-btn" id="group-delete-btn" onclick="deleteCurrentGroup()">Delete Group Room</button>
             </div>
 
-            <!-- User Persona & Backup Form -->
+            <!-- Settings Form -->
             <div id="settings-form" class="form-container hidden">
                 <h3 style="margin-bottom: 14px;">User Persona & Settings</h3>
-                
+
                 <div class="form-group">
                     <label>Your Avatar Picture (Pinch & Drag Cropper)</label>
                     <div class="avatar-edit-trigger" onclick="openAvatarCropperModal('user')">
@@ -536,9 +482,49 @@ HTML_CODE = """
                     <input type="file" id="import-file" accept=".json" onchange="importData(this)">
                 </div>
             </div>
+
+            <!-- Dedicated Character Photo Gallery View -->
+            <div id="gallery-view" class="form-container hidden">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <h3 id="gallery-char-title">Photo Gallery</h3>
+                    <button class="icon-btn" onclick="openChat('char', activeContext.id)"><i class="fa-solid fa-arrow-left"></i></button>
+                </div>
+                <div class="gallery-grid" id="gallery-grid-container"></div>
+            </div>
         </div>
 
-        <!-- Pinch & Drag Cropper.js Modal Overlay -->
+        <!-- Manual Image Generation Modal (Option 1) -->
+        <div id="image-gen-modal" class="avatar-modal-overlay hidden">
+            <div class="avatar-modal-card">
+                <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
+                    <h4 style="font-size:1rem;">Generate AI Selfie / Photo</h4>
+                    <button class="toggle-btn" style="color:#ffffff;" onclick="document.getElementById('image-gen-modal').classList.add('hidden')"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+
+                <div class="input-wrapper" style="width:100%;">
+                    <input type="text" id="manual-prompt-input" placeholder="Keywords (e.g. beach, smiling, casual dress)">
+                    <button class="wand-inbox-btn" onclick="enhancePromptWithWand()" title="Magic Wand Master Prompt Generator">🪄</button>
+                </div>
+
+                <button class="submit-btn" id="generate-img-btn" onclick="submitManualImageGen()">Generate Image</button>
+            </div>
+        </div>
+
+        <!-- Fullscreen Image Lightbox Viewer (Option 5) -->
+        <div id="lightbox-modal" class="lightbox-overlay hidden">
+            <div style="width:100%; display:flex; justify-content:flex-end;">
+                <button class="toggle-btn" style="color:#ffffff; font-size:1.5rem;" onclick="document.getElementById('lightbox-modal').classList.add('hidden')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <img id="lightbox-target-img" class="lightbox-img" src="">
+
+            <div class="lightbox-actions">
+                <button class="lightbox-btn" onclick="downloadLightboxImage()"><i class="fa-solid fa-download"></i> Download</button>
+                <button class="lightbox-btn primary" onclick="regenerateLightboxImage()"><i class="fa-solid fa-rotate-right"></i> Regenerate</button>
+            </div>
+        </div>
+
+        <!-- Pinch & Drag Cropper Modal -->
         <div id="cropper-modal" class="avatar-modal-overlay hidden">
             <div class="avatar-modal-card">
                 <h4 style="font-size:1rem;">Crop & Adjust Avatar (512x512)</h4>
@@ -556,7 +542,7 @@ HTML_CODE = """
             </div>
         </div>
 
-        <!-- Selective Backup Chooser Modal -->
+        <!-- Selective Backup Modal -->
         <div id="backup-modal" class="avatar-modal-overlay hidden">
             <div class="modal-card">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -582,14 +568,17 @@ HTML_CODE = """
         let characters = JSON.parse(localStorage.getItem('aura_chars') || '[]');
         let groups = JSON.parse(localStorage.getItem('aura_groups') || '[]');
         let chatHistories = JSON.parse(localStorage.getItem('aura_chats') || '{}');
+        let galleries = JSON.parse(localStorage.getItem('aura_galleries') || '{}');
         let userPersona = JSON.parse(localStorage.getItem('aura_user') || '{"name":"User", "bio":"", "avatar":"https://api.dicebear.com/7.x/identicon/svg?seed=user"}');
         let currentTheme = localStorage.getItem('aura_theme') || 'dark';
         let activeContext = null;
 
+        let activeLightboxImgUrl = '';
+        let activeLightboxPrompt = '';
+
         let cropperInstance = null;
         let currentEditingAvatarType = null;
 
-        // Apply Theme on Initial Load
         document.body.setAttribute('data-theme', currentTheme);
         updateThemeToggleIcon();
 
@@ -630,6 +619,7 @@ HTML_CODE = """
             document.getElementById('char-form').classList.add('hidden');
             document.getElementById('group-form').classList.add('hidden');
             document.getElementById('settings-form').classList.add('hidden');
+            document.getElementById('gallery-view').classList.add('hidden');
             document.getElementById('top-actions').classList.add('hidden');
             document.getElementById('top-title').innerHTML = `<svg viewBox="-40 -20 140 180" class="aura-logo-svg"><use href="#aura-brand-icon"/></svg> Aura`;
         }
@@ -646,6 +636,7 @@ HTML_CODE = """
             localStorage.setItem('aura_chars', JSON.stringify(characters));
             localStorage.setItem('aura_groups', JSON.stringify(groups));
             localStorage.setItem('aura_chats', JSON.stringify(chatHistories));
+            localStorage.setItem('aura_galleries', JSON.stringify(galleries));
             localStorage.setItem('aura_user', JSON.stringify(userPersona));
             renderSidebar();
         }
@@ -666,17 +657,8 @@ HTML_CODE = """
             if(cropperInstance) cropperInstance.destroy();
             
             cropperInstance = new Cropper(imgElem, {
-                aspectRatio: 1,
-                viewMode: 1,
-                dragMode: 'move',
-                autoCropArea: 0.9,
-                restore: false,
-                guides: false,
-                center: true,
-                highlight: false,
-                cropBoxMovable: true,
-                cropBoxResizable: true,
-                toggleDragModeOnDblclick: false
+                aspectRatio: 1, viewMode: 1, dragMode: 'move', autoCropArea: 0.9, restore: false,
+                guides: false, center: true, highlight: false, cropBoxMovable: true, cropBoxResizable: true, toggleDragModeOnDblclick: false
             });
         }
 
@@ -688,14 +670,7 @@ HTML_CODE = """
                     let imgElem = document.getElementById('cropper-target-img');
                     imgElem.src = e.target.result;
                     cropperInstance = new Cropper(imgElem, {
-                        aspectRatio: 1,
-                        viewMode: 1,
-                        dragMode: 'move',
-                        autoCropArea: 0.9,
-                        restore: false,
-                        guides: false,
-                        center: true,
-                        highlight: false
+                        aspectRatio: 1, viewMode: 1, dragMode: 'move', autoCropArea: 0.9, restore: false, guides: false, center: true, highlight: false
                     });
                 };
                 reader.readAsDataURL(input.files[0]);
@@ -743,7 +718,8 @@ HTML_CODE = """
             let charBackup = {
                 type: 'single_character_backup',
                 character: c,
-                chatHistory: chatHistories[charId] || []
+                chatHistory: chatHistories[charId] || [],
+                gallery: galleries[charId] || []
             };
 
             let blob = new Blob([JSON.stringify(charBackup, null, 2)], { type: 'application/json' });
@@ -755,7 +731,7 @@ HTML_CODE = """
         }
 
         function exportFullData() {
-            let backupData = { characters, groups, chatHistories, userPersona };
+            let backupData = { characters, groups, chatHistories, galleries, userPersona };
             let blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
             let a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
@@ -825,7 +801,6 @@ HTML_CODE = """
             document.getElementById('group-avatar-preview').src = g.avatar || 'https://api.dicebear.com/7.x/shapes/svg?seed=' + g.id;
             document.getElementById('group-form-title').innerText = 'Modify Group Settings';
             document.getElementById('group-delete-btn').classList.remove('hidden');
-            
             showForm('group-form');
         }
 
@@ -836,6 +811,7 @@ HTML_CODE = """
             if(confirm("Are you sure? This character and all chat history will be permanently deleted!")) {
                 characters = characters.filter(c => c.id !== id);
                 delete chatHistories[id];
+                delete galleries[id];
                 saveState();
                 goHome();
             }
@@ -878,6 +854,7 @@ HTML_CODE = """
             document.getElementById('char-form').classList.add('hidden');
             document.getElementById('group-form').classList.add('hidden');
             document.getElementById('settings-form').classList.add('hidden');
+            document.getElementById('gallery-view').classList.add('hidden');
             document.getElementById('top-actions').classList.add('hidden');
             document.getElementById(formId).classList.remove('hidden');
 
@@ -974,11 +951,17 @@ HTML_CODE = """
             document.getElementById('char-form').classList.add('hidden');
             document.getElementById('group-form').classList.add('hidden');
             document.getElementById('settings-form').classList.add('hidden');
+            document.getElementById('gallery-view').classList.add('hidden');
             document.getElementById('chat-view').classList.remove('hidden');
             document.getElementById('top-actions').classList.remove('hidden');
 
-            if(type === 'group') document.getElementById('pin-mem-btn').classList.add('hidden');
-            else document.getElementById('pin-mem-btn').classList.remove('hidden');
+            if(type === 'group') {
+                document.getElementById('pin-mem-btn').classList.add('hidden');
+                document.getElementById('gallery-btn').classList.add('hidden');
+            } else {
+                document.getElementById('pin-mem-btn').classList.remove('hidden');
+                document.getElementById('gallery-btn').classList.remove('hidden');
+            }
 
             renderSidebar();
             
@@ -1002,8 +985,8 @@ HTML_CODE = """
                 let userImg = userPersona.avatar || 'https://api.dicebear.com/7.x/identicon/svg?seed=user';
                 let avatar = isUser ? userImg : m.avatar;
                 
-                // Show continue button only inside AI Chat Bubbles
                 let continueBtnHtml = !isUser ? `<span class="continue-bubble-btn" onclick="continueAiReply()" title="Continue message">&gt;&gt; continue</span>` : '';
+                let imgAttachmentHtml = m.image ? `<img src="${m.image}" class="chat-img-attachment" onclick="openLightbox('${m.image}', '${m.prompt || ''}')" />` : '';
 
                 return `
                     <div class="message ${isUser ? 'user':'ai'}">
@@ -1012,6 +995,7 @@ HTML_CODE = """
                             <div class="sender-name">${m.sender}</div>
                             <div class="content">
                                 ${formatText(m.text)}
+                                ${imgAttachmentHtml}
                                 <div class="bubble-controls">
                                     <span class="edit-link" onclick="tweakMsg(${idx})">edit</span>
                                     ${continueBtnHtml}
@@ -1034,7 +1018,7 @@ HTML_CODE = """
             }
         }
 
-        async function typeWriterEffect(sender, fullText, avatar) {
+        async function typeWriterEffect(sender, fullText, avatar, image = null, prompt = null) {
             let container = document.getElementById('message-container');
             
             let typingDiv = document.createElement('div');
@@ -1067,7 +1051,13 @@ HTML_CODE = """
                 await new Promise(resolve => setTimeout(resolve, 30));
             }
 
-            chatHistories[activeContext.id].push({ sender, text: fullText, avatar });
+            let msgObj = { sender, text: fullText, avatar };
+            if(image) {
+                msgObj.image = image;
+                msgObj.prompt = prompt;
+            }
+
+            chatHistories[activeContext.id].push(msgObj);
             saveState();
             renderMessages();
         }
@@ -1142,8 +1132,157 @@ HTML_CODE = """
             let data = await res.json();
             if(data.responses) {
                 for (let r of data.responses) {
-                    await typeWriterEffect(r.sender, r.text, r.avatar);
+                    await typeWriterEffect(r.sender, r.text, r.avatar, r.image, r.prompt);
+                    
+                    if(r.image && activeContext.type === 'char') {
+                        saveToCharacterGallery(activeContext.id, r.image, r.prompt);
+                    }
                 }
+            }
+        }
+
+        /* Dedicated Gallery Functions */
+        function saveToCharacterGallery(charId, imgUrl, promptText) {
+            if(!galleries[charId]) galleries[charId] = [];
+            galleries[charId].unshift({ id: 'img_' + Date.now(), url: imgUrl, prompt: promptText, date: new Date().toLocaleTimeString() });
+            saveState();
+
+            // Show Red Dot Indicator
+            let dot = document.getElementById('gallery-red-dot');
+            if(dot) dot.classList.remove('hidden');
+        }
+
+        function openCharacterGallery() {
+            if(!activeContext || activeContext.type !== 'char') return;
+            let charId = activeContext.id;
+            let c = characters.find(item => item.id === charId);
+            
+            document.getElementById('gallery-red-dot').classList.add('hidden');
+            document.getElementById('gallery-char-title').innerText = `${c.name}'s Gallery`;
+
+            let container = document.getElementById('gallery-grid-container');
+            let list = galleries[charId] || [];
+
+            if(list.length === 0) {
+                container.innerHTML = `<div style="grid-column:span 2; color:var(--text-sub); text-align:center; padding:30px 0;">No photos generated yet!</div>`;
+            } else {
+                container.innerHTML = list.map(item => `
+                    <div class="gallery-item" onclick="openLightbox('${item.url}', '${item.prompt}')">
+                        <img src="${item.url}" />
+                    </div>
+                `).join('');
+            }
+
+            document.getElementById('chat-view').classList.add('hidden');
+            document.getElementById('gallery-view').classList.remove('hidden');
+        }
+
+        /* Lightbox Fullscreen Viewer (Option 5) */
+        function openLightbox(imgUrl, promptText = '') {
+            activeLightboxImgUrl = imgUrl;
+            activeLightboxPrompt = promptText;
+
+            document.getElementById('lightbox-target-img').src = imgUrl;
+            document.getElementById('lightbox-modal').classList.remove('hidden');
+        }
+
+        function downloadLightboxImage() {
+            if(!activeLightboxImgUrl) return;
+            let a = document.createElement('a');
+            a.href = activeLightboxImgUrl;
+            a.download = `Aura_Photo_${Date.now()}.jpg`;
+            a.target = '_blank';
+            a.click();
+        }
+
+        async function regenerateLightboxImage() {
+            if(!activeLightboxPrompt || !activeContext) return;
+            alert('Regenerating photo...');
+            
+            let res = await fetch('/api/generate-image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    charId: activeContext.id,
+                    character: characters.find(c => c.id === activeContext.id),
+                    userPrompt: activeLightboxPrompt
+                })
+            });
+
+            let data = await res.json();
+            if(data.imageUrl) {
+                openLightbox(data.imageUrl, data.prompt);
+                saveToCharacterGallery(activeContext.id, data.imageUrl, data.prompt);
+            }
+        }
+
+        /* Manual Prompt Image Modal (Option 1) */
+        function openManualImageModal() {
+            if(!activeContext || activeContext.type !== 'char') return alert('Open an individual character chat to generate photos!');
+            document.getElementById('manual-prompt-input').value = '';
+            document.getElementById('image-gen-modal').classList.remove('hidden');
+        }
+
+        async function enhancePromptWithWand() {
+            let input = document.getElementById('manual-prompt-input');
+            let rawKeywords = input.value.trim();
+            if(!rawKeywords) return alert('Type keywords first (e.g. beach, red dress)');
+
+            input.placeholder = "Magic Wand expanding prompt...";
+            
+            let res = await fetch('/api/enhance-prompt', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    keywords: rawKeywords,
+                    character: characters.find(c => c.id === activeContext.id)
+                })
+            });
+
+            let data = await res.json();
+            if(data.masterPrompt) {
+                input.value = data.masterPrompt;
+            }
+            input.placeholder = "Keywords (e.g. beach, smiling)";
+        }
+
+        async function submitManualImageGen() {
+            let promptVal = document.getElementById('manual-prompt-input').value.trim();
+            if(!promptVal) return alert('Enter prompt keywords!');
+
+            document.getElementById('image-gen-modal').classList.add('hidden');
+            let c = characters.find(item => item.id === activeContext.id);
+
+            // Append typing placeholder
+            let container = document.getElementById('message-container');
+            let tempDiv = document.createElement('div');
+            tempDiv.className = 'message ai';
+            tempDiv.innerHTML = `
+                <img class="avatar" src="${c.avatar}" />
+                <div>
+                    <div class="sender-name">${c.name}</div>
+                    <div class="content">*Taking a selfie...* <div class="typing-dots"><span></span><span></span><span></span></div></div>
+                </div>
+            `;
+            container.appendChild(tempDiv);
+            container.scrollTop = container.scrollHeight;
+
+            let res = await fetch('/api/generate-image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    charId: activeContext.id,
+                    character: c,
+                    userPrompt: promptVal
+                })
+            });
+
+            let data = await res.json();
+            container.removeChild(tempDiv);
+
+            if(data.imageUrl) {
+                typeWriterEffect(c.name, `*Here is the photo you asked for!*`, c.avatar, data.imageUrl, data.prompt);
+                saveToCharacterGallery(activeContext.id, data.imageUrl, data.prompt);
             }
         }
 
@@ -1182,12 +1321,14 @@ HTML_CODE = """
                         else characters.push(c);
 
                         chatHistories[c.id] = imported.chatHistory || [];
+                        galleries[c.id] = imported.gallery || [];
                         saveState();
                         alert(`Character "${c.name}" imported successfully!`);
                     } else {
                         if(imported.characters) characters = imported.characters;
                         if(imported.groups) groups = imported.groups;
                         if(imported.chatHistories) chatHistories = imported.chatHistories;
+                        if(imported.galleries) galleries = imported.galleries;
                         if(imported.userPersona) userPersona = imported.userPersona;
                         saveState();
                         alert('Full app data imported successfully!');
@@ -1226,7 +1367,6 @@ Based on the chat history, write a short, natural, in-character next message tha
 Return ONLY the text/action response. Do not add quotes or explanations.
     """
 
-    # Ghostwriter uses last 10 messages for auto-suggest
     messages = [{"role": "system", "content": system_prompt}]
     for m in data.get("history", [])[-10:]:
         messages.append({"role": "user" if m["sender"] != "You" else "assistant", "content": f"{m['sender']}: {m['text']}"})
@@ -1241,6 +1381,56 @@ Return ONLY the text/action response. Do not add quotes or explanations.
         return jsonify({"suggestion": suggestion.strip('"')})
     except:
         return jsonify({"suggestion": "Hey! What's on your mind?"})
+
+@app.route("/api/enhance-prompt", methods=["POST"])
+def enhance_prompt():
+    data = request.json
+    api_key = os.environ.get("GROQ_API_KEY")
+    c = data.get("character", {})
+    raw_keywords = data.get("keywords", "")
+
+    if not api_key: return jsonify({"masterPrompt": raw_keywords})
+
+    system_prompt = f"""
+You are an expert AI Photo Prompt Architect.
+Character Name: {c.get('name', 'Person')}
+Appearance: {c.get('appearance', 'Attractive')}
+
+User Keywords: "{raw_keywords}"
+
+Task: Expand the keywords into a detailed 1-sentence FLUX/SDXL image prompt.
+CRITICAL RULE: LOCK the face features based on appearance. Dynamic outfit, lighting, and pose based on keywords.
+Output ONLY the final English master prompt text.
+    """
+
+    try:
+        res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={
+            "model": "llama-3.1-8b-instant",
+            "messages": [{"role": "system", "content": system_prompt}]
+        }, headers={"Authorization": f"Bearer {api_key.strip()}", "Content-Type": "application/json"}).json()
+
+        master = res["choices"][0]["message"]["content"].strip()
+        return jsonify({"masterPrompt": master})
+    except:
+        return jsonify({"masterPrompt": f"A realistic selfie of {c.get('name', '')}, {raw_keywords}, highly detailed"})
+
+@app.route("/api/generate-image", methods=["POST"])
+def generate_image():
+    data = request.json
+    c = data.get("character", {})
+    user_prompt = data.get("userPrompt", "smiling")
+
+    # Face Anchor Enforcement
+    face_anchor = f"realistic portrait selfie of {c.get('name', 'character')}, {c.get('appearance', '')}, identical face structure"
+    full_prompt = f"{face_anchor}, {user_prompt}, 8k resolution, cinematic lighting, photorealistic"
+
+    encoded_prompt = urllib.parse.quote(full_prompt)
+    seed = random.randint(1000, 999999)
+    
+    # Pollinations AI Free Unlimited Image Endpoint
+    image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=512&height=512&nologo=true&seed={seed}"
+
+    return jsonify({"imageUrl": image_url, "prompt": user_prompt})
 
 @app.route("/api/advanced-chat", methods=["POST"])
 def advanced_chat():
@@ -1263,26 +1453,27 @@ def advanced_chat():
 
     if data["type"] == "char":
         c = data["character"]
+        
+        # Check if user asked for a photo/pic in the last message
+        last_user_msg = data["history"][-1]["text"].lower() if data["history"] else ""
+        photo_requested = any(kw in last_user_msg for kw in ["photo", "pic", "picture", "selfie", "bhejo", "vejo", "dikhao", "look like"])
+
         system_prompt = f"""
 Name: {c['name']}
 Relationship with User: {c.get('relationship', 'Friend')}
 Appearance: {c.get('appearance', '')}
 Backstory: {c.get('backstory', '')}
 Directives: {c.get('directives', '')}
-Key Memories / Current Context: {c.get('memories', '')}
+Key Memories / Context: {c.get('memories', '')}
 
-User Profile:
-Name: {user_name}
-Bio: {user_bio}
+User Profile: {user_name} ({user_bio})
 
-Roleplay naturally as {c['name']}. Stay in character. Use asterisks for actions like *smiles and looks at you*.
+Roleplay naturally as {c['name']}. Stay in character. Use asterisks for actions like *smiles*.
         """
-        if data.get("isContinue"):
-            system_prompt += "\nUser pressed Continue. Extend your previous reply seamlessly."
+        if photo_requested:
+            system_prompt += "\nUser requested a photo. Agree enthusiastically in text (e.g. *Here is the picture for you!*)."
 
         messages = [{"role": "system", "content": system_prompt}]
-        
-        # MEMORY BOOSTER: Upgraded from 8 to LAST 50 MESSAGES for deep context retention
         for m in data["history"][-50:]:
             role = "user" if m["sender"] == "You" or m["sender"] == user_name else "assistant"
             messages.append({"role": role, "content": m["text"]})
@@ -1293,27 +1484,31 @@ Roleplay naturally as {c['name']}. Stay in character. Use asterisks for actions 
         }, headers=headers).json()
 
         reply_text = res["choices"][0]["message"]["content"]
-        responses.append({"sender": c['name'], "text": reply_text, "avatar": c['avatar']})
+        resp_obj = {"sender": c['name'], "text": reply_text, "avatar": c['avatar']}
+
+        # Auto Photo Generation Trigger
+        if photo_requested:
+            # Generate Auto Scenario Prompt
+            scene_prompt = f"realistic portrait selfie of {c['name']}, {c.get('appearance', '')}, current scenario in chat, detailed outfit"
+            encoded_prompt = urllib.parse.quote(scene_prompt)
+            seed = random.randint(1000, 999999)
+            resp_obj["image"] = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=512&height=512&nologo=true&seed={seed}"
+            resp_obj["prompt"] = scene_prompt
+
+        responses.append(resp_obj)
 
     else:
         group = data["group"]
         members = data["members"]
         for char in members[:2]:
             system_prompt = f"""
-You are in a group chat named "{group.get('title', 'Group Chat')}" as {char['name']}.
-Group Setting/Context: {group.get('context', '')}
-Group Directives: {group.get('directives', '')}
-
+Group Chat: "{group.get('title', 'Group Chat')}" as {char['name']}.
+Group Setting: {group.get('context', '')}
 User Profile: {user_name} ({user_bio})
-Relationship with User: {char.get('relationship', 'Friend')}
-Character Backstory: {char.get('backstory', '')}
-
-Respond briefly from {char['name']}'s perspective. Use asterisks for actions like *laughs*.
+Roleplay naturally from {char['name']}'s perspective.
             """
 
             messages = [{"role": "system", "content": system_prompt}]
-            
-            # MEMORY BOOSTER FOR GROUPS: Last 50 Messages
             for m in data["history"][-50:]:
                 messages.append({"role": "user", "content": f"{m['sender']}: {m['text']}"})
 
