@@ -16,44 +16,44 @@ HTML_CODE = """
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <style>
         :root {
-            --bg-main: #050508;
-            --bg-surface: rgba(18, 18, 21, 0.75);
-            --bg-surface-solid: #121215;
-            --bg-input: rgba(9, 9, 11, 0.85);
-            --border-color: rgba(255, 255, 255, 0.08);
+            --bg-main: #0a0b10;
+            --bg-surface: #12131c;
+            --bg-surface-solid: #161824;
+            --bg-input: #1a1c29;
+            --border-color: rgba(236, 72, 153, 0.15);
             --text-main: #f4f4f5;
             --text-sub: #a1a1aa;
             --accent-purple: #a855f7;
             --accent-pink: #ec4899;
             --action-text: #f472b6;
             --user-msg-bg: linear-gradient(135deg, #9333ea, #ec4899);
-            --ai-msg-bg: rgba(24, 24, 27, 0.7);
-            --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            --ai-msg-bg: #161824;
+            --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
             
-            --sidebar-bg: rgba(9, 9, 11, 0.85);
-            --sidebar-border: rgba(255, 255, 255, 0.08);
+            --sidebar-bg: #0a0b10;
+            --sidebar-border: rgba(236, 72, 153, 0.12);
             --sidebar-text: #f4f4f5;
-            --sidebar-btn-bg: rgba(18, 18, 21, 0.6);
-            --sidebar-btn-hover: rgba(39, 39, 42, 0.8);
+            --sidebar-btn-bg: #12131c;
+            --sidebar-btn-hover: #1c1e2d;
         }
 
         [data-theme="light"] {
             --bg-main: #f4f4f5;
-            --bg-surface: rgba(255, 255, 255, 0.75);
+            --bg-surface: #ffffff;
             --bg-surface-solid: #ffffff;
-            --bg-input: rgba(255, 255, 255, 0.85);
-            --border-color: rgba(0, 0, 0, 0.08);
+            --bg-input: #e4e4e7;
+            --border-color: rgba(168, 85, 247, 0.2);
             --text-main: #09090b;
             --text-sub: #52525b;
             --action-text: #be185d;
-            --ai-msg-bg: rgba(255, 255, 255, 0.8);
-            --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+            --ai-msg-bg: #ffffff;
+            --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
 
-            --sidebar-bg: rgba(255, 255, 255, 0.85);
-            --sidebar-border: rgba(0, 0, 0, 0.08);
+            --sidebar-bg: #ffffff;
+            --sidebar-border: rgba(168, 85, 247, 0.15);
             --sidebar-text: #09090b;
-            --sidebar-btn-bg: rgba(244, 244, 245, 0.8);
-            --sidebar-btn-hover: rgba(228, 228, 231, 0.9);
+            --sidebar-btn-bg: #f4f4f5;
+            --sidebar-btn-hover: #e4e4e7;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -80,11 +80,11 @@ HTML_CODE = """
             position: relative;
             overflow: hidden; 
             border: 1px solid var(--border-color);
+            box-shadow: 0 0 40px rgba(168, 85, 247, 0.08);
             transition: background 0.3s;
         }
         @media (min-width: 500px) { .app-container { height: 94dvh; border-radius: 20px; } }
 
-        /* Micro-interactions for buttons */
         button, .dash-card, .menu-category-btn, .item-btn, .avatar-edit-trigger {
             transition: transform 0.15s ease, background 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
         }
@@ -92,14 +92,13 @@ HTML_CODE = """
             transform: scale(0.96) !important;
         }
 
-        /* Glassmorphism Top Bar */
+        /* Top Bar (Reference Match with Purple/Pink Accent Line) */
         .top-bar { 
-            height: 52px; 
-            min-height: 52px; 
+            height: 56px; 
+            min-height: 56px; 
             background: var(--bg-surface); 
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border-color); 
+            border-bottom: 2px solid transparent;
+            border-image: linear-gradient(90deg, #a855f7, #ec4899) 1;
             display: flex; 
             align-items: center; 
             justify-content: space-between; 
@@ -110,26 +109,24 @@ HTML_CODE = """
         
         .toggle-btn { background: transparent; border: none; color: var(--text-main); font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .top-title { font-weight: 700; font-size: 1rem; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
-        .icon-btn { background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; }
+        .icon-btn { background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); width: 34px; height: 34px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; }
 
-        /* Glassmorphism Sidebar */
+        /* Sidebar Drawer */
         .sidebar { 
             position: absolute; top: 0; left: 0; width: 85%; height: 100%; 
             background: var(--sidebar-bg); 
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
             color: var(--sidebar-text);
             border-right: 1px solid var(--sidebar-border); display: flex; flex-direction: column; 
             transition: transform 0.3s ease, background 0.3s; z-index: 100; transform: translateX(-100%); pointer-events: none; 
         }
         .sidebar.open { transform: translateX(0); pointer-events: auto; }
-        .sidebar-header { padding: 14px 16px; font-size: 1.2rem; font-weight: 800; color: var(--accent-pink); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--sidebar-border); }
+        .sidebar-header { padding: 16px; font-size: 1.2rem; font-weight: 800; color: var(--accent-pink); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--sidebar-border); }
         .header-actions { display: flex; align-items: center; gap: 6px; }
         .sidebar-icon-btn { background: var(--sidebar-btn-bg); border: 1px solid var(--sidebar-border); color: var(--sidebar-text); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.88rem; }
 
         .nav-section { padding: 12px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
 
-        .menu-category-btn { width: 100%; padding: 12px 14px; background: var(--sidebar-btn-bg); border: 1px solid var(--sidebar-border); color: var(--sidebar-text); border-radius: 10px; text-align: left; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-size: 0.92rem; font-weight: 600; }
+        .menu-category-btn { width: 100%; padding: 12px 14px; background: var(--sidebar-btn-bg); border: 1px solid var(--sidebar-border); color: var(--sidebar-text); border-radius: 12px; text-align: left; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-size: 0.92rem; font-weight: 600; }
         .menu-category-btn i.cat-icon { color: var(--accent-pink); font-size: 1rem; margin-right: 10px; }
         .menu-category-btn .arrow-icon { font-size: 0.8rem; color: var(--text-sub); transition: transform 0.2s ease; }
         .menu-category-btn.active .arrow-icon { transform: rotate(180deg); }
@@ -140,53 +137,47 @@ HTML_CODE = """
         .item-btn:hover, .item-btn.active { background: var(--sidebar-btn-hover); color: var(--sidebar-text); }
         .item-btn img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
 
-        .sub-create-btn { width: 100%; padding: 9px; background: linear-gradient(135deg, #9333ea, #ec4899); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.82rem; display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 4px; }
-        .sub-create-btn.blue { background: #2563eb; }
+        .sub-create-btn { width: 100%; padding: 10px; background: linear-gradient(135deg, #9333ea, #ec4899); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 4px; }
+        .sub-create-btn.blue { background: linear-gradient(135deg, #2563eb, #3b82f6); }
 
-        .workspace { flex: 1; display: flex; flex-direction: column; height: calc(100% - 52px); position: relative; overflow: hidden; }
+        .workspace { flex: 1; display: flex; flex-direction: column; height: calc(100% - 56px); position: relative; overflow: hidden; }
 
+        /* Dashboard Layout (Reference Match Style) */
         .dashboard { flex: 1; padding: 24px 16px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; }
-        .dash-logo { width: 80px; height: 80px; margin-bottom: 12px; filter: drop-shadow(0 0 10px rgba(236,72,153,0.4)); }
-        .dash-title { font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin-bottom: 6px; }
+        .dash-logo { width: 70px; height: 70px; margin-bottom: 10px; filter: drop-shadow(0 0 12px rgba(236,72,153,0.5)); }
+        .dash-title { font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin-bottom: 4px; }
         .dash-sub { font-size: 0.85rem; color: var(--text-sub); text-align: center; margin-bottom: 24px; }
         
-        .dash-card { width: 100%; background: var(--bg-surface); backdrop-filter: blur(8px); border: 1px solid var(--border-color); padding: 14px 16px; border-radius: 14px; display: flex; align-items: center; gap: 14px; margin-bottom: 12px; cursor: pointer; box-shadow: var(--card-shadow); }
+        .dash-card { width: 100%; background: var(--bg-surface); border: 1px solid var(--border-color); padding: 16px; border-radius: 16px; display: flex; align-items: center; gap: 14px; margin-bottom: 12px; cursor: pointer; box-shadow: var(--card-shadow); }
         .dash-card i { font-size: 1.3rem; color: var(--accent-pink); }
-        .dash-card strong { display: block; color: var(--text-main); font-size: 0.92rem; }
-        .dash-card span { font-size: 0.75rem; color: var(--text-sub); }
+        .dash-card strong { display: block; color: var(--text-main); font-size: 0.95rem; }
+        .dash-card span { font-size: 0.78rem; color: var(--text-sub); }
 
         #chat-view { flex: 1; display: flex; flex-direction: column; height: 100%; overflow: hidden; }
         .chat-messages { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; -webkit-overflow-scrolling: touch; }
         
-        /* Smooth Message Animations */
-        @keyframes msgSlideUp {
-            from { opacity: 0; transform: translateY(12px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .message { display: flex; gap: 10px; max-width: 88%; position: relative; animation: msgSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        /* Flicker-free message styling (No backdrop-filter on active bubble stream) */
+        .message { display: flex; gap: 10px; max-width: 88%; position: relative; will-change: transform; }
         .message.user { align-self: flex-end; flex-direction: row-reverse; }
         .message .avatar { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; background: var(--border-color); flex-shrink: 0; }
-        .message .content { background: var(--ai-msg-bg); backdrop-filter: blur(10px); border: 1px solid var(--border-color); padding: 10px 14px; border-radius: 14px; font-size: 0.9rem; line-height: 1.45; color: var(--text-main); word-break: break-word; box-shadow: var(--card-shadow); }
-        .message.user .content { background: var(--user-msg-bg); border: none; color: #ffffff; border-bottom-right-radius: 2px; }
-        .message.ai .content { border-bottom-left-radius: 2px; }
-        .message .sender-name { font-size: 0.7rem; color: var(--text-sub); margin-bottom: 3px; font-weight: 600; }
+        .message .content { background: var(--ai-msg-bg); border: 1px solid var(--border-color); padding: 12px 14px; border-radius: 16px; font-size: 0.9rem; line-height: 1.45; color: var(--text-main); word-break: break-word; box-shadow: var(--card-shadow); }
+        .message.user .content { background: var(--user-msg-bg); border: none; color: #ffffff; border-bottom-right-radius: 4px; }
+        .message.ai .content { border-bottom-left-radius: 4px; }
+        .message .sender-name { font-size: 0.72rem; color: var(--text-sub); margin-bottom: 3px; font-weight: 600; }
         
         .action-text { color: var(--action-text); font-style: italic; font-weight: 500; }
         
-        .bubble-controls { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
-        .edit-link, .continue-bubble-btn { font-size: 0.68rem; color: var(--text-sub); text-decoration: underline; cursor: pointer; opacity: 0.65; transition: opacity 0.2s; }
+        .bubble-controls { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+        .edit-link, .continue-bubble-btn { font-size: 0.7rem; color: var(--text-sub); text-decoration: underline; cursor: pointer; opacity: 0.7; transition: opacity 0.2s; }
         .edit-link:hover, .continue-bubble-btn:hover { opacity: 1; color: var(--accent-pink); }
 
         .typing-indicator { display: flex; align-items: center; gap: 4px; padding: 4px 8px; font-style: italic; font-size: 0.78rem; color: var(--accent-pink); }
 
-        /* Floating Input Area */
+        /* Input Area */
         .input-area { 
-            padding: 10px 12px; 
+            padding: 12px; 
             border-top: 1px solid var(--border-color); 
             background: var(--bg-surface); 
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
             display: flex; 
             gap: 8px; 
             width: 100%; 
@@ -197,79 +188,56 @@ HTML_CODE = """
             width: 100%; 
             background: var(--bg-input); 
             border: 1px solid var(--border-color); 
-            padding: 10px 38px 10px 12px; 
-            border-radius: 20px; 
+            padding: 11px 40px 11px 14px; 
+            border-radius: 24px; 
             color: var(--text-main); 
             outline: none; 
-            font-size: 0.88rem; 
-            transition: border-color 0.25s ease, box-shadow 0.25s ease;
+            font-size: 0.9rem; 
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
         .input-wrapper input:focus {
             border-color: var(--accent-pink);
-            box-shadow: 0 0 12px rgba(236, 72, 153, 0.25);
+            box-shadow: 0 0 10px rgba(236, 72, 153, 0.2);
         }
 
         .wand-inbox-btn { 
             position: absolute; 
-            right: 10px; 
+            right: 12px; 
             background: transparent; 
             border: none; 
             color: var(--accent-pink); 
-            opacity: 0.6; 
-            font-size: 0.95rem; 
+            opacity: 0.7; 
+            font-size: 1rem; 
             cursor: pointer; 
             transition: opacity 0.2s, transform 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 4px;
+            display: flex; align-items: center; justify-content: center;
         }
-        .wand-inbox-btn:hover, .wand-inbox-btn:active { opacity: 1; transform: scale(1.15); }
+        .wand-inbox-btn:hover { opacity: 1; transform: scale(1.15); }
 
-        .input-area button.send-btn { height: 38px; padding: 0 14px; background: linear-gradient(135deg, #9333ea, #ec4899); color: #ffffff; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        
-        .tool-btn { background: var(--bg-input) !important; color: var(--accent-pink) !important; border: 1px solid var(--border-color) !important; padding: 0 10px !important; font-size: 0.95rem; border-radius: 10px !important; height: 38px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .input-area button.send-btn { height: 42px; padding: 0 16px; background: linear-gradient(135deg, #9333ea, #ec4899); color: #ffffff; border: none; border-radius: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .tool-btn { background: var(--bg-input) !important; color: var(--accent-pink) !important; border: 1px solid var(--border-color) !important; padding: 0 12px !important; font-size: 0.95rem; border-radius: 12px !important; height: 42px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-        /* Empty Chat State */
         .empty-chat-placeholder {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            text-align: center;
-            color: var(--text-sub);
-            padding: 20px;
-            opacity: 0.7;
-            animation: msgSlideUp 0.3s ease;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100%; text-align: center; color: var(--text-sub); padding: 20px; opacity: 0.75;
         }
-        .empty-chat-placeholder i {
-            font-size: 2.2rem;
-            color: var(--accent-pink);
-            margin-bottom: 10px;
-        }
+        .empty-chat-placeholder i { font-size: 2.5rem; color: var(--accent-pink); margin-bottom: 12px; }
 
         .form-header-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
         .form-back-btn { background: var(--bg-surface); border: 1px solid var(--border-color); color: var(--text-main); padding: 6px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
 
         .form-container { padding: 16px; overflow-y: auto; flex: 1; width: 100%; }
         .form-group { margin-bottom: 14px; }
-        .form-group label { display: block; margin-bottom: 4px; font-size: 0.8rem; color: var(--text-sub); font-weight: 600; }
-        .form-group input, .form-group textarea { width: 100%; background: var(--bg-surface-solid); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; color: var(--text-main); outline: none; font-size: 0.88rem; }
+        .form-group label { display: block; margin-bottom: 5px; font-size: 0.82rem; color: var(--text-sub); font-weight: 600; }
+        .form-group input, .form-group textarea { width: 100%; background: var(--bg-surface-solid); border: 1px solid var(--border-color); padding: 10px 12px; border-radius: 10px; color: var(--text-main); outline: none; font-size: 0.9rem; }
         .form-group textarea { height: 75px; resize: vertical; }
 
         .avatar-edit-trigger {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: var(--bg-surface-solid);
-            border: 1px solid var(--border-color);
-            padding: 10px 14px;
-            border-radius: 12px;
-            cursor: pointer;
+            display: flex; align-items: center; gap: 12px; background: var(--bg-surface-solid);
+            border: 1px solid var(--border-color); padding: 10px 14px; border-radius: 14px; cursor: pointer;
         }
         .avatar-thumb-wrapper {
-            width: 54px; height: 54px; border-radius: 50%; overflow: hidden;
+            width: 52px; height: 52px; border-radius: 50%; overflow: hidden;
             border: 2px solid var(--accent-pink); flex-shrink: 0; background: var(--border-color);
             display: flex; justify-content: center; align-items: center;
         }
@@ -277,19 +245,17 @@ HTML_CODE = """
 
         .avatar-modal-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.88); backdrop-filter: blur(8px);
-            z-index: 200; display: flex; flex-direction: column;
+            background: rgba(0, 0, 0, 0.85); z-index: 200; display: flex; flex-direction: column;
             align-items: center; justify-content: center; padding: 16px;
         }
         .avatar-modal-card {
-            width: 100%; max-width: 360px; background: #121215;
-            border: 1px solid #27272a; border-radius: 20px; padding: 16px;
-            display: flex; flex-direction: column; align-items: center; gap: 14px; color: #ffffff;
-            position: relative;
+            width: 100%; max-width: 360px; background: var(--bg-surface-solid);
+            border: 1px solid var(--border-color); border-radius: 20px; padding: 16px;
+            display: flex; flex-direction: column; align-items: center; gap: 14px; color: var(--text-main);
         }
         .cropper-container-box {
             width: 100%; height: 260px; background: #000; border-radius: 12px;
-            overflow: hidden; border: 1px solid #27272a; position: relative;
+            overflow: hidden; border: 1px solid var(--border-color); position: relative;
         }
 
         .modal-card {
@@ -298,34 +264,34 @@ HTML_CODE = """
             display: flex; flex-direction: column; gap: 12px; max-height: 80vh; overflow-y: auto; color: var(--text-main);
         }
 
-        .submit-btn { width: 100%; padding: 11px; background: linear-gradient(135deg, #9333ea, #ec4899); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 0.9rem; margin-top: 8px; }
+        .submit-btn { width: 100%; padding: 12px; background: linear-gradient(135deg, #9333ea, #ec4899); color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 0.92rem; margin-top: 8px; }
         .delete-btn { background: #ef4444 !important; margin-top: 10px; }
 
         .memory-tag-chip {
             display: flex; align-items: center; justify-content: space-between;
             background: var(--bg-input); border: 1px solid var(--border-color);
-            padding: 6px 10px; border-radius: 8px; font-size: 0.8rem; color: var(--text-main); margin-bottom: 6px;
+            padding: 8px 12px; border-radius: 10px; font-size: 0.82rem; color: var(--text-main); margin-bottom: 6px;
         }
         .memory-tag-chip i { cursor: pointer; color: #ef4444; opacity: 0.8; }
         .memory-tag-chip i:hover { opacity: 1; }
 
         .hidden { display: none !important; }
-        .aura-logo-svg { width: 28px; height: 28px; filter: drop-shadow(0 0 6px rgba(236,72,153,0.5)); }
+        .aura-logo-svg { width: 30px; height: 30px; filter: drop-shadow(0 0 6px rgba(236, 72, 153, 0.5)); }
     </style>
 </head>
 <body data-theme="dark">
 
+    <!-- Option 1 Logo Definition (Ring + Spark) -->
     <svg class="hidden">
         <defs>
-            <linearGradient id="roleGradVibrant" x1="0%" y1="0%" x2="100%" y2="100%">
+            <linearGradient id="auraOption1Grad" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stop-color="#a855f7"/>
-                <stop offset="50%" stop-color="#ec4899"/>
-                <stop offset="100%" stop-color="#f43f5e"/>
+                <stop offset="100%" stop-color="#ec4899"/>
             </linearGradient>
             <g id="aura-brand-icon">
-                <path d="M 20 6 C 50 6, 75 30, 65 70 C 55 110, 20 120, 0 80 C -15 50 -10 6 20 6 Z" fill="url(#roleGradVibrant)" stroke="#ffffff" stroke-width="3" opacity="0.95"/>
-                <path d="M 45 30 C 0 30, -20 60, -5 100 C 10 135, 50 140, 70 110 C 85 70, 75 30, 45 30 Z" fill="#ec4899" stroke="#9333ea" stroke-width="2.5" opacity="0.85"/>
-                <path d="M 30 -5 Q 30 15 50 15 Q 30 15 30 35 Q 30 15 10 15 Q 30 15 30 -5 Z" fill="#ffffff"/>
+                <circle cx="50" cy="50" r="38" fill="none" stroke="url(#auraOption1Grad)" stroke-width="10"/>
+                <path d="M 50 18 Q 32 50 50 82 Q 68 50 50 18 Z" fill="url(#auraOption1Grad)"/>
+                <circle cx="50" cy="50" r="8" fill="#ffffff"/>
             </g>
         </defs>
     </svg>
@@ -335,7 +301,7 @@ HTML_CODE = """
         <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <span style="display:flex; align-items:center; gap:8px;">
-                    <svg viewBox="-40 -20 140 180" class="aura-logo-svg"><use href="#aura-brand-icon"/></svg>
+                    <svg viewBox="0 0 100 100" class="aura-logo-svg"><use href="#aura-brand-icon"/></svg>
                     Aura
                 </span>
                 <div class="header-actions">
@@ -383,7 +349,7 @@ HTML_CODE = """
             <div style="display: flex; align-items: center; gap: 10px;">
                 <button class="toggle-btn" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
                 <div class="top-title" id="top-title">
-                    <svg viewBox="-40 -20 140 180" class="aura-logo-svg"><use href="#aura-brand-icon"/></svg>
+                    <svg viewBox="0 0 100 100" class="aura-logo-svg"><use href="#aura-brand-icon"/></svg>
                     Aura
                 </div>
             </div>
@@ -391,7 +357,7 @@ HTML_CODE = """
             <div style="display: flex; gap: 6px; align-items: center;">
                 <div id="top-actions" class="hidden" style="display: flex; gap: 6px;">
                     <button class="icon-btn" id="pin-mem-btn" onclick="openPinnedMemoryModal()" title="Pin Memory"><i class="fa-solid fa-thumbtack"></i></button>
-                    <button class="icon-btn" onclick="handleEditClick()" title="Edit Companion / Group"><i class="fa-solid fa-wrench"></i></button>
+                    <button class="icon-btn" onclick="handleEditClick()" title="Edit Companion"><i class="fa-solid fa-wrench"></i></button>
                     <button class="icon-btn" onclick="regenerateLastResponse()" title="Regenerate"><i class="fa-solid fa-rotate-right"></i></button>
                     <button class="icon-btn" onclick="clearCurrentChat()" title="Clear Chat"><i class="fa-solid fa-trash"></i></button>
                 </div>
@@ -402,15 +368,15 @@ HTML_CODE = """
         <div class="workspace">
             <!-- Dashboard View -->
             <div id="dashboard-view" class="dashboard">
-                <svg viewBox="-40 -20 140 180" class="dash-logo"><use href="#aura-brand-icon"/></svg>
+                <svg viewBox="0 0 100 100" class="dash-logo"><use href="#aura-brand-icon"/></svg>
                 <h2 class="dash-title">Welcome to Aura</h2>
-                <p class="dash-sub">Your personal AI companion & roleplay platform.</p>
+                <p class="dash-sub">Your secure personal AI companion space.</p>
                 
                 <div class="dash-card" onclick="openNewCharForm()">
                     <i class="fa-solid fa-user-plus"></i>
                     <div>
                         <strong>Create AI Companion</strong>
-                        <span>Custom backstory & relationship</span>
+                        <span>Custom backstory & bonded persona</span>
                     </div>
                 </div>
 
@@ -418,7 +384,7 @@ HTML_CODE = """
                     <i class="fa-solid fa-users"></i>
                     <div>
                         <strong>Create Group Room</strong>
-                        <span>Chat with multiple characters</span>
+                        <span>Chat with multi-characters</span>
                     </div>
                 </div>
 
@@ -426,7 +392,7 @@ HTML_CODE = """
                     <i class="fa-solid fa-sliders"></i>
                     <div>
                         <strong>Persona & Settings</strong>
-                        <span>Edit profile, memories, backups</span>
+                        <span>Edit profile, memories & data backup</span>
                     </div>
                 </div>
             </div>
@@ -437,14 +403,14 @@ HTML_CODE = """
                 <div class="input-area">
                     <button class="tool-btn" onclick="alert('Photo feature paused.')" title="Photo">🤳</button>
                     <div class="input-wrapper">
-                        <input type="text" id="chat-input" placeholder="Message..." onkeypress="if(event.key==='Enter') sendMsg()">
+                        <input type="text" id="chat-input" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendMsg()">
                         <button class="wand-inbox-btn" onclick="suggestUserMessage()" title="Magic Reply">🪄</button>
                     </div>
                     <button class="send-btn" onclick="sendMsg()"><i class="fa-solid fa-paper-plane"></i></button>
                 </div>
             </div>
 
-            <!-- Character Creation / Edit Form -->
+            <!-- Character Form -->
             <div id="char-form" class="form-container hidden">
                 <div class="form-header-bar">
                     <button class="form-back-btn" onclick="smartFormBack()"><i class="fa-solid fa-chevron-left"></i> Back</button>
@@ -460,7 +426,7 @@ HTML_CODE = """
                         </div>
                         <div>
                             <strong style="font-size:0.85rem; display:block;">Pinch & Drag Crop Avatar</strong>
-                            <span style="font-size:0.75rem; color:var(--text-sub);">Set high-res reference image</span>
+                            <span style="font-size:0.75rem; color:var(--text-sub);">Tap to configure</span>
                         </div>
                     </div>
                 </div>
@@ -491,8 +457,8 @@ HTML_CODE = """
                             <img id="group-avatar-preview" src="https://api.dicebear.com/7.x/shapes/svg?seed=group">
                         </div>
                         <div>
-                            <strong style="font-size:0.85rem; display:block;">Pinch & Drag Crop Group Icon</strong>
-                            <span style="font-size:0.75rem; color:var(--text-sub);">Tap to crop icon</span>
+                            <strong style="font-size:0.85rem; display:block;">Pinch & Drag Crop Icon</strong>
+                            <span style="font-size:0.75rem; color:var(--text-sub);">Tap to crop</span>
                         </div>
                     </div>
                 </div>
@@ -506,7 +472,7 @@ HTML_CODE = """
                 <button class="submit-btn delete-btn" id="group-delete-btn" onclick="deleteCurrentGroup()">Delete Group</button>
             </div>
 
-            <!-- Settings & Backup Form -->
+            <!-- Settings Form -->
             <div id="settings-form" class="form-container hidden">
                 <div class="form-header-bar">
                     <button class="form-back-btn" onclick="smartFormBack()"><i class="fa-solid fa-chevron-left"></i> Back</button>
@@ -520,7 +486,7 @@ HTML_CODE = """
                             <img id="user-avatar-preview" src="https://api.dicebear.com/7.x/identicon/svg?seed=user">
                         </div>
                         <div>
-                            <strong style="font-size:0.85rem; display:block;">Pinch & Drag Crop Your Avatar</strong>
+                            <strong style="font-size:0.85rem; display:block;">Crop Your Avatar</strong>
                             <span style="font-size:0.75rem; color:var(--text-sub);">Tap to adjust photo</span>
                         </div>
                     </div>
@@ -569,7 +535,7 @@ HTML_CODE = """
             </div>
         </div>
 
-        <!-- Selective Backup Modal -->
+        <!-- Backup Modal -->
         <div id="backup-modal" class="avatar-modal-overlay hidden">
             <div class="modal-card">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -611,11 +577,8 @@ HTML_CODE = """
         function toggleFullScreen() { if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
 
         function smartFormBack() {
-            if (activeContext) {
-                openChat(activeContext.type, activeContext.id);
-            } else {
-                goHome();
-            }
+            if (activeContext) openChat(activeContext.type, activeContext.id);
+            else goHome();
         }
 
         function goHome() {
@@ -627,7 +590,7 @@ HTML_CODE = """
             document.getElementById('group-form').classList.add('hidden');
             document.getElementById('settings-form').classList.add('hidden');
             document.getElementById('top-actions').classList.add('hidden');
-            document.getElementById('top-title').innerHTML = `<svg viewBox="-40 -20 140 180" class="aura-logo-svg"><use href="#aura-brand-icon"/></svg> Aura`;
+            document.getElementById('top-title').innerHTML = `<svg viewBox="0 0 100 100" class="aura-logo-svg"><use href="#aura-brand-icon"/></svg> Aura`;
         }
 
         function saveState() {
@@ -653,10 +616,7 @@ HTML_CODE = """
         }
 
         function closeCropperModal() {
-            if(cropperInstance) {
-                cropperInstance.destroy();
-                cropperInstance = null;
-            }
+            if(cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
             document.getElementById('cropper-modal').classList.add('hidden');
         }
 
@@ -874,7 +834,7 @@ HTML_CODE = """
             document.getElementById('top-actions').classList.add('hidden');
             document.getElementById(formId).classList.remove('hidden');
 
-            document.getElementById('top-title').innerHTML = `<svg viewBox="-40 -20 140 180" class="aura-logo-svg"><use href="#aura-brand-icon"/></svg> Aura`;
+            document.getElementById('top-title').innerHTML = `<svg viewBox="0 0 100 100" class="aura-logo-svg"><use href="#aura-brand-icon"/></svg> Aura`;
 
             if(formId === 'settings-form') {
                 document.getElementById('user-name').value = userPersona.name || '';
@@ -891,7 +851,7 @@ HTML_CODE = """
             let selectedIds = currentGroup ? currentGroup.memberIds : [];
 
             container.innerHTML = characters.map(c => `
-                <label style="display:flex; align-items:center; gap:8px; background:var(--bg-surface-solid); padding:8px; border-radius:6px; cursor:pointer;">
+                <label style="display:flex; align-items:center; gap:8px; background:var(--bg-surface-solid); padding:8px; border-radius:8px; cursor:pointer; margin-bottom:4px;">
                     <input type="checkbox" value="${c.id}" ${selectedIds.includes(c.id) ? 'checked':''} class="group-char-checkbox" style="width:auto;">
                     <img src="${c.avatar}" style="width:24px; height:24px; border-radius:50%;"/>
                     ${c.name}
@@ -954,7 +914,7 @@ HTML_CODE = """
 
             charList.innerHTML = characters.map(c => `
                 <button class="item-btn ${activeContext?.id === c.id ? 'active':''}" onclick="openChat('char', '${c.id}')">
-                    <img src="${c.avatar || 'https://via.placeholder.com/40'}" />
+                    <img src="${c.avatar}" />
                     <span>${c.name}</span>
                 </button>
             `).join('');
@@ -1006,7 +966,7 @@ HTML_CODE = """
                     <div class="empty-chat-placeholder">
                         <i class="fa-regular fa-comments"></i>
                         <strong style="font-size:0.95rem; color:var(--text-main);">No messages yet</strong>
-                        <span style="font-size:0.78rem;">Say hi or tap 🪄 for a magic conversation starter!</span>
+                        <span style="font-size:0.78rem;">Say hi or tap 🪄 for magic conversation starter!</span>
                     </div>
                 `;
                 return;
@@ -1127,7 +1087,7 @@ HTML_CODE = """
 
             let data = await res.json();
             if(data.suggestion) input.value = data.suggestion;
-            input.placeholder = "Message...";
+            input.placeholder = "Type a message...";
         }
 
         async function continueAiReply() {
@@ -1272,7 +1232,6 @@ def advanced_chat():
     extracted_memory = None
     last_user_msg = data["history"][-1]["text"] if data["history"] else ""
 
-    # Silent Auto-Memory Extraction
     if len(last_user_msg) > 12 and any(k in last_user_msg.lower() for k in ["i am", "i love", "i like", "my birthday", "my favorite", "mujhe", "mera", "meri", "hu"]):
         try:
             mem_prompt = f"Extract a short, single personal fact about the user from this message: '{last_user_msg}'. If no specific fact, return NONE. Output fact ONLY in 3-6 words."
