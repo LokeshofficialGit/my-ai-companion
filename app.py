@@ -15,24 +15,41 @@ HTML_CODE = """
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        html, body { height: 100%; width: 100vw; background: #000000; color: #f4f4f5; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+        
+        /* Fixed Dynamic Viewport Height for Mobile Browsers */
+        html, body { 
+            height: 100dvh; 
+            width: 100vw; 
+            background: #000000; 
+            color: #f4f4f5; 
+            overflow: hidden; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+        }
 
         .app-container {
-            width: 100%; max-width: 440px; height: 100vh;
-            background: #09090b; display: flex; flex-direction: column; position: relative;
-            overflow: hidden; border: 1px solid #27272a;
+            width: 100%; 
+            max-width: 440px; 
+            height: 100dvh;
+            background: #09090b; 
+            display: flex; 
+            flex-direction: column; 
+            position: relative;
+            overflow: hidden; 
+            border: 1px solid #27272a;
         }
-        @media (min-width: 500px) { .app-container { height: 94vh; border-radius: 20px; } }
+        @media (min-width: 500px) { .app-container { height: 94dvh; border-radius: 20px; } }
 
         /* Top Bar */
-        .top-bar { height: 54px; min-height: 54px; background: #121215; border-bottom: 1px solid #27272a; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; z-index: 10; }
+        .top-bar { height: 52px; min-height: 52px; background: #121215; border-bottom: 1px solid #27272a; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; z-index: 10; }
         .toggle-btn { background: transparent; border: none; color: #f4f4f5; font-size: 1.2rem; cursor: pointer; }
         .top-title { font-weight: 700; font-size: 1rem; color: #ffffff; display: flex; align-items: center; gap: 8px; }
         .icon-btn { background: #27272a; border: none; color: #f4f4f5; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; }
 
         /* Sidebar Overlay */
-        .sidebar { position: absolute; top: 0; left: 0; width: 85%; height: 100%; background: #121215; border-right: 1px solid #27272a; display: flex; flex-direction: column; transition: transform 0.3s ease; z-index: 100; transform: translateX(-100%); }
-        .sidebar.open { transform: translateX(0); }
+        .sidebar { position: absolute; top: 0; left: 0; width: 85%; height: 100%; background: #121215; border-right: 1px solid #27272a; display: flex; flex-direction: column; transition: transform 0.3s ease; z-index: 100; transform: translateX(-100%); pointer-events: none; }
+        .sidebar.open { transform: translateX(0); pointer-events: auto; }
         .sidebar-header { padding: 16px; font-size: 1.2rem; font-weight: 800; color: #a855f7; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #18181b; }
         .nav-section { padding: 12px; flex: 1; overflow-y: auto; }
         .section-title { font-size: 0.7rem; text-transform: uppercase; color: #71717a; padding: 6px 8px; font-weight: 700; }
@@ -42,7 +59,7 @@ HTML_CODE = """
         .item-btn img { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }
 
         /* Workspace & Pages */
-        .workspace { flex: 1; display: flex; flex-direction: column; height: calc(100% - 54px); position: relative; overflow: hidden; }
+        .workspace { flex: 1; display: flex; flex-direction: column; height: calc(100% - 52px); position: relative; overflow: hidden; }
 
         /* Dashboard */
         .dashboard { flex: 1; padding: 24px 16px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; }
@@ -65,15 +82,25 @@ HTML_CODE = """
         .message.user .content { background: #9333ea; border: none; color: #ffffff; border-bottom-right-radius: 2px; }
         .message.ai .content { border-bottom-left-radius: 2px; }
         .message .sender-name { font-size: 0.7rem; color: #a1a1aa; margin-bottom: 3px; font-weight: 600; }
-        .action-text { color: #d8b4fe; font-style: italic; }
+        
+        /* Actions Text Changed from Purple to Soft Silver/Gray */
+        .action-text { color: #a1a1aa; font-style: italic; }
 
         .edit-link { font-size: 0.68rem; color: #71717a; text-decoration: underline; cursor: pointer; display: inline-block; margin-top: 4px; }
         .edit-link:hover { color: #c084fc; }
 
-        .input-area { padding: 10px 14px; border-top: 1px solid #1c1c21; background: #121215; display: flex; gap: 8px; width: 100%; align-items: center; }
+        /* Typing Dots */
+        .typing-dots { display: flex; gap: 4px; align-items: center; padding: 4px 0; }
+        .typing-dots span { width: 5px; height: 5px; background: #a855f7; border-radius: 50%; animation: pulse 1.2s infinite ease-in-out; }
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes pulse { 0%, 100% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.1); } }
+
+        /* Input Controls Bar */
+        .input-area { padding: 10px 12px; border-top: 1px solid #1c1c21; background: #121215; display: flex; gap: 6px; width: 100%; align-items: center; }
         .input-area input { flex: 1; background: #09090b; border: 1px solid #27272a; padding: 10px 12px; border-radius: 10px; color: #ffffff; outline: none; font-size: 0.88rem; }
-        .input-area button { height: 38px; padding: 0 14px; background: #9333ea; color: #ffffff; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .continue-btn { background: #27272a !important; color: #a855f7 !important; border: 1px solid #3f3f46 !important; padding: 0 10px !important; font-size: 0.85rem; }
+        .input-area button { height: 38px; padding: 0 12px; background: #9333ea; color: #ffffff; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .tool-btn { background: #27272a !important; color: #a855f7 !important; border: 1px solid #3f3f46 !important; padding: 0 10px !important; font-size: 0.85rem; }
 
         /* Forms */
         .form-container { padding: 16px; overflow-y: auto; flex: 1; width: 100%; }
@@ -90,7 +117,7 @@ HTML_CODE = """
 <body>
 
     <div class="app-container">
-        <!-- Sidebar Navigation -->
+        <!-- Sidebar Overlay Navigation -->
         <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <span>✨ Aura</span>
@@ -114,10 +141,10 @@ HTML_CODE = """
                 <button class="toggle-btn" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
                 <div class="top-title" id="top-title">✨ Aura</div>
             </div>
-            <!-- Header Icons (Only inside Chat) -->
+            <!-- Header Icons (Shown ONLY Inside Active Chat) -->
             <div id="top-actions" class="hidden" style="display: flex; gap: 6px;">
                 <button class="icon-btn" onclick="openPinnedMemoryModal()" title="Pin Memory"><i class="fa-solid fa-thumbtack"></i></button>
-                <button class="icon-btn" onclick="editCurrentCharacter()" title="Edit"><i class="fa-solid fa-wrench"></i></button>
+                <button class="icon-btn" onclick="editCurrentCharacter()" title="Edit Companion"><i class="fa-solid fa-wrench"></i></button>
                 <button class="icon-btn" onclick="regenerateLastResponse()" title="Regenerate"><i class="fa-solid fa-rotate-right"></i></button>
                 <button class="icon-btn" onclick="clearCurrentChat()" title="Clear Chat"><i class="fa-solid fa-trash"></i></button>
             </div>
@@ -150,8 +177,16 @@ HTML_CODE = """
                 <div class="dash-card" onclick="showForm('settings-form')">
                     <i class="fa-solid fa-sliders"></i>
                     <div>
-                        <strong>User Persona & Backup Settings</strong>
+                        <strong>Persona & Settings</strong>
                         <span>Edit your profile, backup & restore</span>
+                    </div>
+                </div>
+
+                <div class="dash-card" onclick="toggleFullScreen()">
+                    <i class="fa-solid fa-expand"></i>
+                    <div>
+                        <strong>📱 Enter Fullscreen Mode</strong>
+                        <span>Best experience on mobile devices</span>
                     </div>
                 </div>
             </div>
@@ -160,7 +195,8 @@ HTML_CODE = """
             <div id="chat-view" class="hidden">
                 <div class="chat-messages" id="message-container"></div>
                 <div class="input-area">
-                    <button class="continue-btn" onclick="continueAiReply()" title="Continue AI Reply">&gt;&gt;</button>
+                    <button class="tool-btn" onclick="suggestUserMessage()" title="Magic Auto-Suggest">🪄</button>
+                    <button class="tool-btn" onclick="continueAiReply()" title="Continue AI Reply">&gt;&gt;</button>
                     <input type="text" id="chat-input" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendMsg()">
                     <button onclick="sendMsg()"><i class="fa-solid fa-paper-plane"></i></button>
                 </div>
@@ -184,7 +220,7 @@ HTML_CODE = """
 
                 <div class="form-group">
                     <label>Relationship with You</label>
-                    <input type="text" id="char-rel" placeholder="e.g. Best Friend, Girlfriend, Rival">
+                    <input type="text" id="char-rel" placeholder="e.g. Best Friend, Partner, Boss">
                 </div>
 
                 <div class="form-group">
@@ -261,7 +297,18 @@ HTML_CODE = """
         let userPersona = JSON.parse(localStorage.getItem('aura_user') || '{"name":"User", "bio":""}');
         let activeContext = null;
 
-        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+        function toggleSidebar() { 
+            let sb = document.getElementById('sidebar');
+            sb.classList.toggle('open'); 
+        }
+
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => alert("Fullscreen blocked by browser!"));
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
 
         function saveState() {
             localStorage.setItem('aura_chars', JSON.stringify(characters));
@@ -468,6 +515,39 @@ HTML_CODE = """
             }
         }
 
+        async function typeWriterEffect(sender, fullText, avatar) {
+            let container = document.getElementById('message-container');
+            
+            let typingDiv = document.createElement('div');
+            typingDiv.className = 'message ai';
+            typingDiv.innerHTML = `
+                <img class="avatar" src="${avatar}" />
+                <div>
+                    <div class="sender-name">${sender}</div>
+                    <div class="content"><div class="typing-dots"><span></span><span></span><span></span></div></div>
+                </div>
+            `;
+            container.appendChild(typingDiv);
+            container.scrollTop = container.scrollHeight;
+
+            await new Promise(resolve => setTimeout(resolve, 800));
+
+            let contentDiv = typingDiv.querySelector('.content');
+            contentDiv.innerHTML = '';
+            let words = fullText.split(' ');
+            
+            for (let i = 0; i < words.length; i++) {
+                let currentSubText = words.slice(0, i + 1).join(' ');
+                contentDiv.innerHTML = formatText(currentSubText) + `<div><span class="edit-link" onclick="tweakMsg(${chatHistories[activeContext.id].length})">edit</span></div>`;
+                container.scrollTop = container.scrollHeight;
+                await new Promise(resolve => setTimeout(resolve, 30));
+            }
+
+            chatHistories[activeContext.id].push({ sender, text: fullText, avatar });
+            saveState();
+            renderMessages();
+        }
+
         async function sendMsg() {
             let input = document.getElementById('chat-input');
             let text = input.value.trim();
@@ -480,6 +560,30 @@ HTML_CODE = """
             renderMessages();
 
             fetchAIResponse();
+        }
+
+        async function suggestUserMessage() {
+            if(!activeContext) return;
+            let input = document.getElementById('chat-input');
+            input.placeholder = "Generating magic reply...";
+
+            let payload = {
+                contextId: activeContext.id,
+                userPersona: userPersona,
+                history: chatHistories[activeContext.id] || []
+            };
+
+            let res = await fetch('/api/suggest-reply', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            let data = await res.json();
+            if(data.suggestion) {
+                input.value = data.suggestion;
+            }
+            input.placeholder = "Type a message...";
         }
 
         async function continueAiReply() {
@@ -513,10 +617,8 @@ HTML_CODE = """
             let data = await res.json();
             if(data.responses) {
                 for (let r of data.responses) {
-                    chatHistories[activeContext.id].push({ sender: r.sender, text: r.text, avatar: r.avatar });
+                    await typeWriterEffect(r.sender, r.text, r.avatar);
                 }
-                saveState();
-                renderMessages();
             }
         }
 
@@ -579,6 +681,37 @@ HTML_CODE = """
 @app.route("/")
 def home():
     return render_template_string(HTML_CODE)
+
+@app.route("/api/suggest-reply", methods=["POST"])
+def suggest_reply():
+    data = request.json
+    api_key = os.environ.get("GROQ_API_KEY")
+    if not api_key: return jsonify({"suggestion": ""})
+
+    headers = {"Authorization": f"Bearer {api_key.strip()}", "Content-Type": "application/json"}
+    user_info = data.get("userPersona", {})
+    
+    system_prompt = f"""
+You are a ghostwriter for the user ({user_info.get('name', 'User')}).
+User Bio: {user_info.get('bio', '')}
+Based on the chat history, write a short, natural, in-character next message that the User would say.
+Return ONLY the text/action response. Do not add quotes or explanations.
+    """
+
+    messages = [{"role": "system", "content": system_prompt}]
+    for m in data.get("history", [])[-6:]:
+        messages.append({"role": "user" if m["sender"] != "You" else "assistant", "content": f"{m['sender']}: {m['text']}"})
+
+    try:
+        res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={
+            "model": "llama-3.1-8b-instant",
+            "messages": messages
+        }, headers=headers).json()
+        
+        suggestion = res["choices"][0]["message"]["content"]
+        return jsonify({"suggestion": suggestion.strip('"')})
+    except:
+        return jsonify({"suggestion": "Hey! What's on your mind?"})
 
 @app.route("/api/advanced-chat", methods=["POST"])
 def advanced_chat():
