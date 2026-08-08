@@ -209,7 +209,7 @@ HTML_CODE = """
         .wand-inbox-btn:hover { opacity: 1; }
 
         .input-area button.send-btn { height: 42px; padding: 0 16px; background: linear-gradient(135deg, #9333ea, #ec4899); color: #ffffff; border: none; border-radius: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .tool-btn { background: var(--bg-input) !important; color: var(--accent-pink) !important; border: 1px solid var(--border-color) !important; padding: 0 8px !important; font-size: 0.7rem; font-weight: 700; border-radius: 12px !important; height: 42px; cursor: pointer; display: flex; align-items: center; justify-content: center; min-width: 60px; }
+        .tool-btn { background: var(--bg-input) !important; color: var(--accent-pink) !important; border: 1px solid var(--border-color) !important; padding: 0 10px !important; font-size: 0.75rem; font-weight: 700; border-radius: 12px !important; height: 42px; cursor: pointer; display: flex; align-items: center; justify-content: center; min-width: 75px; }
 
         .empty-chat-placeholder {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -533,17 +533,13 @@ HTML_CODE = """
         let activeContext = null;
         let cropperInstance = null;
         let currentEditingAvatarType = null;
-        let currentAiProvider = 'groq'; // Options: groq, openrouter, huggingface
+        let currentAiProvider = 'groq'; // Options: groq, openrouter
 
         function toggleAiProvider() {
             if (currentAiProvider === 'groq') {
                 currentAiProvider = 'openrouter';
                 document.getElementById('provider-switch-btn').innerHTML = '🌐 OpenRouter';
                 document.getElementById('provider-switch-btn').style.color = '#a855f7';
-            } else if (currentAiProvider === 'openrouter') {
-                currentAiProvider = 'huggingface';
-                document.getElementById('provider-switch-btn').innerHTML = '🤗 HuggingFace';
-                document.getElementById('provider-switch-btn').style.color = '#f59e0b';
             } else {
                 currentAiProvider = 'groq';
                 document.getElementById('provider-switch-btn').innerHTML = '⚡ Groq';
@@ -1199,22 +1195,9 @@ def call_llm(provider, messages, system_prompt):
                 "messages": [{"role": "system", "content": system_prompt}] + messages
             }
             res = requests.post("https://openrouter.ai/api/v1/chat/completions", json=payload, headers=headers).json()
-            return res["choices"][0]["message"]["content"]
-
-        elif provider == "huggingface":
-            api_key = os.environ.get("HUGGINGFACE_API_KEY")
-            if not api_key: return "HuggingFace Key missing!"
-            headers = {"Authorization": f"Bearer {api_key.strip()}", "Content-Type": "application/json"}
-            prompt_text = f"System: {system_prompt}\n"
-            for m in messages:
-                prompt_text += f"{m['role']}: {m['content']}\n"
-            prompt_text += "assistant:"
-            
-            payload = {"inputs": prompt_text, "parameters": {"max_new_tokens": 250, "return_full_text": False}}
-            res = requests.post("https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta", json=payload, headers=headers).json()
-            if isinstance(res, list) and len(res) > 0:
-                return res[0].get("generated_text", "Hey!")
-            return "HuggingFace response error."
+            if "choices" in res and len(res["choices"]) > 0:
+                return res["choices"][0]["message"]["content"]
+            return f"OpenRouter Error: {res.get('error', 'Unknown error')}"
 
         else:  # Default Groq
             api_key = os.environ.get("GROQ_API_KEY")
@@ -1225,7 +1208,9 @@ def call_llm(provider, messages, system_prompt):
                 "messages": [{"role": "system", "content": system_prompt}] + messages
             }
             res = requests.post("https://api.groq.com/openai/v1/chat/completions", json=payload, headers=headers).json()
-            return res["choices"][0]["message"]["content"]
+            if "choices" in res and len(res["choices"]) > 0:
+                return res["choices"][0]["message"]["content"]
+            return f"Groq Error: {res.get('error', 'Unknown error')}"
     except Exception as e:
         return f"*Smiles* Error: {str(e)}"
 
@@ -1286,10 +1271,10 @@ Bond: {new_affinity}/100 ({mood_str}). {behavior_note}
 User Bio: {user_bio}
 Known Memory Facts: {memories_formatted}
 
-CRITICAL INSTRUCTIONS:
+CRITICAL DESI HINGLISH INSTRUCTIONS:
 - Talk strictly in natural, casual Hinglish (Roman Hindi mixed with simple English like WhatsApp texting).
-- Use everyday words like "yaar", "sach mein", "batao", "sahi hai".
-- Keep it human-like, express actions in asterisks like *smiles*.
+- Use everyday words like "yaar", "sach mein", "batao", "sahi hai", "pakka".
+- Keep it human-like and expressive. Use asterisks for actions like *smiles*.
 """
         if data.get("isContinue"):
             system_prompt += "\nUser pressed Continue. Extend your last response seamlessly."
