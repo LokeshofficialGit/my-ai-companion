@@ -2,9 +2,15 @@ import os
 import requests
 import json
 import base64
+import google.generativeai as genai
 from flask import Flask, request, jsonify, render_template_string
 
 app = Flask(__name__)
+
+# Gemini Setup
+GEMINI_KEY = os.environ.get("GEMINI_API_KEY")
+if GEMINI_KEY:
+    genai.configure(api_key=GEMINI_KEY)
 
 HTML_CODE = """
 <!DOCTYPE html>
@@ -1067,7 +1073,7 @@ HTML_CODE = """
             let charObj = characters.find(c => c.id === activeContext.id);
             let targetName = charObj ? charObj.name : 'Companion';
 
-            showTypingIndicator(targetName + " is generating realistic selfie 📸...");
+            showTypingIndicator(targetName + " is generating high-quality realistic selfie 📸 (this may take a moment)...");
 
             let payload = {
                 character: charObj,
@@ -1075,7 +1081,7 @@ HTML_CODE = """
             };
 
             try {
-                let res = await fetch('/api/generate-selfie-pollinations', {
+                let res = await fetch('/api/generate-selfie-gemini', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -1223,58 +1229,68 @@ HTML_CODE = """
 def home():
     return render_template_string(HTML_CODE)
 
-@app.route("/api/generate-selfie-pollinations", methods=["POST"])
-def generate_selfie_pollinations():
+@app.route("/api/generate-selfie-gemini", methods=["POST"])
+def generate_selfie_gemini():
     data = request.json
     char_data = data.get("character", {})
     history = data.get("history", [])
     
     char_name = char_data.get("name", "Companion")
-    char_app = char_data.get("appearance", "realistic features, detailed face, gorgeous")
+    char_app = char_data.get("appearance", "poised, striking beauty, high-end fashion")
     
     groq_api_key = os.environ.get("GROQ_API_KEY")
-    pollinations_key = os.environ.get("POLLINATIONS_API_KEY")
     
-    # Use Groq to craft an ultra-realistic photography prompt
-    scene_prompt = f"photorealistic smartphone front camera selfie of {char_name}, {char_app}, natural candid pose, realistic lighting, highly detailed skin texture, 8k, DSLR photography, raw photo"
+    # 1. Use Groq to craft a detailed photorealistic prompt utilizing the Character's Appearance Bio
+    scene_prompt = f"Hyper-realistic smartphone front camera selfie of {char_name}, appearance details: {char_app}, candid look, natural lighting, professional photography, 8k, extremely detailed skin texture, raw photo"
     
     if groq_api_key and history:
         try:
             headers_groq = {"Authorization": f"Bearer {groq_api_key.strip()}", "Content-Type": "application/json"}
             recent_chat = "\n".join([f"{m['sender']}: {m['text']}" for m in history[-3:]])
             prompt_gen_query = f"""
-Based on this recent chat context, write a short, precise image generation prompt for a photorealistic selfie.
-Character: {char_name}, Appearance: {char_app}
-Recent Chat:
-{recent_chat}
+Create a precise prompt for a photorealistic selfie based on the character's exact appearance description.
+Character Name: {char_name}
+Appearance Bio: {char_app}
+Recent chat context: {recent_chat}
 
-Output ONLY the prompt text in English, focusing strictly on outfit, location, mood, and explicit realism keywords (e.g., candid smartphone selfie, real photography). Keep it under 35 words.
+Output ONLY the final English prompt for image generation, focusing heavily on realistic photographic style, lighting, and keeping the specified appearance traits.
             """
+            
             groq_res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={
                 "model": "llama-3.1-8b-instant",
                 "messages": [{"role": "user", "content": prompt_gen_query}]
-            }, headers=headers_groq, timeout=10).json()
+            }, headers=headers_groq, timeout=15).json()
             
             gen_text = groq_res["choices"][0]["message"]["content"].strip()
             if gen_text:
-                scene_prompt = f"smartphone front camera selfie of {char_name}, {gen_text}, realistic skin, natural lighting, photorealistic, candid"
+                scene_prompt = gen_text
         except:
             pass
 
-    import urllib.parse
-    # Force high realism model (Flux) and safe negative styles via prompt
-    full_prompt_encoded = urllib.parse.quote(scene_prompt + ", highly detailed, unedited, 8k")
-    
-    # Construct Pollinations Image URL with Flux model for top-tier realism
-    image_url = f"https://image.pollinations.ai/prompt/{full_prompt_encoded}?model=flux&nologo=true&private=true"
-    if pollinations_key:
-        image_url += f"&seed=42&apikey={pollinations_key.strip()}"
-
-    return jsonify({
-        "sender": char_name,
-        "imageUrl": image_url,
-        "text": f"*Sends a selfie* 📸 Ye le, abhi click ki!"
-    })
+    # 2. Use Gemini Imagen 3 via official SDK
+    try:
+        model = genai.GenerativeModel('imagen-3.0-generate-001')
+        
+        result = model.generate_content(
+            scene_prompt,
+            generation_config=genai.types.GenerationConfig(
+                number_of_images=1,
+                aspect_ratio="9:16",
+                output_mime_type="image/jpeg"
+            )
+        )
+        
+        image_bytes = result.candidates[0].content.parts[0].image.image_bytes
+        img_base64 = base64.b64encode(image_bytes).decode('utf-8')
+        image_data_url = f"data:image/jpeg;base64,{img_base64}"
+        
+        return jsonify({
+            "sender": char_name,
+            "imageUrl": image_data_url,
+            "text": f"*Sends a selfie* 📸 Ye le, abhi click ki!"
+        })
+    except Exception as e:
+        return jsonify({"error": f"Gemini Image Gen Error: {str(e)}"}), 500
 
 @app.route("/api/suggest-reply", methods=["POST"])
 def suggest_reply():
