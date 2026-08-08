@@ -87,7 +87,7 @@ HTML_CODE = """
         }
         
         .toggle-btn { background: transparent; border: none; color: var(--text-main); font-size: 1.25rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .top-title { font-weight: 700; font-size: 0.9rem; color: var(--text-main); display: flex; align-items: center; gap: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .top-title { font-weight: 700; font-size: 0.95rem; color: var(--text-main); display: flex; align-items: center; gap: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         
         .header-avatar {
             width: 32px;
@@ -168,7 +168,6 @@ HTML_CODE = """
             margin-bottom: 4px; 
             font-weight: 700; 
             padding-left: 2px; 
-            color: var(--accent-pink); 
         }
         .message.user .sender-name { 
             text-align: right; 
@@ -1016,14 +1015,11 @@ HTML_CODE = """
             } else {
                 document.getElementById('pin-mem-btn').classList.remove('hidden');
                 let c = characters.find(item => item.id === id);
-                let aff = c ? (c.affinity || 50) : 50;
-                let label = aff >= 80 ? 'Deep Bond ❤️' : (aff >= 50 ? 'Warm 😊' : 'Distant 💔');
                 let avatarSrc = c ? c.avatar : 'https://api.dicebear.com/7.x/bottts/svg?seed=default';
                 let nameText = c ? c.name : 'Chat';
                 document.getElementById('top-title').innerHTML = `
                     <img src="${avatarSrc}" class="header-avatar" onclick="handleHeaderAvatarClick()" title="Edit Companion">
                     <span>${nameText}</span>
-                    <span style="font-size:0.6rem; padding:2px 5px; background:rgba(236,72,153,0.15); border:1px solid var(--accent-pink); color:var(--accent-pink); border-radius:8px; margin-left:4px; flex-shrink:0;">${label} (${aff}%)</span>
                 `;
             }
 
@@ -1233,18 +1229,6 @@ HTML_CODE = """
 
             if(data.responses) {
                 for (let r of data.responses) {
-                    if(r.newAffinity !== undefined && activeContext.type === 'char') {
-                        let charObj = characters.find(c => c.id === activeContext.id);
-                        if(charObj) {
-                            charObj.affinity = r.newAffinity;
-                            let avatarSrc = charObj.avatar;
-                            document.getElementById('top-title').innerHTML = `
-                                <img src="${avatarSrc}" class="header-avatar" onclick="handleHeaderAvatarClick()" title="Edit Companion">
-                                <span>${charObj.name}</span>
-                                <span style="font-size:0.6rem; padding:2px 5px; background:rgba(236,72,153,0.15); border:1px solid var(--accent-pink); color:var(--accent-pink); border-radius:8px; margin-left:4px; flex-shrink:0;">${r.affinityLabel} (${r.newAffinity}%)</span>
-                            `;
-                        }
-                    }
                     streamWordByWord(r.sender, r.text, isContinue);
                 }
             }
@@ -1425,9 +1409,7 @@ CRITICAL DESI HINGLISH INSTRUCTIONS:
 
         responses.append({
             "sender": c['name'], 
-            "text": reply_text, 
-            "newAffinity": new_affinity,
-            "affinityLabel": mood_str
+            "text": reply_text
         })
 
     else:
