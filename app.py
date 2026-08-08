@@ -71,7 +71,7 @@ HTML_CODE = """
             transform: scale(0.96) !important;
         }
 
-        /* Top Bar (Visible ONLY in Chat) - Cleaned up */
+        /* Top Bar */
         .top-bar { 
             height: 56px; 
             min-height: 56px; 
@@ -147,7 +147,7 @@ HTML_CODE = """
         #chat-view { flex: 1; display: flex; flex-direction: column; height: 100%; overflow: hidden; }
         .chat-messages { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; -webkit-overflow-scrolling: touch; }
         
-        /* Message Bubbles - Avatars removed, only sender name and text bubble */
+        /* Message Bubbles */
         .message { display: flex; flex-direction: column; max-width: 88%; position: relative; will-change: transform; align-self: flex-start; }
         .message.user { align-self: flex-end; }
         .message .content { background: var(--ai-msg-bg); border: 1px solid var(--border-color); padding: 12px 14px; border-radius: 16px; font-size: 0.9rem; line-height: 1.45; color: var(--text-main); word-break: break-word; box-shadow: var(--card-shadow); border-bottom-left-radius: 4px; }
@@ -157,9 +157,10 @@ HTML_CODE = """
         
         .action-text { color: var(--action-text); font-style: italic; font-weight: 500; }
         
-        .bubble-controls { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
-        .edit-link, .continue-bubble-btn { font-size: 0.7rem; color: var(--text-sub); text-decoration: underline; cursor: pointer; opacity: 0.7; transition: opacity 0.2s; }
-        .edit-link:hover, .continue-bubble-btn:hover { opacity: 1; color: var(--accent-pink); }
+        /* Low opacity clean icon controls inside bubbles */
+        .bubble-controls { display: flex; align-items: center; gap: 12px; margin-top: 6px; }
+        .bubble-btn-icon { font-size: 0.75rem; color: var(--text-sub); opacity: 0.45; cursor: pointer; transition: opacity 0.2s, color 0.2s; }
+        .bubble-btn-icon:hover { opacity: 1; color: var(--accent-pink); }
 
         .typing-indicator { display: flex; align-items: center; gap: 4px; padding: 4px 8px; font-style: italic; font-size: 0.78rem; color: var(--accent-pink); }
 
@@ -262,7 +263,6 @@ HTML_CODE = """
 </head>
 <body data-theme="dark">
 
-    <!-- Global SVG Gradient Definition -->
     <svg style="width:0;height:0;position:absolute;" aria-hidden="true" focusable="false">
         <linearGradient id="auraLogoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stop-color="#a855f7"/>
@@ -321,7 +321,7 @@ HTML_CODE = """
             </div>
         </div>
 
-        <!-- Top Bar (Visible ONLY in Chat) -->
+        <!-- Top Bar (Reload button removed from header) -->
         <div class="top-bar hidden" id="top-bar">
             <div style="display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1;">
                 <button class="toggle-btn" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
@@ -330,7 +330,6 @@ HTML_CODE = """
             
             <div style="display: flex; gap: 3px; align-items: center; flex-shrink: 0;" id="top-actions">
                 <button class="icon-btn" id="pin-mem-btn" onclick="openPinnedMemoryModal()" title="Pin Memory"><i class="fa-solid fa-location-dot"></i></button>
-                <button class="icon-btn" onclick="regenerateLastResponse()" title="Regenerate"><i class="fa-solid fa-rotate-right"></i></button>
                 <button class="icon-btn" onclick="clearCurrentChat()" title="Clear Chat"><i class="fa-solid fa-comment-slash"></i></button>
             </div>
         </div>
@@ -962,8 +961,11 @@ HTML_CODE = """
                         <div class="content">
                             ${formatText(m.text)}
                             <div class="bubble-controls">
-                                <span class="edit-link" onclick="tweakMsg(${idx})">edit</span>
-                                ${!isUser ? `<span class="continue-bubble-btn" onclick="continueAiReply()">&gt;&gt; continue</span>` : ''}
+                                <i class="fa-solid fa-pen-to-square bubble-btn-icon" onclick="tweakMsg(${idx})" title="Edit"></i>
+                                ${!isUser ? `
+                                    <i class="fa-solid fa-forward-step bubble-btn-icon" onclick="continueAiReply()" title="Continue"></i>
+                                    <i class="fa-solid fa-rotate-right bubble-btn-icon" onclick="regenerateLastResponse()" title="Reload Response"></i>
+                                ` : ''}
                             </div>
                         </div>
                     </div>
@@ -995,28 +997,47 @@ HTML_CODE = """
             if(elem) elem.remove();
         }
 
-        function streamWordByWord(sender, fullText) {
+        /* Fixed streaming for normal and continuation text */
+        function streamWordByWord(sender, newText, isAppend = false) {
             removeTypingIndicator();
             if(!chatHistories[activeContext.id]) chatHistories[activeContext.id] = [];
-            
-            let words = fullText.split(' ');
-            let currentText = '';
-            let msgObj = { sender: sender, text: '' };
-            chatHistories[activeContext.id].push(msgObj);
-            let msgIndex = chatHistories[activeContext.id].length - 1;
 
+            let words = newText.split(' ');
             let wordIdx = 0;
-            let timer = setInterval(() => {
-                if (wordIdx < words.length) {
-                    currentText += (wordIdx === 0 ? '' : ' ') + words[wordIdx];
-                    chatHistories[activeContext.id][msgIndex].text = currentText;
-                    renderMessages();
-                    wordIdx++;
-                } else {
-                    clearInterval(timer);
-                    saveState();
-                }
-            }, 30);
+
+            if (isAppend && chatHistories[activeContext.id].length > 0) {
+                let lastMsgIdx = chatHistories[activeContext.id].length - 1;
+                let existingText = chatHistories[activeContext.id][lastMsgIdx].text;
+                
+                let timer = setInterval(() => {
+                    if (wordIdx < words.length) {
+                        existingText += (existingText && wordIdx === 0 ? ' ' : (wordIdx === 0 ? '' : ' ')) + words[wordIdx];
+                        chatHistories[activeContext.id][lastMsgIdx].text = existingText;
+                        renderMessages();
+                        wordIdx++;
+                    } else {
+                        clearInterval(timer);
+                        saveState();
+                    }
+                }, 30);
+            } else {
+                let currentText = '';
+                let msgObj = { sender: sender, text: '' };
+                chatHistories[activeContext.id].push(msgObj);
+                let msgIndex = chatHistories[activeContext.id].length - 1;
+
+                let timer = setInterval(() => {
+                    if (wordIdx < words.length) {
+                        currentText += (wordIdx === 0 ? '' : ' ') + words[wordIdx];
+                        chatHistories[activeContext.id][msgIndex].text = currentText;
+                        renderMessages();
+                        wordIdx++;
+                    } else {
+                        clearInterval(timer);
+                        saveState();
+                    }
+                }, 30);
+            }
         }
 
         function tweakMsg(idx) {
@@ -1126,7 +1147,7 @@ HTML_CODE = """
                             `;
                         }
                     }
-                    streamWordByWord(r.sender, r.text);
+                    streamWordByWord(r.sender, r.text, isContinue);
                 }
             }
         }
