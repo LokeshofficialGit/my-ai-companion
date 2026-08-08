@@ -26,8 +26,8 @@ HTML_CODE = """
             --text-sub: #a1a1aa;
             --accent-purple: #a855f7;
             --accent-pink: #ec4899;
-            --action-text: #f472b6;
-            --user-msg-bg: linear-gradient(135deg, #9333ea, #ec4899);
+            --action-text: #a1a1aa;
+            --user-msg-bg: #1f202b;
             --ai-msg-bg: #161824;
             --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
             
@@ -159,15 +159,48 @@ HTML_CODE = """
         #chat-view { flex: 1; display: flex; flex-direction: column; height: 100%; overflow: hidden; }
         .chat-messages { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; -webkit-overflow-scrolling: touch; }
         
-        /* Message Bubbles */
+        /* Message Bubbles - Kindroid Minimal Aesthetic */
         .message { display: flex; flex-direction: column; max-width: 88%; position: relative; will-change: transform; align-self: flex-start; }
         .message.user { align-self: flex-end; }
-        .message .content { background: var(--ai-msg-bg); border: 1px solid var(--border-color); padding: 12px 14px; border-radius: 16px; font-size: 0.9rem; line-height: 1.45; color: var(--text-main); word-break: break-word; box-shadow: var(--card-shadow); border-bottom-left-radius: 4px; }
-        .message.user .content { background: var(--user-msg-bg); border: none; color: #ffffff; border-bottom-left-radius: 16px; border-bottom-right-radius: 4px; }
-        .message .sender-name { font-size: 0.72rem; color: var(--text-sub); margin-bottom: 3px; font-weight: 600; padding-left: 2px; }
-        .message.user .sender-name { text-align: right; padding-right: 2px; }
         
-        .action-text { color: var(--action-text); font-style: italic; font-weight: 500; }
+        .message .sender-name { 
+            font-size: 0.78rem; 
+            margin-bottom: 4px; 
+            font-weight: 700; 
+            padding-left: 2px; 
+            color: var(--accent-pink); 
+        }
+        .message.user .sender-name { 
+            text-align: right; 
+            padding-right: 2px; 
+            color: var(--accent-purple); 
+        }
+        .message.ai .sender-name { 
+            text-align: left; 
+            color: var(--accent-pink); 
+        }
+
+        .message .content { 
+            background: var(--ai-msg-bg); 
+            border: 1px solid var(--border-color); 
+            padding: 12px 14px; 
+            border-radius: 16px; 
+            font-size: 0.9rem; 
+            line-height: 1.5; 
+            color: var(--text-main); 
+            word-break: break-word; 
+            box-shadow: var(--card-shadow); 
+            border-bottom-left-radius: 4px; 
+        }
+        .message.user .content { 
+            background: var(--user-msg-bg); 
+            border: 1px solid rgba(168, 85, 247, 0.2); 
+            color: #e4e4e7; 
+            border-bottom-left-radius: 16px; 
+            border-bottom-right-radius: 4px; 
+        }
+        
+        .action-text { color: var(--action-text); font-style: italic; font-weight: 400; }
         
         .bubble-controls { display: flex; align-items: center; gap: 12px; margin-top: 6px; }
         .bubble-btn-icon { font-size: 0.75rem; color: var(--text-sub); opacity: 0.45; cursor: pointer; transition: opacity 0.2s, color 0.2s; }
