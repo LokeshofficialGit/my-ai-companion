@@ -37,25 +37,6 @@ HTML_CODE = """
             --sidebar-btn-hover: #1c1e2d;
         }
 
-        [data-theme="light"] {
-            --bg-main: #f4f4f5;
-            --bg-surface: #ffffff;
-            --bg-surface-solid: #ffffff;
-            --bg-input: #e4e4e7;
-            --border-color: rgba(168, 85, 247, 0.2);
-            --text-main: #09090b;
-            --text-sub: #52525b;
-            --action-text: #be185d;
-            --ai-msg-bg: #ffffff;
-            --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
-
-            --sidebar-bg: #ffffff;
-            --sidebar-border: rgba(168, 85, 247, 0.15);
-            --sidebar-text: #09090b;
-            --sidebar-btn-bg: #f4f4f5;
-            --sidebar-btn-hover: #e4e4e7;
-        }
-
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         
         html, body { 
@@ -67,7 +48,6 @@ HTML_CODE = """
             display: flex; 
             justify-content: center; 
             align-items: center; 
-            transition: background 0.3s, color 0.3s;
         }
 
         .app-container {
@@ -81,7 +61,6 @@ HTML_CODE = """
             overflow: hidden; 
             border: 1px solid var(--border-color);
             box-shadow: 0 0 40px rgba(168, 85, 247, 0.08);
-            transition: background 0.3s;
         }
         @media (min-width: 500px) { .app-container { height: 94dvh; border-radius: 20px; } }
 
@@ -92,24 +71,35 @@ HTML_CODE = """
             transform: scale(0.96) !important;
         }
 
-        /* Top Bar (Visible ONLY in Chat) */
+        /* Top Bar (Visible ONLY in Chat) - Cleaned up */
         .top-bar { 
             height: 56px; 
             min-height: 56px; 
             background: var(--bg-surface); 
-            border-bottom: 2px solid transparent;
-            border-image: linear-gradient(90deg, #a855f7, #ec4899) 1;
+            border-bottom: none;
             display: flex; 
             align-items: center; 
             justify-content: space-between; 
             padding: 0 12px; 
             z-index: 10; 
             box-shadow: 0 4px 20px rgba(168, 85, 247, 0.12);
-            transition: background 0.3s; 
         }
         
         .toggle-btn { background: transparent; border: none; color: var(--text-main); font-size: 1.25rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .top-title { font-weight: 700; font-size: 0.9rem; color: var(--text-main); display: flex; align-items: center; gap: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        
+        .header-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--accent-pink);
+            cursor: pointer;
+            flex-shrink: 0;
+            background: var(--border-color);
+        }
+        .header-avatar:hover { opacity: 0.85; }
+
         .icon-btn { background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; flex-shrink: 0; margin-left: 3px; }
 
         /* Sidebar Drawer */
@@ -118,7 +108,7 @@ HTML_CODE = """
             background: var(--sidebar-bg); 
             color: var(--sidebar-text);
             border-right: 1px solid var(--sidebar-border); display: flex; flex-direction: column; 
-            transition: transform 0.3s ease, background 0.3s; z-index: 100; transform: translateX(-100%); pointer-events: none; 
+            transition: transform 0.3s ease; z-index: 100; transform: translateX(-100%); pointer-events: none; 
         }
         .sidebar.open { transform: translateX(0); pointer-events: auto; }
         .sidebar-header { padding: 16px; font-size: 1.2rem; font-weight: 800; color: var(--accent-pink); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--sidebar-border); }
@@ -157,13 +147,13 @@ HTML_CODE = """
         #chat-view { flex: 1; display: flex; flex-direction: column; height: 100%; overflow: hidden; }
         .chat-messages { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; -webkit-overflow-scrolling: touch; }
         
-        .message { display: flex; gap: 10px; max-width: 88%; position: relative; will-change: transform; }
-        .message.user { align-self: flex-end; flex-direction: row-reverse; }
-        .message .avatar { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; background: var(--border-color); flex-shrink: 0; }
-        .message .content { background: var(--ai-msg-bg); border: 1px solid var(--border-color); padding: 12px 14px; border-radius: 16px; font-size: 0.9rem; line-height: 1.45; color: var(--text-main); word-break: break-word; box-shadow: var(--card-shadow); }
-        .message.user .content { background: var(--user-msg-bg); border: none; color: #ffffff; border-bottom-right-radius: 4px; }
-        .message.ai .content { border-bottom-left-radius: 4px; }
-        .message .sender-name { font-size: 0.72rem; color: var(--text-sub); margin-bottom: 3px; font-weight: 600; }
+        /* Message Bubbles - Avatars removed, only sender name and text bubble */
+        .message { display: flex; flex-direction: column; max-width: 88%; position: relative; will-change: transform; align-self: flex-start; }
+        .message.user { align-self: flex-end; }
+        .message .content { background: var(--ai-msg-bg); border: 1px solid var(--border-color); padding: 12px 14px; border-radius: 16px; font-size: 0.9rem; line-height: 1.45; color: var(--text-main); word-break: break-word; box-shadow: var(--card-shadow); border-bottom-left-radius: 4px; }
+        .message.user .content { background: var(--user-msg-bg); border: none; color: #ffffff; border-bottom-left-radius: 16px; border-bottom-right-radius: 4px; }
+        .message .sender-name { font-size: 0.72rem; color: var(--text-sub); margin-bottom: 3px; font-weight: 600; padding-left: 2px; }
+        .message.user .sender-name { text-align: right; padding-right: 2px; }
         
         .action-text { color: var(--action-text); font-style: italic; font-weight: 500; }
         
@@ -293,7 +283,6 @@ HTML_CODE = """
                     Aura
                 </span>
                 <div class="header-actions">
-                    <button class="sidebar-icon-btn" onclick="toggleAppTheme()" id="sidebar-theme-btn"><i class="fa-solid fa-moon"></i></button>
                     <button class="sidebar-icon-btn" onclick="toggleFullScreen()"><i class="fa-solid fa-expand"></i></button>
                     <button class="sidebar-icon-btn" onclick="toggleSidebar()"><i class="fa-solid fa-xmark"></i></button>
                 </div>
@@ -340,10 +329,9 @@ HTML_CODE = """
             </div>
             
             <div style="display: flex; gap: 3px; align-items: center; flex-shrink: 0;" id="top-actions">
-                <button class="icon-btn" id="pin-mem-btn" onclick="openPinnedMemoryModal()" title="Pin Memory"><i class="fa-solid fa-thumbtack"></i></button>
-                <button class="icon-btn" onclick="handleEditClick()" title="Edit Companion"><i class="fa-solid fa-wrench"></i></button>
+                <button class="icon-btn" id="pin-mem-btn" onclick="openPinnedMemoryModal()" title="Pin Memory"><i class="fa-solid fa-location-dot"></i></button>
                 <button class="icon-btn" onclick="regenerateLastResponse()" title="Regenerate"><i class="fa-solid fa-rotate-right"></i></button>
-                <button class="icon-btn" onclick="clearCurrentChat()" title="Clear Chat"><i class="fa-solid fa-trash"></i></button>
+                <button class="icon-btn" onclick="clearCurrentChat()" title="Clear Chat"><i class="fa-solid fa-comment-slash"></i></button>
             </div>
         </div>
 
@@ -549,18 +537,9 @@ HTML_CODE = """
         let userPersona = JSON.parse(localStorage.getItem('aura_user') || '{"name":"User", "bio":"", "avatar":"https://api.dicebear.com/7.x/identicon/svg?seed=user", "memories":[]}');
         if (!userPersona.memories) userPersona.memories = [];
         
-        let currentTheme = localStorage.getItem('aura_theme') || 'dark';
         let activeContext = null;
         let cropperInstance = null;
         let currentEditingAvatarType = null;
-
-        document.body.setAttribute('data-theme', currentTheme);
-
-        function toggleAppTheme() {
-            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            document.body.setAttribute('data-theme', currentTheme);
-            localStorage.setItem('aura_theme', currentTheme);
-        }
 
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
         function toggleMenuCategory(subId) { document.getElementById(subId).classList.toggle('hidden'); }
@@ -748,7 +727,7 @@ HTML_CODE = """
             showForm('group-form');
         }
 
-        function handleEditClick() {
+        function handleHeaderAvatarClick() {
             if(!activeContext) return;
             if(activeContext.type === 'char') editCurrentCharacter();
             else if(activeContext.type === 'group') editCurrentGroup();
@@ -928,18 +907,27 @@ HTML_CODE = """
             document.getElementById('chat-view').classList.remove('hidden');
             document.getElementById('top-bar').classList.remove('hidden');
 
-            let logoHtml = `<svg viewBox="0 0 100 100" class="aura-logo-svg"><circle cx="50" cy="50" r="38" fill="none" stroke="url(#auraLogoGrad)" stroke-width="10"/><path d="M 50 18 L 70 72 L 58 72 L 53 58 L 47 58 L 42 72 L 30 72 Z M 48 45 L 50 34 L 52 45 Z" fill="url(#auraLogoGrad)"/><path d="M 59 62 L 68 76 Q 72 82 78 78 L 74 68 Z" fill="url(#auraLogoGrad)"/></svg>`;
-
             if(type === 'group') {
                 document.getElementById('pin-mem-btn').classList.add('hidden');
                 let g = groups.find(item => item.id === id);
-                document.getElementById('top-title').innerHTML = `${logoHtml} ${g ? g.title : 'Group Chat'}`;
+                let avatarSrc = g ? (g.avatar || 'https://api.dicebear.com/7.x/shapes/svg?seed=' + g.id) : 'https://api.dicebear.com/7.x/shapes/svg?seed=group';
+                let titleText = g ? g.title : 'Group Chat';
+                document.getElementById('top-title').innerHTML = `
+                    <img src="${avatarSrc}" class="header-avatar" onclick="handleHeaderAvatarClick()" title="Edit Group">
+                    <span>${titleText}</span>
+                `;
             } else {
                 document.getElementById('pin-mem-btn').classList.remove('hidden');
                 let c = characters.find(item => item.id === id);
                 let aff = c ? (c.affinity || 50) : 50;
                 let label = aff >= 80 ? 'Deep Bond ❤️' : (aff >= 50 ? 'Warm 😊' : 'Distant 💔');
-                document.getElementById('top-title').innerHTML = `${logoHtml} ${c ? c.name : 'Chat'} <span style="font-size:0.6rem; padding:2px 5px; background:rgba(236,72,153,0.15); border:1px solid var(--accent-pink); color:var(--accent-pink); border-radius:8px; margin-left:4px; flex-shrink:0;">${label} (${aff}%)</span>`;
+                let avatarSrc = c ? c.avatar : 'https://api.dicebear.com/7.x/bottts/svg?seed=default';
+                let nameText = c ? c.name : 'Chat';
+                document.getElementById('top-title').innerHTML = `
+                    <img src="${avatarSrc}" class="header-avatar" onclick="handleHeaderAvatarClick()" title="Edit Companion">
+                    <span>${nameText}</span>
+                    <span style="font-size:0.6rem; padding:2px 5px; background:rgba(236,72,153,0.15); border:1px solid var(--accent-pink); color:var(--accent-pink); border-radius:8px; margin-left:4px; flex-shrink:0;">${label} (${aff}%)</span>
+                `;
             }
 
             renderSidebar();
@@ -967,19 +955,15 @@ HTML_CODE = """
 
             container.innerHTML = history.map((m, idx) => {
                 let isUser = m.sender === 'You';
-                let avatar = isUser ? (userPersona.avatar || 'https://api.dicebear.com/7.x/identicon/svg?seed=user') : m.avatar;
 
                 return `
                     <div class="message ${isUser ? 'user':'ai'}">
-                        <img class="avatar" src="${avatar}" />
-                        <div>
-                            <div class="sender-name">${m.sender}</div>
-                            <div class="content">
-                                ${formatText(m.text)}
-                                <div class="bubble-controls">
-                                    <span class="edit-link" onclick="tweakMsg(${idx})">edit</span>
-                                    ${!isUser ? `<span class="continue-bubble-btn" onclick="continueAiReply()">&gt;&gt; continue</span>` : ''}
-                                </div>
+                        <div class="sender-name">${m.sender}</div>
+                        <div class="content">
+                            ${formatText(m.text)}
+                            <div class="bubble-controls">
+                                <span class="edit-link" onclick="tweakMsg(${idx})">edit</span>
+                                ${!isUser ? `<span class="continue-bubble-btn" onclick="continueAiReply()">&gt;&gt; continue</span>` : ''}
                             </div>
                         </div>
                     </div>
@@ -988,7 +972,7 @@ HTML_CODE = """
             container.scrollTop = container.scrollHeight;
         }
 
-        function showTypingIndicator(senderName, avatar) {
+        function showTypingIndicator(senderName) {
             let container = document.getElementById('message-container');
             let emptyState = container.querySelector('.empty-chat-placeholder');
             if (emptyState) emptyState.remove();
@@ -997,12 +981,9 @@ HTML_CODE = """
             typingElem.id = 'typing-bubble';
             typingElem.className = 'message ai';
             typingElem.innerHTML = `
-                <img class="avatar" src="${avatar}" />
-                <div>
-                    <div class="sender-name">${senderName}</div>
-                    <div class="content typing-indicator">
-                        <i class="fa-solid fa-ellipsis fa-beat"></i> typing...
-                    </div>
+                <div class="sender-name">${senderName}</div>
+                <div class="content typing-indicator">
+                    <i class="fa-solid fa-ellipsis fa-beat"></i> typing...
                 </div>
             `;
             container.appendChild(typingElem);
@@ -1014,13 +995,13 @@ HTML_CODE = """
             if(elem) elem.remove();
         }
 
-        function streamWordByWord(sender, fullText, avatar) {
+        function streamWordByWord(sender, fullText) {
             removeTypingIndicator();
             if(!chatHistories[activeContext.id]) chatHistories[activeContext.id] = [];
             
             let words = fullText.split(' ');
             let currentText = '';
-            let msgObj = { sender: sender, text: '', avatar: avatar };
+            let msgObj = { sender: sender, text: '' };
             chatHistories[activeContext.id].push(msgObj);
             let msgIndex = chatHistories[activeContext.id].length - 1;
 
@@ -1090,15 +1071,14 @@ HTML_CODE = """
         }
 
         async function fetchAIResponse(isContinue = false) {
-            let targetAvatar = 'https://api.dicebear.com/7.x/bottts/svg?seed=default';
             let targetName = 'Companion';
             
             if(activeContext.type === 'char') {
                 let c = characters.find(item => item.id === activeContext.id);
-                if(c) { targetAvatar = c.avatar; targetName = c.name; }
+                if(c) { targetName = c.name; }
             }
             
-            showTypingIndicator(targetName, targetAvatar);
+            showTypingIndicator(targetName);
 
             let payload = {
                 type: activeContext.type,
@@ -1132,18 +1112,21 @@ HTML_CODE = """
                 }
             }
 
-            let logoHtml = `<svg viewBox="0 0 100 100" class="aura-logo-svg"><circle cx="50" cy="50" r="38" fill="none" stroke="url(#auraLogoGrad)" stroke-width="10"/><path d="M 50 18 L 70 72 L 58 72 L 53 58 L 47 58 L 42 72 L 30 72 Z M 48 45 L 50 34 L 52 45 Z" fill="url(#auraLogoGrad)"/><path d="M 59 62 L 68 76 Q 72 82 78 78 L 74 68 Z" fill="url(#auraLogoGrad)"/></svg>`;
-
             if(data.responses) {
                 for (let r of data.responses) {
                     if(r.newAffinity !== undefined && activeContext.type === 'char') {
                         let charObj = characters.find(c => c.id === activeContext.id);
                         if(charObj) {
                             charObj.affinity = r.newAffinity;
-                            document.getElementById('top-title').innerHTML = `${logoHtml} ${charObj.name} <span style="font-size:0.6rem; padding:2px 5px; background:rgba(236,72,153,0.15); border:1px solid var(--accent-pink); color:var(--accent-pink); border-radius:8px; margin-left:4px; flex-shrink:0;">${r.affinityLabel} (${r.newAffinity}%)</span>`;
+                            let avatarSrc = charObj.avatar;
+                            document.getElementById('top-title').innerHTML = `
+                                <img src="${avatarSrc}" class="header-avatar" onclick="handleHeaderAvatarClick()" title="Edit Companion">
+                                <span>${charObj.name}</span>
+                                <span style="font-size:0.6rem; padding:2px 5px; background:rgba(236,72,153,0.15); border:1px solid var(--accent-pink); color:var(--accent-pink); border-radius:8px; margin-left:4px; flex-shrink:0;">${r.affinityLabel} (${r.newAffinity}%)</span>
+                            `;
                         }
                     }
-                    streamWordByWord(r.sender, r.text, r.avatar);
+                    streamWordByWord(r.sender, r.text);
                 }
             }
         }
@@ -1311,7 +1294,6 @@ CRITICAL HINGLISH RULE:
         responses.append({
             "sender": c['name'], 
             "text": reply_text, 
-            "avatar": c['avatar'],
             "newAffinity": new_affinity,
             "affinityLabel": mood_str
         })
@@ -1339,7 +1321,7 @@ Talk briefly in casual Hinglish (Roman Hindi/English mixed). Use asterisks for a
             }, headers=headers).json()
 
             reply_text = res["choices"][0]["message"]["content"]
-            responses.append({"sender": char['name'], "text": reply_text, "avatar": char['avatar']})
+            responses.append({"sender": char['name'], "text": reply_text})
 
     return jsonify({"responses": responses, "extractedMemory": extracted_memory})
 
