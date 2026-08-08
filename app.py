@@ -209,7 +209,25 @@ HTML_CODE = """
         .wand-inbox-btn:hover { opacity: 1; }
 
         .input-area button.send-btn { height: 42px; padding: 0 16px; background: linear-gradient(135deg, #9333ea, #ec4899); color: #ffffff; border: none; border-radius: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .tool-btn { background: var(--bg-input) !important; color: var(--accent-pink) !important; border: 1px solid var(--border-color) !important; padding: 0 10px !important; font-size: 0.75rem; font-weight: 700; border-radius: 12px !important; height: 42px; cursor: pointer; display: flex; align-items: center; justify-content: center; min-width: 75px; }
+        .tool-btn { background: var(--bg-input) !important; color: var(--accent-pink) !important; border: 1px solid var(--border-color) !important; padding: 0 10px !important; font-size: 0.75rem; font-weight: 700; border-radius: 12px !important; height: 42px; cursor: pointer; display: flex; align-items: center; justify-content: center; min-width: 45px; }
+
+        /* Prompt Popup Modal */
+        .prompt-modal-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8); z-index: 300; display: flex; flex-direction: column;
+            justify-content: flex-end; padding: 0; animation: fadeIn 0.2s ease;
+        }
+        .prompt-modal-card {
+            width: 100%; background: var(--bg-surface-solid); border-top: 1px solid var(--border-color);
+            border-top-left-radius: 24px; border-top-right-radius: 24px; padding: 20px;
+            display: flex; flex-direction: column; gap: 14px; color: var(--text-main);
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.5); max-height: 70vh;
+        }
+        .prompt-textarea {
+            width: 100%; height: 130px; background: var(--bg-input); border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 12px; color: var(--text-main); font-size: 0.88rem; resize: none; outline: none;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         .empty-chat-placeholder {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -372,7 +390,7 @@ HTML_CODE = """
             <div id="chat-view" class="hidden">
                 <div class="chat-messages" id="message-container"></div>
                 <div class="input-area">
-                    <button class="tool-btn" id="provider-switch-btn" onclick="toggleAiProvider()" title="Switch Model">⚡ Groq</button>
+                    <button class="tool-btn" id="gp-btn" onclick="generateImagePrompt()" title="Generate 9:16 Image Prompt">GP</button>
                     <div class="input-wrapper">
                         <input type="text" id="chat-input" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendMsg()">
                         <button class="wand-inbox-btn" onclick="suggestUserMessage()" title="Magic Reply">🪄</button>
@@ -489,9 +507,24 @@ HTML_CODE = """
             </div>
         </div>
 
+        <!-- Prompt Modal -->
+        <div id="prompt-modal" class="prompt-modal-overlay hidden">
+            <div class="prompt-modal-card">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h4 style="font-size:0.95rem; color:var(--accent-pink);"><i class="fa-solid fa-wand-magic-sparkles"></i> 9:16 Image Generation Prompt</h4>
+                    <button class="toggle-btn" onclick="document.getElementById('prompt-modal').classList.add('hidden')" style="font-size:1.1rem;"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <textarea id="prompt-output-box" class="prompt-textarea" readonly></textarea>
+                <div style="display:flex; gap:8px; width:100%;">
+                    <button class="sub-create-btn" style="background:#27272a; flex:1;" onclick="document.getElementById('prompt-modal').classList.add('hidden')">Close</button>
+                    <button class="sub-create-btn" style="flex:1;" onclick="copyPromptText()"><i class="fa-solid fa-copy"></i> Copy Prompt</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Cropper Modal -->
-        <div id="cropper-modal" class="avatar-modal-overlay hidden">
-            <div class="avatar-modal-card">
+        <div id="cropper-modal" class="avatar-modal-overlay hidden" style="justify-content:center;">
+            <div class="avatar-modal-card" style="border-top-left-radius:20px; border-top-right-radius:20px;">
                 <div style="width:100%; display:flex; justify-content:space-between; align-items:center;">
                     <h4 style="font-size:1rem;">Crop Avatar</h4>
                     <button class="toggle-btn" onclick="closeCropperModal()" style="font-size:1.1rem;"><i class="fa-solid fa-xmark"></i></button>
@@ -507,7 +540,7 @@ HTML_CODE = """
         </div>
 
         <!-- Backup Modal -->
-        <div id="backup-modal" class="avatar-modal-overlay hidden">
+        <div id="backup-modal" class="avatar-modal-overlay hidden" style="justify-content:center;">
             <div class="modal-card">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <h4 style="font-size:1rem;">Select Data to Backup</h4>
@@ -533,18 +566,43 @@ HTML_CODE = """
         let activeContext = null;
         let cropperInstance = null;
         let currentEditingAvatarType = null;
-        let currentAiProvider = 'groq'; // Options: groq, openrouter
+        let currentAiProvider = 'groq';
 
-        function toggleAiProvider() {
-            if (currentAiProvider === 'groq') {
-                currentAiProvider = 'openrouter';
-                document.getElementById('provider-switch-btn').innerHTML = '🌐 OpenRouter';
-                document.getElementById('provider-switch-btn').style.color = '#a855f7';
-            } else {
-                currentAiProvider = 'groq';
-                document.getElementById('provider-switch-btn').innerHTML = '⚡ Groq';
-                document.getElementById('provider-switch-btn').style.color = 'var(--accent-pink)';
+        async function generateImagePrompt() {
+            if(!activeContext || activeContext.type !== 'char') {
+                alert('GP feature is currently available for single character chats!');
+                return;
             }
+
+            let btn = document.getElementById('gp-btn');
+            let origText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+            let history = chatHistories[activeContext.id] || [];
+            let character = characters.find(c => c.id === activeContext.id);
+
+            try {
+                let res = await fetch('/api/generate-image-prompt', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ character, history })
+                });
+                let data = await res.json();
+                
+                document.getElementById('prompt-output-box').value = data.prompt || 'Failed to generate prompt.';
+                document.getElementById('prompt-modal').classList.remove('hidden');
+            } catch(e) {
+                alert('Error generating prompt.');
+            } finally {
+                btn.innerHTML = origText;
+            }
+        }
+
+        function copyPromptText() {
+            let box = document.getElementById('prompt-output-box');
+            box.select();
+            navigator.clipboard.writeText(box.value);
+            alert('Prompt copied to clipboard!');
         }
 
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
@@ -1217,6 +1275,49 @@ def call_llm(provider, messages, system_prompt):
 @app.route("/")
 def home():
     return render_template_string(HTML_CODE)
+
+@app.route("/api/generate-image-prompt", methods=["POST"])
+def generate_image_prompt():
+    data = request.json
+    character = data.get("character", {})
+    history = data.get("history", [])
+
+    # Last 2 messages for recent scenario/dress/location context
+    recent_context = "\n".join([f"{m['sender']}: {m['text']}" for m in history[-2:]])
+    char_appearance = character.get("appearance", "Beautiful appearance")
+    char_name = character.get("name", "Character")
+
+    system_prompt = f"""
+You are an expert prompt engineer for AI image generators (like Midjourney / Stable Diffusion).
+Your task is to create a detailed, high-quality image generation prompt based on the character's appearance and the recent chat context.
+
+Details:
+- Character Name: {char_name}
+- Character Physical Appearance: {char_appearance}
+- Recent Chat Context (Scenario, Dress, Location, Action): {recent_context}
+
+Rules for the Image Prompt:
+1. Combine the character appearance, current outfit/dress mentioned in chat, and current location/setting.
+2. Make it cinematic, photorealistic, highly detailed, beautiful lighting.
+3. CRITICAL: End the prompt with aspect ratio tag `--ar 9:16`.
+4. Output ONLY the final image prompt text, no extra conversation or intro.
+"""
+
+    api_key = os.environ.get("GROQ_API_KEY")
+    if not api_key:
+        return jsonify({"prompt": "Error: Groq API Key missing!"})
+
+    try:
+        headers = {"Authorization": f"Bearer {api_key.strip()}", "Content-Type": "application/json"}
+        payload = {
+            "model": "llama-3.1-8b-instant",
+            "messages": [{"role": "system", "content": system_prompt}, {"role": "user", "content": "Generate the 9:16 image prompt now."}]
+        }
+        res = requests.post("https://api.groq.com/openai/v1/chat/completions", json=payload, headers=headers).json()
+        prompt_text = res["choices"][0]["message"]["content"].strip()
+        return jsonify({"prompt": prompt_text})
+    except Exception as e:
+        return jsonify({"prompt": f"Error generating prompt: {str(e)}"})
 
 @app.route("/api/suggest-reply", methods=["POST"])
 def suggest_reply():
