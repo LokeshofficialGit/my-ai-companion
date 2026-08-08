@@ -136,7 +136,7 @@ HTML_CODE = """
         /* Dashboard Layout */
         .dashboard { flex: 1; padding: 24px 16px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
         
-        /* Custom Branded Logo Container matching user preference */
+        /* Fixed Perfect Logo Design matching reference image */
         .kio-brand-logo {
             display: flex;
             align-items: center;
@@ -154,31 +154,21 @@ HTML_CODE = """
             -webkit-text-fill-color: transparent;
             display: inline-flex;
             align-items: flex-end;
+            position: relative;
         }
         .kio-brand-heart {
-            font-size: 1.2rem;
+            position: absolute;
+            top: -12px;
+            left: 54%;
+            font-size: 1.05rem;
             color: #a855f7;
-            margin-left: 2px;
-            margin-right: 2px;
-            vertical-align: super;
-            filter: drop-shadow(0 0 6px rgba(168,85,247,0.8));
+            filter: drop-shadow(0 0 6px rgba(168,85,247,0.9));
         }
         .kio-brand-dot {
             color: #ec4899;
             -webkit-text-fill-color: #ec4899;
-            margin-left: 1px;
+            margin-left: 2px;
             position: relative;
-        }
-        .kio-brand-dot::after {
-            content: '';
-            position: absolute;
-            width: 8px;
-            height: 8px;
-            background: #ec4899;
-            border-radius: 50%;
-            top: 12px;
-            right: -10px;
-            box-shadow: 0 0 10px #ec4899;
         }
 
         .dash-title { font-size: 1.3rem; font-weight: 800; color: var(--text-main); margin-bottom: 4px; }
@@ -304,7 +294,7 @@ HTML_CODE = """
 
         .hidden { display: none !important; }
         
-        /* Sidebar Logo Mini typography styling */
+        /* Sidebar Logo Mini styling */
         .sidebar-logo-text {
             font-size: 1.15rem;
             font-weight: 900;
@@ -314,13 +304,14 @@ HTML_CODE = """
             -webkit-text-fill-color: transparent;
             display: inline-flex;
             align-items: flex-end;
+            position: relative;
         }
         .sidebar-logo-heart {
-            font-size: 0.75rem;
+            position: absolute;
+            top: -7px;
+            left: 52%;
+            font-size: 0.55rem;
             color: #a855f7;
-            margin-left: 1px;
-            margin-right: 1px;
-            vertical-align: super;
         }
         .sidebar-logo-dot {
             color: #ec4899;
@@ -335,7 +326,7 @@ HTML_CODE = """
         <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <span style="display:flex; align-items:center; gap:8px;">
-                    <span class="sidebar-logo-text">Kio<span class="sidebar-logo-heart"><i class="fa-solid fa-heart" style="font-size:0.6rem;"></i></span><span class="sidebar-logo-dot">.</span></span>
+                    <span class="sidebar-logo-text">Kio<span class="sidebar-logo-heart"><i class="fa-solid fa-heart"></i></span><span class="sidebar-logo-dot">.</span></span>
                 </span>
                 <div class="header-actions">
                     <button class="sidebar-icon-btn" onclick="toggleFullScreen()"><i class="fa-solid fa-expand"></i></button>
@@ -398,7 +389,9 @@ HTML_CODE = """
                 </div>
                 
                 <div class="kio-brand-logo">
-                    <span class="kio-brand-text">Kio<span class="kio-brand-heart"><i class="fa-solid fa-heart" style="font-size:0.9rem;"></i></span><span class="kio-brand-dot">.</span></span>
+                    <span class="kio-brand-text">
+                        Kio<span class="kio-brand-heart"><i class="fa-solid fa-heart"></i></span><span class="kio-brand-dot">.</span>
+                    </span>
                 </div>
                 
                 <h2 class="dash-title">Welcome to Kio.</h2>
