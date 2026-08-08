@@ -11,7 +11,7 @@ HTML_CODE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Aura - AI Companions</title>
+    <title>Kio. - Intelligence with a heart</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <style>
@@ -135,9 +135,54 @@ HTML_CODE = """
 
         /* Dashboard Layout */
         .dashboard { flex: 1; padding: 24px 16px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
-        .dash-logo-large { width: 90px; height: 90px; margin-bottom: 14px; filter: drop-shadow(0 0 16px rgba(236,72,153,0.6)); display: block; }
-        .dash-title { font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin-bottom: 4px; }
-        .dash-sub { font-size: 0.85rem; color: var(--text-sub); text-align: center; margin-bottom: 24px; }
+        
+        /* Custom Branded Logo Container matching user preference */
+        .kio-brand-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin-bottom: 14px;
+            filter: drop-shadow(0 0 16px rgba(236,72,153,0.4));
+        }
+        .kio-brand-text {
+            font-size: 2.8rem;
+            font-weight: 900;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, #a855f7, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-flex;
+            align-items: flex-end;
+        }
+        .kio-brand-heart {
+            font-size: 1.2rem;
+            color: #a855f7;
+            margin-left: 2px;
+            margin-right: 2px;
+            vertical-align: super;
+            filter: drop-shadow(0 0 6px rgba(168,85,247,0.8));
+        }
+        .kio-brand-dot {
+            color: #ec4899;
+            -webkit-text-fill-color: #ec4899;
+            margin-left: 1px;
+            position: relative;
+        }
+        .kio-brand-dot::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #ec4899;
+            border-radius: 50%;
+            top: 12px;
+            right: -10px;
+            box-shadow: 0 0 10px #ec4899;
+        }
+
+        .dash-title { font-size: 1.3rem; font-weight: 800; color: var(--text-main); margin-bottom: 4px; }
+        .dash-sub { font-size: 0.82rem; color: var(--text-sub); text-align: center; margin-bottom: 24px; font-style: italic; letter-spacing: 0.3px; }
         
         .dash-card { width: 100%; background: var(--bg-surface); border: 1px solid var(--border-color); padding: 16px; border-radius: 16px; display: flex; align-items: center; gap: 14px; margin-bottom: 12px; cursor: pointer; box-shadow: var(--card-shadow); }
         .dash-card i { font-size: 1.3rem; color: var(--accent-pink); }
@@ -258,29 +303,39 @@ HTML_CODE = """
         .memory-tag-chip i { cursor: pointer; color: #ef4444; opacity: 0.8; }
 
         .hidden { display: none !important; }
-        .aura-logo-svg { width: 28px; height: 28px; flex-shrink: 0; filter: drop-shadow(0 0 6px rgba(236, 72, 153, 0.5)); display: inline-block; }
+        
+        /* Sidebar Logo Mini typography styling */
+        .sidebar-logo-text {
+            font-size: 1.15rem;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #a855f7, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-flex;
+            align-items: flex-end;
+        }
+        .sidebar-logo-heart {
+            font-size: 0.75rem;
+            color: #a855f7;
+            margin-left: 1px;
+            margin-right: 1px;
+            vertical-align: super;
+        }
+        .sidebar-logo-dot {
+            color: #ec4899;
+            -webkit-text-fill-color: #ec4899;
+        }
     </style>
 </head>
 <body data-theme="dark">
-
-    <svg style="width:0;height:0;position:absolute;" aria-hidden="true" focusable="false">
-        <linearGradient id="auraLogoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#a855f7"/>
-            <stop offset="100%" stop-color="#ec4899"/>
-        </linearGradient>
-    </svg>
 
     <div class="app-container">
         <!-- Sidebar Navigation -->
         <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <span style="display:flex; align-items:center; gap:10px;">
-                    <svg viewBox="0 0 100 100" class="aura-logo-svg">
-                        <circle cx="50" cy="50" r="38" fill="none" stroke="url(#auraLogoGrad)" stroke-width="10"/>
-                        <path d="M 50 18 L 70 72 L 58 72 L 53 58 L 47 58 L 42 72 L 30 72 Z M 48 45 L 50 34 L 52 45 Z" fill="url(#auraLogoGrad)"/>
-                        <path d="M 59 62 L 68 76 Q 72 82 78 78 L 74 68 Z" fill="url(#auraLogoGrad)"/>
-                    </svg>
-                    Aura
+                <span style="display:flex; align-items:center; gap:8px;">
+                    <span class="sidebar-logo-text">Kio<span class="sidebar-logo-heart"><i class="fa-solid fa-heart" style="font-size:0.6rem;"></i></span><span class="sidebar-logo-dot">.</span></span>
                 </span>
                 <div class="header-actions">
                     <button class="sidebar-icon-btn" onclick="toggleFullScreen()"><i class="fa-solid fa-expand"></i></button>
@@ -321,7 +376,7 @@ HTML_CODE = """
             </div>
         </div>
 
-        <!-- Top Bar (Reload button removed from header) -->
+        <!-- Top Bar -->
         <div class="top-bar hidden" id="top-bar">
             <div style="display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1;">
                 <button class="toggle-btn" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
@@ -341,13 +396,13 @@ HTML_CODE = """
                 <div style="position: absolute; top: 16px; left: 16px;">
                     <button class="icon-btn" onclick="toggleSidebar()" style="width:38px; height:38px; font-size:1rem;"><i class="fa-solid fa-bars"></i></button>
                 </div>
-                <svg viewBox="0 0 100 100" class="dash-logo-large">
-                    <circle cx="50" cy="50" r="38" fill="none" stroke="url(#auraLogoGrad)" stroke-width="10"/>
-                    <path d="M 50 18 L 70 72 L 58 72 L 53 58 L 47 58 L 42 72 L 30 72 Z M 48 45 L 50 34 L 52 45 Z" fill="url(#auraLogoGrad)"/>
-                    <path d="M 59 62 L 68 76 Q 72 82 78 78 L 74 68 Z" fill="url(#auraLogoGrad)"/>
-                </svg>
-                <h2 class="dash-title">Welcome to Aura</h2>
-                <p class="dash-sub">Your secure personal AI companion space.</p>
+                
+                <div class="kio-brand-logo">
+                    <span class="kio-brand-text">Kio<span class="kio-brand-heart"><i class="fa-solid fa-heart" style="font-size:0.9rem;"></i></span><span class="kio-brand-dot">.</span></span>
+                </div>
+                
+                <h2 class="dash-title">Welcome to Kio.</h2>
+                <p class="dash-sub">Intelligence with a heart.</p>
                 
                 <div class="dash-card" onclick="openNewCharForm()">
                     <i class="fa-solid fa-user-plus"></i>
@@ -663,7 +718,7 @@ HTML_CODE = """
             let blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
             let a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = 'Aura_Full_Backup_' + Date.now() + '.json';
+            a.download = 'Kio_Full_Backup_' + Date.now() + '.json';
             a.click();
             document.getElementById('backup-modal').classList.add('hidden');
         }
@@ -997,7 +1052,6 @@ HTML_CODE = """
             if(elem) elem.remove();
         }
 
-        /* Fixed streaming for normal and continuation text */
         function streamWordByWord(sender, newText, isAppend = false) {
             removeTypingIndicator();
             if(!chatHistories[activeContext.id]) chatHistories[activeContext.id] = [];
