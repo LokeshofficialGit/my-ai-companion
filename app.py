@@ -1214,7 +1214,7 @@ Return ONLY text.
                 return jsonify({"suggestion": "Arey batao, kya haal hai?"})
             
             genai.configure(api_key=gemini_api_key)
-            model = genai.GenerativeModel('gemini-2.5-flash')
+            model = genai.GenerativeModel('gemini-2.0-flash')
             chat_context = system_prompt + "\n".join([f"{m['sender']}: {m['text']}" for m in history[-10:]])
             response = model.generate_content(chat_context)
             return jsonify({"suggestion": response.text.strip('"')})
@@ -1307,7 +1307,7 @@ CRITICAL HINGLISH RULE:
                     return jsonify({"responses": [{"sender": "System", "text": "Gemini API Key missing!"}]})
                 
                 genai.configure(api_key=gemini_api_key)
-                model = genai.GenerativeModel('gemini-2.5-flash')
+                model = genai.GenerativeModel('gemini-2.0-flash')
                 
                 gemini_chat_history = system_prompt + "\n\n"
                 for m in history[-25:]:
@@ -1360,7 +1360,7 @@ Talk briefly in casual Hinglish (Roman Hindi/English mixed). Use asterisks for a
                 if provider == "gemini":
                     gemini_api_key = os.environ.get("GEMINI_API_KEY")
                     genai.configure(api_key=gemini_api_key)
-                    model = genai.GenerativeModel('gemini-2.5-flash')
+                    model = genai.GenerativeModel('gemini-2.0-flash')
                     chat_context = system_prompt + "\n".join([f"{m['sender']}: {m['text']}" for m in history[-25:]])
                     res = model.generate_content(chat_context)
                     reply_text = res.text.strip()
