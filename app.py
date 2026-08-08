@@ -1282,25 +1282,24 @@ def generate_image_prompt():
     character = data.get("character", {})
     history = data.get("history", [])
 
-    # Last 2 messages for recent scenario/dress/location context
     recent_context = "\n".join([f"{m['sender']}: {m['text']}" for m in history[-2:]])
-    char_appearance = character.get("appearance", "Beautiful appearance")
-    char_name = character.get("name", "Character")
+    char_appearance = character.get("appearance", "A person with attractive features")
+    char_name = character.get("name", "")
 
     system_prompt = f"""
-You are an expert prompt engineer for AI image generators (like Midjourney / Stable Diffusion).
-Your task is to create a detailed, high-quality image generation prompt based on the character's appearance and the recent chat context.
+You are an expert prompt engineer for AI image generators.
+Your task is to create a high-quality, cinematic image generation prompt.
 
 Details:
-- Character Name: {char_name}
-- Character Physical Appearance: {char_appearance}
+- Appearance details: {char_appearance}
 - Recent Chat Context (Scenario, Dress, Location, Action): {recent_context}
 
 Rules for the Image Prompt:
-1. Combine the character appearance, current outfit/dress mentioned in chat, and current location/setting.
-2. Make it cinematic, photorealistic, highly detailed, beautiful lighting.
-3. CRITICAL: End the prompt with aspect ratio tag `--ar 9:16`.
-4. Output ONLY the final image prompt text, no extra conversation or intro.
+1. CRITICAL: NEVER use the character's name or any real person's name. Use pronouns like 'She' or 'He' exclusively.
+2. Maintain all physical attributes, outfit/dress, location, and style provided in the context.
+3. Keep it photorealistic, highly detailed, cinematic lighting, and professional.
+4. End the prompt with aspect ratio tag `--ar 9:16`.
+5. Output ONLY the final image prompt text, no extra conversation.
 """
 
     api_key = os.environ.get("GROQ_API_KEY")
@@ -1315,6 +1314,10 @@ Rules for the Image Prompt:
         }
         res = requests.post("https://api.groq.com/openai/v1/chat/completions", json=payload, headers=headers).json()
         prompt_text = res["choices"][0]["message"]["content"].strip()
+        
+        if char_name:
+            prompt_text = prompt_text.replace(char_name, "the subject")
+
         return jsonify({"prompt": prompt_text})
     except Exception as e:
         return jsonify({"prompt": f"Error generating prompt: {str(e)}"})
