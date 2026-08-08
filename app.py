@@ -934,7 +934,7 @@ HTML_CODE = """
         }
 
         function formatText(text) {
-            return text.replace(/\*(.*?)\*/g, '<span class="action-text">*$1*</span>');
+            return text.replace(/\\*(.*?)\\*/g, '<span class="action-text">*$1*</span>');
         }
 
         function renderMessages() {
@@ -1073,7 +1073,7 @@ HTML_CODE = """
             let charObj = characters.find(c => c.id === activeContext.id);
             let targetName = charObj ? charObj.name : 'Companion';
 
-            showTypingIndicator(targetName + " is generating high-quality realistic selfie 📸 (this may take a moment)...");
+            showTypingIndicator(targetName + " is generating realistic selfie 📸...");
 
             let payload = {
                 character: charObj,
@@ -1240,7 +1240,6 @@ def generate_selfie_gemini():
     
     groq_api_key = os.environ.get("GROQ_API_KEY")
     
-    # 1. Craft prompt enforcing 9:16 vertical aspect ratio and character appearance
     scene_prompt = f"Vertical 9:16 aspect ratio smartphone front camera selfie of {char_name}, appearance details: {char_app}, candid look, natural lighting, professional photography, 8k, extremely detailed skin texture, raw photo"
     
     if groq_api_key and history:
@@ -1267,13 +1266,29 @@ Output ONLY the final English prompt for image generation, focusing heavily on v
         except:
             pass
 
-    # 2. Use Gemini Imagen 3 via official SDK cleanly without unsupported configuration dictionaries
+    # Use Gemini model supporting image generation natively on free tier
     try:
-        model = genai.GenerativeModel('imagen-3.0-generate-001')
-        
+        model = genai.GenerativeModel('gemini-2.5-flash')
         result = model.generate_content(scene_prompt)
         
-        image_bytes = result.candidates[0].content.parts[0].image.image_bytes
+        image_bytes = None
+        for part in result.candidates[0].content.parts:
+            if hasattr(part, 'inline_data') and part.inline_data:
+                image_bytes = part.inline_data.data
+                break
+        
+        if not image_bytes:
+            for candidate in result.candidates:
+                for part in candidate.content.parts:
+                    if hasattr(part, 'image_bytes'):
+                        image_bytes = part.image_bytes
+                        break
+                if image_bytes:
+                    break
+
+        if not image_bytes:
+            return jsonify({"error": "Model did not return image data. Try a simpler description."}), 500
+
         img_base64 = base64.b64encode(image_bytes).decode('utf-8')
         image_data_url = f"data:image/jpeg;base64,{img_base64}"
         
