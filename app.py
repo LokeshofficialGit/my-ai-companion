@@ -934,7 +934,7 @@ HTML_CODE = """
         }
 
         function formatText(text) {
-            return text.replace(/\\*(.*?)\\*/g, '<span class="action-text">*$1*</span>');
+            return text.replace(/\*(.*?)\*/g, '<span class="action-text">*$1*</span>');
         }
 
         function renderMessages() {
@@ -1240,20 +1240,20 @@ def generate_selfie_gemini():
     
     groq_api_key = os.environ.get("GROQ_API_KEY")
     
-    # 1. Use Groq to craft a detailed photorealistic prompt utilizing the Character's Appearance Bio
-    scene_prompt = f"Hyper-realistic smartphone front camera selfie of {char_name}, appearance details: {char_app}, candid look, natural lighting, professional photography, 8k, extremely detailed skin texture, raw photo"
+    # 1. Craft prompt enforcing 9:16 vertical aspect ratio and character appearance
+    scene_prompt = f"Vertical 9:16 aspect ratio smartphone front camera selfie of {char_name}, appearance details: {char_app}, candid look, natural lighting, professional photography, 8k, extremely detailed skin texture, raw photo"
     
     if groq_api_key and history:
         try:
             headers_groq = {"Authorization": f"Bearer {groq_api_key.strip()}", "Content-Type": "application/json"}
             recent_chat = "\n".join([f"{m['sender']}: {m['text']}" for m in history[-3:]])
             prompt_gen_query = f"""
-Create a precise prompt for a photorealistic selfie based on the character's exact appearance description.
+Create a precise prompt for a vertical 9:16 photorealistic selfie based on the character's exact appearance description.
 Character Name: {char_name}
 Appearance Bio: {char_app}
 Recent chat context: {recent_chat}
 
-Output ONLY the final English prompt for image generation, focusing heavily on realistic photographic style, lighting, and keeping the specified appearance traits.
+Output ONLY the final English prompt for image generation, focusing heavily on vertical 9:16 aspect ratio, realistic photographic style, lighting, and appearance traits.
             """
             
             groq_res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={
@@ -1263,21 +1263,15 @@ Output ONLY the final English prompt for image generation, focusing heavily on r
             
             gen_text = groq_res["choices"][0]["message"]["content"].strip()
             if gen_text:
-                scene_prompt = gen_text
+                scene_prompt = f"Vertical 9:16 aspect ratio, {gen_text}"
         except:
             pass
 
-    # 2. Use Gemini Imagen 3 via official SDK (Fixed configuration)
+    # 2. Use Gemini Imagen 3 via official SDK cleanly without unsupported configuration dictionaries
     try:
         model = genai.GenerativeModel('imagen-3.0-generate-001')
         
-        result = model.generate_content(
-            scene_prompt,
-            generation_config=genai.types.GenerationConfig(
-                aspect_ratio="9:16",
-                output_mime_type="image/jpeg"
-            )
-        )
+        result = model.generate_content(scene_prompt)
         
         image_bytes = result.candidates[0].content.parts[0].image.image_bytes
         img_base64 = base64.b64encode(image_bytes).decode('utf-8')
