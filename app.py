@@ -1267,14 +1267,13 @@ Output ONLY the final English prompt for image generation, focusing heavily on r
         except:
             pass
 
-    # 2. Use Gemini Imagen 3 via official SDK
+    # 2. Use Gemini Imagen 3 via official SDK (Fixed configuration)
     try:
         model = genai.GenerativeModel('imagen-3.0-generate-001')
         
         result = model.generate_content(
             scene_prompt,
             generation_config=genai.types.GenerationConfig(
-                number_of_images=1,
                 aspect_ratio="9:16",
                 output_mime_type="image/jpeg"
             )
