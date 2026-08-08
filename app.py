@@ -136,7 +136,6 @@ HTML_CODE = """
         /* Dashboard Layout */
         .dashboard { flex: 1; padding: 24px 16px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
         
-        /* 100% Stable Professional Brand Typography */
         .brand-name {
             font-size: 2.8rem;
             font-weight: 900;
@@ -372,7 +371,7 @@ HTML_CODE = """
             <div id="chat-view" class="hidden">
                 <div class="chat-messages" id="message-container"></div>
                 <div class="input-area">
-                    <button class="tool-btn" onclick="alert('Photo feature paused.')" title="Photo">🤳</button>
+                    <button class="tool-btn" onclick="requestSelfie()" title="Request Selfie">🤳</button>
                     <div class="input-wrapper">
                         <input type="text" id="chat-input" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendMsg()">
                         <button class="wand-inbox-btn" onclick="suggestUserMessage()" title="Magic Reply">🪄</button>
@@ -948,12 +947,14 @@ HTML_CODE = """
 
             container.innerHTML = history.map((m, idx) => {
                 let isUser = m.sender === 'You';
+                let imageHtml = m.imageUrl ? `<img src="${m.imageUrl}" style="width:100%; border-radius:12px; margin-top:8px; object-fit:cover; max-height:380px;" />` : '';
 
                 return `
                     <div class="message ${isUser ? 'user':'ai'}">
                         <div class="sender-name">${m.sender}</div>
                         <div class="content">
                             ${formatText(m.text)}
+                            ${imageHtml}
                             <div class="bubble-controls">
                                 <i class="fa-solid fa-pen-to-square bubble-btn-icon" onclick="tweakMsg(${idx})" title="Edit"></i>
                                 ${!isUser ? `
@@ -1054,6 +1055,48 @@ HTML_CODE = """
             renderMessages();
 
             fetchAIResponse();
+        }
+
+        async function requestSelfie() {
+            if(!activeContext || activeContext.type !== 'char') {
+                alert('Selfie feature is available in individual companion chats.');
+                return;
+            }
+
+            let charObj = characters.find(c => c.id === activeContext.id);
+            let targetName = charObj ? charObj.name : 'Companion';
+
+            showTypingIndicator(targetName + " is clicking a realistic selfie 📸...");
+
+            let payload = {
+                character: charObj,
+                userPersona: userPersona
+            };
+
+            try {
+                let res = await fetch('/api/generate-selfie', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                let data = await res.json();
+                removeTypingIndicator();
+
+                if(!chatHistories[activeContext.id]) chatHistories[activeContext.id] = [];
+                
+                chatHistories[activeContext.id].push({
+                    sender: data.sender,
+                    text: data.text,
+                    imageUrl: data.imageUrl
+                });
+
+                saveState();
+                renderMessages();
+            } catch(err) {
+                removeTypingIndicator();
+                alert('Failed to generate selfie.');
+            }
         }
 
         async function suggestUserMessage() {
@@ -1173,6 +1216,25 @@ HTML_CODE = """
 @app.route("/")
 def home():
     return render_template_string(HTML_CODE)
+
+@app.route("/api/generate-selfie", methods=["POST"])
+def generate_selfie():
+    data = request.json
+    char_data = data.get("character", {})
+    
+    char_name = char_data.get("name", "Companion")
+    char_app = char_data.get("appearance", "beautiful, realistic features")
+    
+    prompt = f"A photorealistic candid selfie of {char_name}, {char_app}, looking into the camera, natural lighting, smartphone front camera aesthetic, highly detailed face, 8k resolution, photorealistic masterpiece"
+    
+    encoded_prompt = requests.utils.quote(prompt)
+    image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1080&height=1440&nologo=true&seed={os.urandom(4).hex()}"
+    
+    return jsonify({
+        "sender": char_name,
+        "imageUrl": image_url,
+        "text": f"*Sends a selfie* 📸 Ye dekh kaisi lag rahi hai?"
+    })
 
 @app.route("/api/suggest-reply", methods=["POST"])
 def suggest_reply():
