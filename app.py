@@ -934,7 +934,7 @@ HTML_CODE = """
         }
 
         function formatText(text) {
-            return text.replace(/\*(.*?)\*/g, '<span class="action-text">*$1*</span>');
+            return text.replace(/\\*(.*?)\\*/g, '<span class="action-text">*$1*</span>');
         }
 
         function renderMessages() {
