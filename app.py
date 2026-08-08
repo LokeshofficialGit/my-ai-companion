@@ -1,9 +1,95 @@
 import os
 import requests
 import json
-from flask import Flask, request, jsonify, render_template_string
+import math
+from flask import Flask, request, jsonify, render_template_string, send_from_directory
 
 app = Flask(__name__)
+
+# ---------- AUTOMATIC LOGO GENERATOR (PIL) ----------
+def generate_kio_logo():
+    os.makedirs("static", exist_ok=True)
+    logo_path = "static/kio_logo.png"
+    
+    # Agar pehle se bani hai toh dobara generate karne ki zaroorat nahi
+    if os.path.exists(logo_path):
+        return
+
+    WIDTH, HEIGHT = 1400, 760
+    BG_COLOR = (10, 8, 18, 255)
+    COLOR_START = (139, 92, 246)
+    COLOR_END = (236, 30, 130)
+    
+    img = Image.new("RGBA", (WIDTH, HEIGHT), BG_COLOR)
+    
+    # Fallback default font handling if system font not found
+    try:
+        font = ImageFont.truetype("DejaVuSans-Bold.ttf", 320)
+    except:
+        try:
+            font = ImageFont.load_default()
+        except:
+            pass
+
+    text = "Kio"
+    text_mask = Image.new("L", (WIDTH, HEIGHT), 0)
+    text_draw = ImageDraw.Draw(text_mask)
+    
+    # Drawing text (safe fallback position)
+    text_draw.text((250, 150), text, font=font, fill=255)
+
+    # Gradient generator
+    base = Image.new("RGB", (WIDTH, HEIGHT), COLOR_START)
+    top = Image.new("RGB", (WIDTH, HEIGHT), COLOR_END)
+    mask = Image.new("L", (WIDTH, HEIGHT))
+    mask_data = []
+    for x in range(WIDTH):
+        mask_data.extend([int(255 * (x / WIDTH))] * HEIGHT)
+    mask_img = Image.new("L", (HEIGHT, WIDTH))
+    mask_img.putdata(mask_data)
+    mask_img = mask_img.transpose(Image.ROTATE_90)
+    base.paste(top, (0, 0), mask_img)
+
+    text_layer = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
+    text_layer.paste(base, (0, 0), text_mask)
+
+    glow = text_layer.filter(ImageFilter.GaussianBlur(18))
+    img = Image.alpha_composite(img, glow)
+    img = Image.alpha_composite(img, text_layer)
+
+    draw = ImageDraw.Draw(img)
+
+    # Heart function for 'i'
+    def draw_heart(draw_obj, center_x, center_y, size, color):
+        x, y = center_x, center_y
+        points = []
+        for t in range(0, 628):
+            angle = t / 100
+            hx = 16 * math.sin(angle) ** 3
+            hy = 13 * math.cos(angle) - 5 * math.cos(2*angle) - 2 * math.cos(3*angle) - math.cos(4*angle)
+            points.append((x + hx * size, y - hy * size))
+        draw_obj.polygon(points, fill=color)
+
+    draw_heart(draw, 665, 205, 2.3, COLOR_START)
+
+    # Glowing dot after 'o'
+    dot_x, dot_y, dot_r = 955, 460, 34
+    glow_layer = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
+    glow_draw = ImageDraw.Draw(glow_layer)
+    glow_draw.ellipse([dot_x - dot_r, dot_y - dot_r, dot_x + dot_r, dot_y + dot_r], fill=COLOR_END)
+    glow_blur = glow_layer.filter(ImageFilter.GaussianBlur(20))
+    img = Image.alpha_composite(img, glow_blur)
+    img = Image.alpha_composite(img, glow_layer)
+
+    img.save(logo_path)
+
+# Try importing PIL safely for logo generation
+try:
+    from PIL import Image, ImageDraw, ImageFont, ImageFilter
+    generate_kio_logo()
+except Exception as e:
+    print("PIL Logo generation skipped/failed:", e)
+
 
 HTML_CODE = """
 <!DOCTYPE html>
@@ -136,24 +222,11 @@ HTML_CODE = """
         /* Dashboard Layout */
         .dashboard { flex: 1; padding: 24px 16px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
         
-        /* Perfect Bulletproof Logo Design */
-        .kio-brand-logo {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            margin-bottom: 14px;
+        .kio-logo-img {
+            max-width: 160px;
+            height: auto;
+            margin-bottom: 12px;
             filter: drop-shadow(0 0 16px rgba(236,72,153,0.4));
-        }
-        .kio-brand-text {
-            font-size: 2.8rem;
-            font-weight: 900;
-            letter-spacing: -1px;
-            background: linear-gradient(135deg, #a855f7, #ec4899);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            display: inline-flex;
-            align-items: center;
         }
 
         .dash-title { font-size: 1.3rem; font-weight: 800; color: var(--text-main); margin-bottom: 4px; }
@@ -177,7 +250,6 @@ HTML_CODE = """
         
         .action-text { color: var(--action-text); font-style: italic; font-weight: 500; }
         
-        /* Low opacity clean icon controls inside bubbles */
         .bubble-controls { display: flex; align-items: center; gap: 12px; margin-top: 6px; }
         .bubble-btn-icon { font-size: 0.75rem; color: var(--text-sub); opacity: 0.45; cursor: pointer; transition: opacity 0.2s, color 0.2s; }
         .bubble-btn-icon:hover { opacity: 1; color: var(--accent-pink); }
@@ -279,16 +351,9 @@ HTML_CODE = """
 
         .hidden { display: none !important; }
         
-        /* Sidebar Logo Mini styling */
-        .sidebar-logo-text {
-            font-size: 1.15rem;
-            font-weight: 900;
-            letter-spacing: -0.5px;
-            background: linear-gradient(135deg, #a855f7, #ec4899);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            display: inline-flex;
-            align-items: center;
+        .sidebar-logo-img {
+            max-width: 90px;
+            height: auto;
         }
     </style>
 </head>
@@ -299,14 +364,7 @@ HTML_CODE = """
         <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <span style="display:flex; align-items:center; gap:8px;">
-                    <span class="sidebar-logo-text">
-                        <span>Ki</span>
-                        <span style="position: relative; display: inline-flex; align-items: center;">
-                            o
-                            <i class="fa-solid fa-heart" style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); font-size: 0.5rem; color: #a855f7;"></i>
-                        </span>
-                        <span style="margin-left: 2px;">.</span>
-                    </span>
+                    <img src="/static/kio_logo.png" class="sidebar-logo-img" alt="Kio.">
                 </span>
                 <div class="header-actions">
                     <button class="sidebar-icon-btn" onclick="toggleFullScreen()"><i class="fa-solid fa-expand"></i></button>
@@ -368,17 +426,7 @@ HTML_CODE = """
                     <button class="icon-btn" onclick="toggleSidebar()" style="width:38px; height:38px; font-size:1rem;"><i class="fa-solid fa-bars"></i></button>
                 </div>
                 
-                <div class="kio-brand-logo">
-                    <span class="kio-brand-text">
-                        <span>Ki</span>
-                        <span style="position: relative; display: inline-flex; align-items: center;">
-                            o
-                            <i class="fa-solid fa-heart" style="position: absolute; top: -14px; left: 50%; transform: translateX(-50%); font-size: 0.9rem; color: #a855f7; filter: drop-shadow(0 0 4px rgba(168,85,247,0.8));"></i>
-                        </span>
-                        <span style="margin-left: 2px;">.</span>
-                        <span style="width: 8px; height: 8px; background: #ec4899; border-radius: 50%; margin-left: 4px; box-shadow: 0 0 10px #ec4899; flex-shrink: 0;"></span>
-                    </span>
-                </div>
+                <img src="/static/kio_logo.png" class="kio-logo-img" alt="Kio. Logo">
                 
                 <h2 class="dash-title">Welcome to Kio.</h2>
                 <p class="dash-sub">Intelligence with a heart.</p>
