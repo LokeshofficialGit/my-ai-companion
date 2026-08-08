@@ -2,15 +2,9 @@ import os
 import requests
 import json
 import base64
-import google.generativeai as genai
 from flask import Flask, request, jsonify, render_template_string
 
 app = Flask(__name__)
-
-# Gemini Setup
-GEMINI_KEY = os.environ.get("GEMINI_API_KEY")
-if GEMINI_KEY:
-    genai.configure(api_key=GEMINI_KEY)
 
 HTML_CODE = """
 <!DOCTYPE html>
@@ -215,7 +209,7 @@ HTML_CODE = """
         .wand-inbox-btn:hover { opacity: 1; }
 
         .input-area button.send-btn { height: 42px; padding: 0 16px; background: linear-gradient(135deg, #9333ea, #ec4899); color: #ffffff; border: none; border-radius: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .tool-btn { background: var(--bg-input) !important; color: var(--accent-pink) !important; border: 1px solid var(--border-color) !important; padding: 0 10px !important; font-size: 0.75rem; font-weight: 700; border-radius: 12px !important; height: 42px; cursor: pointer; display: flex; align-items: center; justify-content: center; min-width: 65px; }
+        .tool-btn { background: var(--bg-input) !important; color: var(--accent-pink) !important; border: 1px solid var(--border-color) !important; padding: 0 8px !important; font-size: 0.7rem; font-weight: 700; border-radius: 12px !important; height: 42px; cursor: pointer; display: flex; align-items: center; justify-content: center; min-width: 60px; }
 
         .empty-chat-placeholder {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -539,17 +533,21 @@ HTML_CODE = """
         let activeContext = null;
         let cropperInstance = null;
         let currentEditingAvatarType = null;
-        let currentAiProvider = 'groq';
+        let currentAiProvider = 'groq'; // Options: groq, openrouter, huggingface
 
         function toggleAiProvider() {
-            currentAiProvider = (currentAiProvider === 'groq') ? 'gemini' : 'groq';
-            let btn = document.getElementById('provider-switch-btn');
             if (currentAiProvider === 'groq') {
-                btn.innerHTML = '⚡ Groq';
-                btn.style.color = 'var(--accent-pink)';
+                currentAiProvider = 'openrouter';
+                document.getElementById('provider-switch-btn').innerHTML = '🌐 OpenRouter';
+                document.getElementById('provider-switch-btn').style.color = '#a855f7';
+            } else if (currentAiProvider === 'openrouter') {
+                currentAiProvider = 'huggingface';
+                document.getElementById('provider-switch-btn').innerHTML = '🤗 HuggingFace';
+                document.getElementById('provider-switch-btn').style.color = '#f59e0b';
             } else {
-                btn.innerHTML = '✨ Gemini';
-                btn.style.color = '#3b82f6';
+                currentAiProvider = 'groq';
+                document.getElementById('provider-switch-btn').innerHTML = '⚡ Groq';
+                document.getElementById('provider-switch-btn').style.color = 'var(--accent-pink)';
             }
         }
 
@@ -1190,6 +1188,47 @@ HTML_CODE = """
 </html>
 """
 
+def call_llm(provider, messages, system_prompt):
+    try:
+        if provider == "openrouter":
+            api_key = os.environ.get("OPENROUTER_API_KEY")
+            if not api_key: return "OpenRouter Key missing!"
+            headers = {"Authorization": f"Bearer {api_key.strip()}", "Content-Type": "application/json"}
+            payload = {
+                "model": "gryphe/mythomax-l2-13b",
+                "messages": [{"role": "system", "content": system_prompt}] + messages
+            }
+            res = requests.post("https://openrouter.ai/api/v1/chat/completions", json=payload, headers=headers).json()
+            return res["choices"][0]["message"]["content"]
+
+        elif provider == "huggingface":
+            api_key = os.environ.get("HUGGINGFACE_API_KEY")
+            if not api_key: return "HuggingFace Key missing!"
+            headers = {"Authorization": f"Bearer {api_key.strip()}", "Content-Type": "application/json"}
+            prompt_text = f"System: {system_prompt}\n"
+            for m in messages:
+                prompt_text += f"{m['role']}: {m['content']}\n"
+            prompt_text += "assistant:"
+            
+            payload = {"inputs": prompt_text, "parameters": {"max_new_tokens": 250, "return_full_text": False}}
+            res = requests.post("https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta", json=payload, headers=headers).json()
+            if isinstance(res, list) and len(res) > 0:
+                return res[0].get("generated_text", "Hey!")
+            return "HuggingFace response error."
+
+        else:  # Default Groq
+            api_key = os.environ.get("GROQ_API_KEY")
+            if not api_key: return "Groq Key missing!"
+            headers = {"Authorization": f"Bearer {api_key.strip()}", "Content-Type": "application/json"}
+            payload = {
+                "model": "llama-3.1-8b-instant",
+                "messages": [{"role": "system", "content": system_prompt}] + messages
+            }
+            res = requests.post("https://api.groq.com/openai/v1/chat/completions", json=payload, headers=headers).json()
+            return res["choices"][0]["message"]["content"]
+    except Exception as e:
+        return f"*Smiles* Error: {str(e)}"
+
 @app.route("/")
 def home():
     return render_template_string(HTML_CODE)
@@ -1201,39 +1240,11 @@ def suggest_reply():
     user_info = data.get("userPersona", {})
     history = data.get("history", [])
 
-    system_prompt = f"""
-You are ghostwriting for {user_info.get('name', 'User')}. Bio: {user_info.get('bio', '')}.
-Generate the next short, natural Hinglish text reply for the user based on history.
-Return ONLY text.
-    """
-
-    try:
-        if provider == "gemini":
-            gemini_api_key = os.environ.get("GEMINI_API_KEY")
-            if not gemini_api_key:
-                return jsonify({"suggestion": "Arey batao, kya haal hai?"})
-            
-            genai.configure(api_key=gemini_api_key)
-            model = genai.GenerativeModel('gemini-2.0-flash')
-            chat_context = system_prompt + "\n".join([f"{m['sender']}: {m['text']}" for m in history[-10:]])
-            response = model.generate_content(chat_context)
-            return jsonify({"suggestion": response.text.strip('"')})
-        else:
-            api_key = os.environ.get("GROQ_API_KEY")
-            if not api_key: return jsonify({"suggestion": ""})
-            headers = {"Authorization": f"Bearer {api_key.strip()}", "Content-Type": "application/json"}
-            messages = [{"role": "system", "content": system_prompt}]
-            for m in history[-10:]:
-                messages.append({"role": "user" if m["sender"] != "You" else "assistant", "content": f"{m['sender']}: {m['text']}"})
-
-            res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={
-                "model": "llama-3.1-8b-instant",
-                "messages": messages
-            }, headers=headers).json()
-
-            return jsonify({"suggestion": res["choices"][0]["message"]["content"].strip('"')})
-    except:
-        return jsonify({"suggestion": "Arey batao, kya haal hai?"})
+    system_prompt = f"Ghostwrite for {user_info.get('name', 'User')}. Bio: {user_info.get('bio', '')}. Generate next short natural Hinglish text reply. Return ONLY text."
+    messages = [{"role": "user" if m["sender"] != "You" else "assistant", "content": f"{m['sender']}: {m['text']}"} for m in history[-10:]]
+    
+    reply = call_llm(provider, messages, system_prompt)
+    return jsonify({"suggestion": reply.strip('"')})
 
 @app.route("/api/advanced-chat", methods=["POST"])
 def advanced_chat():
@@ -1247,7 +1258,6 @@ def advanced_chat():
 
     extracted_memory = None
     last_user_msg = history[-1]["text"] if history else ""
-
     responses = []
 
     if data["type"] == "char":
@@ -1258,84 +1268,38 @@ def advanced_chat():
         positive_words = ["love", "pyar", "achha", "sweet", "thanks", "dost", "like", "cute", "care", "pyaar"]
         negative_words = ["hate", "chup", "bad", "rude", "pagal", "shut up", "irritating"]
 
-        if any(w in last_user_msg.lower() for w in positive_words):
-            delta = 3
-        elif any(w in last_user_msg.lower() for w in negative_words):
-            delta = -4
+        if any(w in last_user_msg.lower() for w in positive_words): delta = 3
+        elif any(w in last_user_msg.lower() for w in negative_words): delta = -4
 
         new_affinity = max(0, min(100, current_affinity + delta))
-
-        if new_affinity >= 80:
-            mood_str = "Deep Bond ❤️"
-            behavior_note = "Be deeply affectionate, caring, playful, and express strong emotional connection."
-        elif new_affinity >= 50:
-            mood_str = "Warm 😊"
-            behavior_note = "Be warm, friendly, supportive, and comfortable like a close buddy."
-        else:
-            mood_str = "Distant 💔"
-            behavior_note = "Be slightly distant, formal, and give short replies as bond is low."
+        mood_str = "Deep Bond ❤️" if new_affinity >= 80 else ("Warm 😊" if new_affinity >= 50 else "Distant 💔")
+        behavior_note = "Be deeply affectionate, playful, and expressive." if new_affinity >= 80 else "Be friendly and comfortable like a close buddy."
 
         memories_formatted = ", ".join(user_memories) if user_memories else "None"
 
         system_prompt = f"""
-Name: {c['name']}
+You are {c['name']}, talking to {user_name}.
 Relationship: {c.get('relationship', 'Friend')}
 Appearance: {c.get('appearance', '')}
 Backstory: {c.get('backstory', '')}
-Directives: {c.get('directives', '')}
-Character Key Memories: {c.get('memories', '')}
+Bond: {new_affinity}/100 ({mood_str}). {behavior_note}
+User Bio: {user_bio}
+Known Memory Facts: {memories_formatted}
 
-Current Relationship Bond: {new_affinity}/100 ({mood_str})
-Behavior Guidance: {behavior_note}
-
-User Profile: {user_name} ({user_bio})
-Known User Personal Details/Preferences: {memories_formatted}
-
-CRITICAL HINGLISH RULE:
-- Talk strictly in natural, casual Hinglish (Roman Hindi + simple English mixed, like WhatsApp texting).
-- Never use complex or corporate English.
-- Use everyday words like "aaj", "phir", "batao", "sahi hai", "thik hai", "waise", "yaar".
-- Express actions in asterisks, e.g., *smiles and sits down*.
+CRITICAL INSTRUCTIONS:
+- Talk strictly in natural, casual Hinglish (Roman Hindi mixed with simple English like WhatsApp texting).
+- Use everyday words like "yaar", "sach mein", "batao", "sahi hai".
+- Keep it human-like, express actions in asterisks like *smiles*.
 """
         if data.get("isContinue"):
             system_prompt += "\nUser pressed Continue. Extend your last response seamlessly."
 
-        try:
-            if provider == "gemini":
-                gemini_api_key = os.environ.get("GEMINI_API_KEY")
-                if not gemini_api_key:
-                    return jsonify({"responses": [{"sender": "System", "text": "Gemini API Key missing!"}]})
-                
-                genai.configure(api_key=gemini_api_key)
-                model = genai.GenerativeModel('gemini-2.0-flash')
-                
-                gemini_chat_history = system_prompt + "\n\n"
-                for m in history[-25:]:
-                    sender_label = "User" if m["sender"] == "You" else m["sender"]
-                    gemini_chat_history += f"{sender_label}: {m['text']}\n"
-                
-                gemini_chat_history += f"{c['name']}:"
-                response = model.generate_content(gemini_chat_history)
-                reply_text = response.text.strip()
-            else:
-                api_key = os.environ.get("GROQ_API_KEY")
-                if not api_key:
-                    return jsonify({"responses": [{"sender": "System", "text": "Groq Key missing!"}]})
-                
-                headers = {"Authorization": f"Bearer {api_key.strip()}", "Content-Type": "application/json"}
-                messages = [{"role": "system", "content": system_prompt}]
-                for m in history[-25:]:
-                    role = "user" if m["sender"] == "You" or m["sender"] == user_name else "assistant"
-                    messages.append({"role": role, "content": m["text"]})
+        messages = []
+        for m in history[-25:]:
+            role = "user" if m["sender"] == "You" or m["sender"] == user_name else "assistant"
+            messages.append({"role": role, "content": f"{m['sender']}: {m['text']}"})
 
-                res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={
-                    "model": "llama-3.1-8b-instant",
-                    "messages": messages
-                }, headers=headers).json()
-
-                reply_text = res["choices"][0]["message"]["content"]
-        except Exception as e:
-            reply_text = f"*Smiles* Error: {str(e)}"
+        reply_text = call_llm(provider, messages, system_prompt)
 
         responses.append({
             "sender": c['name'], 
@@ -1348,37 +1312,9 @@ CRITICAL HINGLISH RULE:
         group = data["group"]
         members = data["members"]
         for char in members[:2]:
-            system_prompt = f"""
-You are in a group chat "{group.get('title', 'Group')}" as {char['name']}.
-Group Setting: {group.get('context', '')}
-Group Directives: {group.get('directives', '')}
-User Profile: {user_name} ({user_bio})
-
-Talk briefly in casual Hinglish (Roman Hindi/English mixed). Use asterisks for actions like *laughs*.
-            """
-            try:
-                if provider == "gemini":
-                    gemini_api_key = os.environ.get("GEMINI_API_KEY")
-                    genai.configure(api_key=gemini_api_key)
-                    model = genai.GenerativeModel('gemini-2.0-flash')
-                    chat_context = system_prompt + "\n".join([f"{m['sender']}: {m['text']}" for m in history[-25:]])
-                    res = model.generate_content(chat_context)
-                    reply_text = res.text.strip()
-                else:
-                    api_key = os.environ.get("GROQ_API_KEY")
-                    headers = {"Authorization": f"Bearer {api_key.strip()}", "Content-Type": "application/json"}
-                    messages = [{"role": "system", "content": system_prompt}]
-                    for m in history[-25:]:
-                        messages.append({"role": "user", "content": f"{m['sender']}: {m['text']}"})
-
-                    res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={
-                        "model": "llama-3.1-8b-instant",
-                        "messages": messages
-                    }, headers=headers).json()
-                    reply_text = res["choices"][0]["message"]["content"]
-            except:
-                reply_text = "Hey!"
-
+            system_prompt = f"You are {char['name']} in group '{group.get('title', 'Group')}'. Talk briefly in casual Hinglish using asterisks for actions."
+            messages = [{"role": "user", "content": f"{m['sender']}: {m['text']}"} for m in history[-25:]]
+            reply_text = call_llm(provider, messages, system_prompt)
             responses.append({"sender": char['name'], "text": reply_text})
 
     return jsonify({"responses": responses, "extractedMemory": extracted_memory})
