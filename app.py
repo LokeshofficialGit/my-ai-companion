@@ -1,6 +1,7 @@
 import os
 import requests
 import json
+import base64
 from flask import Flask, request, jsonify, render_template_string
 
 app = Flask(__name__)
@@ -1066,15 +1067,15 @@ HTML_CODE = """
             let charObj = characters.find(c => c.id === activeContext.id);
             let targetName = charObj ? charObj.name : 'Companion';
 
-            showTypingIndicator(targetName + " is clicking a realistic selfie 📸...");
+            showTypingIndicator(targetName + " is processing realistic selfie 📸 (this may take a minute)...");
 
             let payload = {
                 character: charObj,
-                userPersona: userPersona
+                history: chatHistories[activeContext.id] || []
             };
 
             try {
-                let res = await fetch('/api/generate-selfie', {
+                let res = await fetch('/api/generate-selfie-hf', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -1082,6 +1083,11 @@ HTML_CODE = """
 
                 let data = await res.json();
                 removeTypingIndicator();
+
+                if(data.error) {
+                    alert('Selfie Error: ' + data.error);
+                    return;
+                }
 
                 if(!chatHistories[activeContext.id]) chatHistories[activeContext.id] = [];
                 
@@ -1217,24 +1223,71 @@ HTML_CODE = """
 def home():
     return render_template_string(HTML_CODE)
 
-@app.route("/api/generate-selfie", methods=["POST"])
-def generate_selfie():
+@app.route("/api/generate-selfie-hf", methods=["POST"])
+def generate_selfie_hf():
     data = request.json
     char_data = data.get("character", {})
+    history = data.get("history", [])
     
     char_name = char_data.get("name", "Companion")
-    char_app = char_data.get("appearance", "beautiful, realistic features")
+    char_app = char_data.get("appearance", "beautiful face, realistic features")
     
-    prompt = f"A photorealistic candid selfie of {char_name}, {char_app}, looking into the camera, natural lighting, smartphone front camera aesthetic, highly detailed face, 8k resolution, photorealistic masterpiece"
+    groq_api_key = os.environ.get("GROQ_API_KEY")
+    hf_token = os.environ.get("HUGGINGFACE_API_KEY")
     
-    encoded_prompt = requests.utils.quote(prompt)
-    image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1080&height=1440&nologo=true&seed={os.urandom(4).hex()}"
+    if not hf_token:
+        return jsonify({"error": "Hugging Face API key missing in environment variables!"}), 400
+
+    # Step 1: Use Groq to analyze last 1-2 messages and craft a master photorealistic prompt
+    master_prompt = f"Raw smartphone front camera selfie of {char_name}, {char_app}, natural lighting, candid shot, highly detailed skin texture, 8k resolution, photorealistic masterpiece"
     
-    return jsonify({
-        "sender": char_name,
-        "imageUrl": image_url,
-        "text": f"*Sends a selfie* 📸 Ye dekh kaisi lag rahi hai?"
-    })
+    if groq_api_key and history:
+        try:
+            headers_groq = {"Authorization": f"Bearer {groq_api_key.strip()}", "Content-Type": "application/json"}
+            recent_chat = "\n".join([f"{m['sender']}: {m['text']}" for m in history[-3:]])
+            prompt_gen_query = f"""
+Based on this recent chat context and character description, create a detailed Stable Diffusion prompt for a realistic selfie photo.
+Character: {char_name}, Appearance: {char_app}
+Recent Chat:
+{recent_chat}
+
+Output ONLY the prompt text in English, focusing strictly on scene, clothing, mood, and realistic photography keywords. Keep it under 40 words.
+            """
+            groq_res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={
+                "model": "llama-3.1-8b-instant",
+                "messages": [{"role": "user", "content": prompt_gen_query}]
+            }, headers=headers_groq, timeout=10).json()
+            
+            generated_context_prompt = groq_res["choices"][0]["message"]["content"].strip()
+            if generated_context_prompt:
+                master_prompt = f"Raw smartphone selfie of {char_name}, {generated_context_prompt}, highly detailed face, natural lighting, 8k, photorealistic"
+        except:
+            pass
+
+    # Step 2: Call Hugging Face SDXL Inference API
+    API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0"
+    headers_hf = {"Authorization": f"Bearer {hf_token.strip()}"}
+    
+    payload = {
+        "inputs": master_prompt,
+        "options": {"wait_for_model": True}
+    }
+    
+    try:
+        response = requests.post(API_URL, headers=headers_hf, json=payload, timeout=90)
+        if response.status_code == 200:
+            img_base64 = base64.b64encode(response.content).decode('utf-8')
+            image_data_url = f"data:image/jpeg;base64,{img_base64}"
+            
+            return jsonify({
+                "sender": char_name,
+                "imageUrl": image_data_url,
+                "text": f"*Sends a selfie* 📸 Ye le, abhi click ki!"
+            })
+        else:
+            return jsonify({"error": f"Hugging Face Model error (Status {response.status_code}): Model might be loading, try again in 1 min."}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/api/suggest-reply", methods=["POST"])
 def suggest_reply():
