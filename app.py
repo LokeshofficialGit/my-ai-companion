@@ -215,7 +215,7 @@ HTML_CODE = """
         .wand-inbox-btn:hover { opacity: 1; }
 
         .input-area button.send-btn { height: 42px; padding: 0 16px; background: linear-gradient(135deg, #9333ea, #ec4899); color: #ffffff; border: none; border-radius: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .tool-btn { background: var(--bg-input) !important; color: var(--accent-pink) !important; border: 1px solid var(--border-color) !important; padding: 0 12px !important; font-size: 0.95rem; border-radius: 12px !important; height: 42px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .tool-btn { background: var(--bg-input) !important; color: var(--accent-pink) !important; border: 1px solid var(--border-color) !important; padding: 0 10px !important; font-size: 0.75rem; font-weight: 700; border-radius: 12px !important; height: 42px; cursor: pointer; display: flex; align-items: center; justify-content: center; min-width: 65px; }
 
         .empty-chat-placeholder {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -378,7 +378,7 @@ HTML_CODE = """
             <div id="chat-view" class="hidden">
                 <div class="chat-messages" id="message-container"></div>
                 <div class="input-area">
-                    <button class="tool-btn" onclick="requestSelfie()" title="Request Selfie">🤳</button>
+                    <button class="tool-btn" id="provider-switch-btn" onclick="toggleAiProvider()" title="Switch Model">⚡ Groq</button>
                     <div class="input-wrapper">
                         <input type="text" id="chat-input" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendMsg()">
                         <button class="wand-inbox-btn" onclick="suggestUserMessage()" title="Magic Reply">🪄</button>
@@ -539,6 +539,19 @@ HTML_CODE = """
         let activeContext = null;
         let cropperInstance = null;
         let currentEditingAvatarType = null;
+        let currentAiProvider = 'groq'; // Default provider
+
+        function toggleAiProvider() {
+            currentAiProvider = (currentAiProvider === 'groq') ? 'gemini' : 'groq';
+            let btn = document.getElementById('provider-switch-btn');
+            if (currentAiProvider === 'groq') {
+                btn.innerHTML = '⚡ Groq';
+                btn.style.color = 'var(--accent-pink)';
+            } else {
+                btn.innerHTML = '✨ Gemini';
+                btn.style.color = '#3b82f6';
+            }
+        }
 
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
         function toggleMenuCategory(subId) { document.getElementById(subId).classList.toggle('hidden'); }
@@ -954,14 +967,11 @@ HTML_CODE = """
 
             container.innerHTML = history.map((m, idx) => {
                 let isUser = m.sender === 'You';
-                let imageHtml = m.imageUrl ? `<img src="${m.imageUrl}" style="width:100%; border-radius:12px; margin-top:8px; object-fit:cover; max-height:380px;" />` : '';
-
                 return `
                     <div class="message ${isUser ? 'user':'ai'}">
                         <div class="sender-name">${m.sender}</div>
                         <div class="content">
                             ${formatText(m.text)}
-                            ${imageHtml}
                             <div class="bubble-controls">
                                 <i class="fa-solid fa-pen-to-square bubble-btn-icon" onclick="tweakMsg(${idx})" title="Edit"></i>
                                 ${!isUser ? `
@@ -1064,53 +1074,6 @@ HTML_CODE = """
             fetchAIResponse();
         }
 
-        async function requestSelfie() {
-            if(!activeContext || activeContext.type !== 'char') {
-                alert('Selfie feature is available in individual companion chats.');
-                return;
-            }
-
-            let charObj = characters.find(c => c.id === activeContext.id);
-            let targetName = charObj ? charObj.name : 'Companion';
-
-            showTypingIndicator(targetName + " is generating realistic selfie 📸...");
-
-            let payload = {
-                character: charObj,
-                history: chatHistories[activeContext.id] || []
-            };
-
-            try {
-                let res = await fetch('/api/generate-selfie-gemini', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                let data = await res.json();
-                removeTypingIndicator();
-
-                if(data.error) {
-                    alert('Selfie Error: ' + data.error);
-                    return;
-                }
-
-                if(!chatHistories[activeContext.id]) chatHistories[activeContext.id] = [];
-                
-                chatHistories[activeContext.id].push({
-                    sender: data.sender,
-                    text: data.text,
-                    imageUrl: data.imageUrl
-                });
-
-                saveState();
-                renderMessages();
-            } catch(err) {
-                removeTypingIndicator();
-                alert('Failed to generate selfie.');
-            }
-        }
-
         async function suggestUserMessage() {
             if(!activeContext) return;
             let input = document.getElementById('chat-input');
@@ -1119,6 +1082,7 @@ HTML_CODE = """
             let payload = {
                 contextId: activeContext.id,
                 userPersona: userPersona,
+                provider: currentAiProvider,
                 history: chatHistories[activeContext.id] || []
             };
 
@@ -1154,6 +1118,7 @@ HTML_CODE = """
                 contextId: activeContext.id,
                 userPersona: userPersona,
                 isContinue: isContinue,
+                provider: currentAiProvider,
                 history: chatHistories[activeContext.id]
             };
 
@@ -1229,85 +1194,12 @@ HTML_CODE = """
 def home():
     return render_template_string(HTML_CODE)
 
-@app.route("/api/generate-selfie-gemini", methods=["POST"])
-def generate_selfie_gemini():
-    data = request.json
-    char_data = data.get("character", {})
-    history = data.get("history", [])
-    
-    char_name = char_data.get("name", "Companion")
-    char_app = char_data.get("appearance", "poised, striking beauty, high-end fashion")
-    
-    groq_api_key = os.environ.get("GROQ_API_KEY")
-    
-    scene_prompt = f"Vertical 9:16 aspect ratio smartphone front camera selfie of {char_name}, appearance details: {char_app}, candid look, natural lighting, professional photography, 8k, extremely detailed skin texture, raw photo"
-    
-    if groq_api_key and history:
-        try:
-            headers_groq = {"Authorization": f"Bearer {groq_api_key.strip()}", "Content-Type": "application/json"}
-            recent_chat = "\n".join([f"{m['sender']}: {m['text']}" for m in history[-3:]])
-            prompt_gen_query = f"""
-Create a precise prompt for a vertical 9:16 photorealistic selfie based on the character's exact appearance description.
-Character Name: {char_name}
-Appearance Bio: {char_app}
-Recent chat context: {recent_chat}
-
-Output ONLY the final English prompt for image generation, focusing heavily on vertical 9:16 aspect ratio, realistic photographic style, lighting, and appearance traits.
-            """
-            
-            groq_res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={
-                "model": "llama-3.1-8b-instant",
-                "messages": [{"role": "user", "content": prompt_gen_query}]
-            }, headers=headers_groq, timeout=15).json()
-            
-            gen_text = groq_res["choices"][0]["message"]["content"].strip()
-            if gen_text:
-                scene_prompt = f"Vertical 9:16 aspect ratio, {gen_text}"
-        except:
-            pass
-
-    # Use Gemini model supporting image generation natively on free tier
-    try:
-        model = genai.GenerativeModel('gemini-2.5-flash')
-        result = model.generate_content(scene_prompt)
-        
-        image_bytes = None
-        for part in result.candidates[0].content.parts:
-            if hasattr(part, 'inline_data') and part.inline_data:
-                image_bytes = part.inline_data.data
-                break
-        
-        if not image_bytes:
-            for candidate in result.candidates:
-                for part in candidate.content.parts:
-                    if hasattr(part, 'image_bytes'):
-                        image_bytes = part.image_bytes
-                        break
-                if image_bytes:
-                    break
-
-        if not image_bytes:
-            return jsonify({"error": "Model did not return image data. Try a simpler description."}), 500
-
-        img_base64 = base64.b64encode(image_bytes).decode('utf-8')
-        image_data_url = f"data:image/jpeg;base64,{img_base64}"
-        
-        return jsonify({
-            "sender": char_name,
-            "imageUrl": image_data_url,
-            "text": f"*Sends a selfie* 📸 Ye le, abhi click ki!"
-        })
-    except Exception as e:
-        return jsonify({"error": f"Gemini Image Gen Error: {str(e)}"}), 500
-
 @app.route("/api/suggest-reply", methods=["POST"])
 def suggest_reply():
     data = request.json
-    api_key = os.environ.get("GROQ_API_KEY")
-    if not api_key: return jsonify({"suggestion": ""})
-
-    headers = {"Authorization": f"Bearer {api_key.strip()}", "Content-Type": "application/json"}
+    provider = data.get("provider", "groq")
     user_info = data.get("userPersona", {})
+    history = data.get("history", [])
 
     system_prompt = f"""
 You are ghostwriting for {user_info.get('name', 'User')}. Bio: {user_info.get('bio', '')}.
@@ -1315,54 +1207,46 @@ Generate the next short, natural Hinglish text reply for the user based on histo
 Return ONLY text.
     """
 
-    messages = [{"role": "system", "content": system_prompt}]
-    for m in data.get("history", [])[-10:]:
-        messages.append({"role": "user" if m["sender"] != "You" else "assistant", "content": f"{m['sender']}: {m['text']}"})
-
     try:
-        res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={
-            "model": "llama-3.1-8b-instant",
-            "messages": messages
-        }, headers=headers).json()
+        if provider == "gemini":
+            gemini_api_key = os.environ.get("GEMINI_API_KEY")
+            if not gemini_api_key:
+                return jsonify({"suggestion": "Arey batao, kya haal hai?"})
+            
+            genai.configure(api_key=gemini_api_key)
+            model = genai.GenerativeModel('gemini-1.5-flash')
+            chat_context = system_prompt + "\n".join([f"{m['sender']}: {m['text']}" for m in history[-10:]])
+            response = model.generate_content(chat_context)
+            return jsonify({"suggestion": response.text.strip('"')})
+        else:
+            api_key = os.environ.get("GROQ_API_KEY")
+            if not api_key: return jsonify({"suggestion": ""})
+            headers = {"Authorization": f"Bearer {api_key.strip()}", "Content-Type": "application/json"}
+            messages = [{"role": "system", "content": system_prompt}]
+            for m in history[-10:]:
+                messages.append({"role": "user" if m["sender"] != "You" else "assistant", "content": f"{m['sender']}: {m['text']}"})
 
-        return jsonify({"suggestion": res["choices"][0]["message"]["content"].strip('"')})
+            res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={
+                "model": "llama-3.1-8b-instant",
+                "messages": messages
+            }, headers=headers).json()
+
+            return jsonify({"suggestion": res["choices"][0]["message"]["content"].strip('"')})
     except:
         return jsonify({"suggestion": "Arey batao, kya haal hai?"})
 
 @app.route("/api/advanced-chat", methods=["POST"])
 def advanced_chat():
     data = request.json
-    api_key = os.environ.get("GROQ_API_KEY")
-
-    if not api_key:
-        return jsonify({"responses": [{"sender": "System", "text": "Groq Key missing!"}]})
-
-    headers = {
-        "Authorization": f"Bearer {api_key.strip()}",
-        "Content-Type": "application/json"
-    }
-
+    provider = data.get("provider", "groq")
     user_info = data.get("userPersona", {})
     user_name = user_info.get("name", "User")
     user_bio = user_info.get("bio", "")
     user_memories = user_info.get("memories", [])
+    history = data.get("history", [])
 
     extracted_memory = None
-    last_user_msg = data["history"][-1]["text"] if data["history"] else ""
-
-    if len(last_user_msg) > 12 and any(k in last_user_msg.lower() for k in ["i am", "i love", "i like", "my birthday", "my favorite", "mujhe", "mera", "meri", "hu"]):
-        try:
-            mem_prompt = f"Extract a short, single personal fact about the user from this message: '{last_user_msg}'. If no specific fact, return NONE. Output fact ONLY in 3-6 words."
-            mem_res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={
-                "model": "llama-3.1-8b-instant",
-                "messages": [{"role": "user", "content": mem_prompt}]
-            }, headers=headers).json()
-            
-            fact = mem_res["choices"][0]["message"]["content"].strip()
-            if fact.upper() != "NONE" and len(fact) < 50:
-                extracted_memory = fact
-        except:
-            pass
+    last_user_msg = history[-1]["text"] if history else ""
 
     responses = []
 
@@ -1416,20 +1300,43 @@ CRITICAL HINGLISH RULE:
         if data.get("isContinue"):
             system_prompt += "\nUser pressed Continue. Extend your last response seamlessly."
 
-        messages = [{"role": "system", "content": system_prompt}]
-        for m in data["history"][-25:]:
-            role = "user" if m["sender"] == "You" or m["sender"] == user_name else "assistant"
-            messages.append({"role": role, "content": m["text"]})
-
         try:
-            res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={
-                "model": "llama-3.1-8b-instant",
-                "messages": messages
-            }, headers=headers).json()
+            if provider == "gemini":
+                gemini_api_key = os.environ.get("GEMINI_API_KEY")
+                if not gemini_api_key:
+                    return jsonify({"responses": [{"sender": "System", "text": "Gemini API Key missing!"}]})
+                
+                genai.configure(api_key=gemini_api_key)
+                model = genai.GenerativeModel('gemini-1.5-flash')
+                
+                # Format history for Gemini
+                gemini_chat_history = system_prompt + "\n\n"
+                for m in history[-25:]:
+                    sender_label = "User" if m["sender"] == "You" else m["sender"]
+                    gemini_chat_history += f"{sender_label}: {m['text']}\n"
+                
+                gemini_chat_history += f"{c['name']}:"
+                response = model.generate_content(gemini_chat_history)
+                reply_text = response.text.strip()
+            else:
+                api_key = os.environ.get("GROQ_API_KEY")
+                if not api_key:
+                    return jsonify({"responses": [{"sender": "System", "text": "Groq Key missing!"}]})
+                
+                headers = {"Authorization": f"Bearer {api_key.strip()}", "Content-Type": "application/json"}
+                messages = [{"role": "system", "content": system_prompt}]
+                for m in history[-25:]:
+                    role = "user" if m["sender"] == "You" or m["sender"] == user_name else "assistant"
+                    messages.append({"role": role, "content": m["text"]})
 
-            reply_text = res["choices"][0]["message"]["content"]
+                res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={
+                    "model": "llama-3.1-8b-instant",
+                    "messages": messages
+                }, headers=headers).json()
+
+                reply_text = res["choices"][0]["message"]["content"]
         except Exception as e:
-            reply_text = "*Smiles* Kuch technical glitch ho gaya lagta hai!"
+            reply_text = f"*Smiles* Error: {str(e)}"
 
         responses.append({
             "sender": c['name'], 
@@ -1450,17 +1357,29 @@ User Profile: {user_name} ({user_bio})
 
 Talk briefly in casual Hinglish (Roman Hindi/English mixed). Use asterisks for actions like *laughs*.
             """
+            try:
+                if provider == "gemini":
+                    gemini_api_key = os.environ.get("GEMINI_API_KEY")
+                    genai.configure(api_key=gemini_api_key)
+                    model = genai.GenerativeModel('gemini-1.5-flash')
+                    chat_context = system_prompt + "\n".join([f"{m['sender']}: {m['text']}" for m in history[-25:]])
+                    res = model.generate_content(chat_context)
+                    reply_text = res.text.strip()
+                else:
+                    api_key = os.environ.get("GROQ_API_KEY")
+                    headers = {"Authorization": f"Bearer {api_key.strip()}", "Content-Type": "application/json"}
+                    messages = [{"role": "system", "content": system_prompt}]
+                    for m in history[-25:]:
+                        messages.append({"role": "user", "content": f"{m['sender']}: {m['text']}"})
 
-            messages = [{"role": "system", "content": system_prompt}]
-            for m in data["history"][-25:]:
-                messages.append({"role": "user", "content": f"{m['sender']}: {m['text']}"})
+                    res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={
+                        "model": "llama-3.1-8b-instant",
+                        "messages": messages
+                    }, headers=headers).json()
+                    reply_text = res["choices"][0]["message"]["content"]
+            except:
+                reply_text = "Hey!"
 
-            res = requests.post("https://api.groq.com/openai/v1/chat/completions", json={
-                "model": "llama-3.1-8b-instant",
-                "messages": messages
-            }, headers=headers).json()
-
-            reply_text = res["choices"][0]["message"]["content"]
             responses.append({"sender": char['name'], "text": reply_text})
 
     return jsonify({"responses": responses, "extractedMemory": extracted_memory})
