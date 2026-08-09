@@ -32,7 +32,7 @@ HTML_CODE = """
             --user-msg-bg: #1f202b;
             --ai-msg-bg: #161824;
             --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-            
+
             --sidebar-bg: #0a0b10;
             --sidebar-border: rgba(236, 72, 153, 0.12);
             --sidebar-text: #f4f4f5;
@@ -41,27 +41,27 @@ HTML_CODE = """
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        
-        html, body { 
-            height: 100dvh; 
-            width: 100vw; 
-            background: #000000; 
-            color: var(--text-main); 
-            overflow: hidden; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
+
+        html, body {
+            height: 100dvh;
+            width: 100vw;
+            background: #000000;
+            color: var(--text-main);
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .app-container {
-            width: 100%; 
-            max-width: 440px; 
+            width: 100%;
+            max-width: 440px;
             height: 100dvh;
-            background: var(--bg-main); 
-            display: flex; 
-            flex-direction: column; 
+            background: var(--bg-main);
+            display: flex;
+            flex-direction: column;
             position: relative;
-            overflow: hidden; 
+            overflow: hidden;
             border: 1px solid var(--border-color);
             box-shadow: 0 0 40px rgba(168, 85, 247, 0.08);
         }
@@ -75,22 +75,22 @@ HTML_CODE = """
         }
 
         /* Top Bar */
-        .top-bar { 
-            height: 56px; 
-            min-height: 56px; 
-            background: var(--bg-surface); 
+        .top-bar {
+            height: 56px;
+            min-height: 56px;
+            background: var(--bg-surface);
             border-bottom: none;
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between; 
-            padding: 0 12px; 
-            z-index: 10; 
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 12px;
+            z-index: 10;
             box-shadow: 0 4px 20px rgba(168, 85, 247, 0.12);
         }
-        
+
         .toggle-btn { background: transparent; border: none; color: var(--text-main); font-size: 1.25rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .top-title { font-weight: 700; font-size: 0.95rem; color: var(--text-main); display: flex; align-items: center; gap: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        
+
         .header-avatar {
             width: 32px;
             height: 32px;
@@ -106,12 +106,12 @@ HTML_CODE = """
         .icon-btn { background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; flex-shrink: 0; margin-left: 3px; }
 
         /* Sidebar Drawer */
-        .sidebar { 
-            position: absolute; top: 0; left: 0; width: 85%; height: 100%; 
-            background: var(--sidebar-bg); 
+        .sidebar {
+            position: absolute; top: 0; left: 0; width: 85%; height: 100%;
+            background: var(--sidebar-bg);
             color: var(--sidebar-text);
-            border-right: 1px solid var(--sidebar-border); display: flex; flex-direction: column; 
-            transition: transform 0.3s ease; z-index: 100; transform: translateX(-100%); pointer-events: none; 
+            border-right: 1px solid var(--sidebar-border); display: flex; flex-direction: column;
+            transition: transform 0.3s ease; z-index: 100; transform: translateX(-100%); pointer-events: none;
         }
         .sidebar.open { transform: translateX(0); pointer-events: auto; }
         .sidebar-header { padding: 16px; font-size: 1.3rem; font-weight: 900; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--sidebar-border); }
@@ -126,7 +126,7 @@ HTML_CODE = """
         .menu-category-btn.active .arrow-icon { transform: rotate(180deg); }
 
         .submenu-container { padding: 6px 0 6px 12px; display: flex; flex-direction: column; gap: 4px; }
-        
+
         .item-btn { width: 100%; padding: 9px 12px; background: transparent; border: none; color: var(--text-sub); border-radius: 8px; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 0.88rem; }
         .item-btn:hover, .item-btn.active { background: var(--sidebar-btn-hover); color: var(--sidebar-text); }
         .item-btn img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
@@ -138,7 +138,7 @@ HTML_CODE = """
 
         /* Dashboard Layout */
         .dashboard { flex: 1; padding: 24px 16px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
-        
+
         .brand-name {
             font-size: 2.8rem;
             font-weight: 900;
@@ -152,7 +152,7 @@ HTML_CODE = """
 
         .dash-title { font-size: 1.3rem; font-weight: 800; color: var(--text-main); margin-bottom: 4px; }
         .dash-sub { font-size: 0.82rem; color: var(--text-sub); text-align: center; margin-bottom: 24px; font-style: italic; letter-spacing: 0.3px; }
-        
+
         .dash-card { width: 100%; background: var(--bg-surface); border: 1px solid var(--border-color); padding: 16px; border-radius: 16px; display: flex; align-items: center; gap: 14px; margin-bottom: 12px; cursor: pointer; box-shadow: var(--card-shadow); }
         .dash-card i { font-size: 1.3rem; color: var(--accent-pink); }
         .dash-card strong { display: block; color: var(--text-main); font-size: 0.95rem; }
@@ -160,50 +160,49 @@ HTML_CODE = """
 
         #chat-view { flex: 1; display: flex; flex-direction: column; height: 100%; overflow: hidden; }
         .chat-messages { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; -webkit-overflow-scrolling: touch; }
-        
-        /* FIX: Sleeker Message Bubbles */
+
         .message { display: flex; flex-direction: column; max-width: 88%; position: relative; will-change: transform; align-self: flex-start; }
         .message.user { align-self: flex-end; }
-        
-        .message .sender-name { 
-            font-size: 0.75rem; 
-            margin-bottom: 4px; 
-            font-weight: 700; 
-            padding-left: 2px; 
+
+        .message .sender-name {
+            font-size: 0.75rem;
+            margin-bottom: 4px;
+            font-weight: 700;
+            padding-left: 2px;
         }
-        .message.user .sender-name { 
-            text-align: right; 
-            padding-right: 2px; 
-            color: var(--accent-purple); 
+        .message.user .sender-name {
+            text-align: right;
+            padding-right: 2px;
+            color: var(--accent-purple);
         }
-        .message.ai .sender-name { 
-            text-align: left; 
-            color: var(--accent-pink); 
+        .message.ai .sender-name {
+            text-align: left;
+            color: var(--accent-pink);
         }
 
-        .message .content { 
-            background: var(--ai-msg-bg); 
-            border: 1px solid var(--border-color); 
-            padding: 10px 14px; /* Reduced Padding */
-            border-radius: 14px; /* Sleeker curves */
-            font-size: 0.9rem; 
-            line-height: 1.4; /* Tighter text */
-            color: var(--text-main); 
-            word-break: break-word; 
-            box-shadow: var(--card-shadow); 
-            border-bottom-left-radius: 4px; 
-            white-space: pre-wrap; /* Keeps breaks but tighter now */
+        .message .content {
+            background: var(--ai-msg-bg);
+            border: 1px solid var(--border-color);
+            padding: 10px 14px;
+            border-radius: 14px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            color: var(--text-main);
+            word-break: break-word;
+            box-shadow: var(--card-shadow);
+            border-bottom-left-radius: 4px;
+            white-space: pre-wrap;
         }
-        .message.user .content { 
-            background: var(--user-msg-bg); 
-            border: 1px solid rgba(168, 85, 247, 0.2); 
-            color: #e4e4e7; 
-            border-bottom-left-radius: 14px; 
-            border-bottom-right-radius: 4px; 
+        .message.user .content {
+            background: var(--user-msg-bg);
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            color: #e4e4e7;
+            border-bottom-left-radius: 14px;
+            border-bottom-right-radius: 4px;
         }
-        
+
         .action-text { color: var(--action-text); font-style: italic; font-weight: 400; }
-        
+
         .bubble-controls { display: flex; align-items: center; gap: 12px; margin-top: 6px; }
         .bubble-btn-icon { font-size: 0.75rem; color: var(--text-sub); opacity: 0.45; cursor: pointer; transition: opacity 0.2s, color 0.2s; }
         .bubble-btn-icon:hover { opacity: 1; color: var(--accent-pink); }
@@ -211,35 +210,35 @@ HTML_CODE = """
         .typing-indicator { display: flex; align-items: center; gap: 4px; padding: 4px 8px; font-style: italic; font-size: 0.78rem; color: var(--accent-pink); }
 
         /* Input Area */
-        .input-area { 
-            padding: 12px; 
-            border-top: 1px solid var(--border-color); 
-            background: var(--bg-surface); 
-            display: flex; 
-            gap: 8px; 
-            width: 100%; 
-            align-items: center; 
+        .input-area {
+            padding: 12px;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-surface);
+            display: flex;
+            gap: 8px;
+            width: 100%;
+            align-items: center;
         }
         .input-wrapper { position: relative; flex: 1; display: flex; align-items: center; }
-        .input-wrapper input { 
-            width: 100%; 
-            background: var(--bg-input); 
-            border: 1px solid var(--border-color); 
-            padding: 11px 40px 11px 14px; 
-            border-radius: 24px; 
-            color: var(--text-main); 
-            outline: none; 
-            font-size: 0.9rem; 
+        .input-wrapper input {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            padding: 11px 40px 11px 14px;
+            border-radius: 24px;
+            color: var(--text-main);
+            outline: none;
+            font-size: 0.9rem;
         }
         .input-wrapper input:focus {
             border-color: var(--accent-pink);
             box-shadow: 0 0 10px rgba(236, 72, 153, 0.2);
         }
 
-        .wand-inbox-btn { 
-            position: absolute; right: 12px; background: transparent; border: none; 
-            color: var(--accent-pink); opacity: 0.7; font-size: 1rem; cursor: pointer; 
-            display: flex; align-items: center; justify-content: center; 
+        .wand-inbox-btn {
+            position: absolute; right: 12px; background: transparent; border: none;
+            color: var(--accent-pink); opacity: 0.7; font-size: 1rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
         }
         .wand-inbox-btn:hover { opacity: 1; }
 
@@ -288,11 +287,10 @@ HTML_CODE = """
             display: flex; flex-direction: column; gap: 14px; color: var(--text-main); margin: auto;
         }
         .prompt-textarea { width: 100%; height: 130px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px; color: var(--text-main); font-size: 0.88rem; resize: none; outline: none; }
-        
+
         .cropper-container-box { width: 100%; height: 260px; background: #000; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); position: relative; }
 
         .submit-btn { width: 100%; padding: 12px; background: linear-gradient(135deg, #9333ea, #ec4899); color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 0.92rem; margin-top: 8px; }
-        .sub-create-btn { width: 100%; padding: 10px; background: linear-gradient(135deg, #9333ea, #ec4899); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 6px; }
         .delete-btn { background: #ef4444 !important; margin-top: 10px; }
 
         .memory-tag-chip {
@@ -359,7 +357,7 @@ HTML_CODE = """
                 <button class="toggle-btn" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
                 <div class="top-title" id="top-title"></div>
             </div>
-            
+
             <div style="display: flex; gap: 3px; align-items: center; flex-shrink: 0;" id="top-actions">
                 <button class="icon-btn" id="pin-mem-btn" onclick="openPinnedMemoryModal()" title="Pin Memory"><i class="fa-solid fa-location-dot"></i></button>
                 <button class="icon-btn" onclick="clearCurrentChat()" title="Clear Chat"><i class="fa-solid fa-comment-slash"></i></button>
@@ -373,11 +371,11 @@ HTML_CODE = """
                 <div style="position: absolute; top: 16px; left: 16px;">
                     <button class="icon-btn" onclick="toggleSidebar()" style="width:38px; height:38px; font-size:1rem;"><i class="fa-solid fa-bars"></i></button>
                 </div>
-                
+
                 <div class="brand-name">Kio.</div>
                 <h2 class="dash-title">Welcome to Kio.</h2>
                 <p class="dash-sub">Intelligence with a heart.</p>
-                
+
                 <div class="dash-card" onclick="openNewCharForm()">
                     <i class="fa-solid fa-user-plus"></i>
                     <div>
@@ -409,7 +407,6 @@ HTML_CODE = """
                 <div class="input-area">
                     <button class="tool-btn" id="gp-btn" onclick="generateImagePrompt()" title="Generate Image Prompt">GP</button>
                     <div class="input-wrapper">
-                        <!-- FIX: Ultimate Autofill Killer attribute 'new-password' -->
                         <input type="text" id="chat-input" placeholder="Type a message..." autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" onkeypress="if(event.key==='Enter') sendMsg()">
                         <button class="wand-inbox-btn" onclick="suggestUserMessage()" title="Magic Reply">🪄</button>
                     </div>
@@ -424,7 +421,7 @@ HTML_CODE = """
                     <h3 style="font-size:1.1rem; font-weight:800;" id="char-form-title">Create Companion</h3>
                 </div>
                 <input type="hidden" id="char-id">
-                
+
                 <div class="form-group">
                     <label>Avatar Picture</label>
                     <div class="avatar-edit-trigger" onclick="openAvatarCropperModal('char')">
@@ -514,7 +511,7 @@ HTML_CODE = """
                     <label style="color:var(--accent-pink);"><i class="fa-solid fa-brain"></i> Auto-Remembered Facts</label>
                     <div id="user-memories-list" style="margin-top:8px;"></div>
                 </div>
-                
+
                 <hr style="border-color:var(--border-color); margin: 16px 0;">
                 <div class="form-group">
                     <label>Data Backup & Export</label>
@@ -580,13 +577,20 @@ HTML_CODE = """
         let chatHistories = JSON.parse(localStorage.getItem('aura_chats') || '{}');
         let userPersona = JSON.parse(localStorage.getItem('aura_user') || '{"name":"User", "bio":"", "avatar":"https://api.dicebear.com/7.x/identicon/svg?seed=user", "memories":[]}');
         let nsfwMode = JSON.parse(localStorage.getItem('kio_nsfw') || 'false');
-        
+
         if (!userPersona.memories) userPersona.memories = [];
-        
+
         let activeContext = null;
         let cropperInstance = null;
         let currentEditingAvatarType = null;
         let currentAiProvider = 'groq';
+
+        // ---- FIX #2: escape any raw text before it goes into innerHTML ----
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str == null ? '' : String(str);
+            return div.innerHTML;
+        }
 
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
         function toggleMenuCategory(subId) { document.getElementById(subId).classList.toggle('hidden'); }
@@ -604,12 +608,18 @@ HTML_CODE = """
             document.getElementById('settings-form').classList.add('hidden');
         }
 
+        // ---- FIX #7: guard localStorage writes (quota / private-mode failures) ----
         function saveState() {
-            localStorage.setItem('aura_chars', JSON.stringify(characters));
-            localStorage.setItem('aura_groups', JSON.stringify(groups));
-            localStorage.setItem('aura_chats', JSON.stringify(chatHistories));
-            localStorage.setItem('aura_user', JSON.stringify(userPersona));
-            localStorage.setItem('kio_nsfw', JSON.stringify(nsfwMode));
+            try {
+                localStorage.setItem('aura_chars', JSON.stringify(characters));
+                localStorage.setItem('aura_groups', JSON.stringify(groups));
+                localStorage.setItem('aura_chats', JSON.stringify(chatHistories));
+                localStorage.setItem('aura_user', JSON.stringify(userPersona));
+                localStorage.setItem('kio_nsfw', JSON.stringify(nsfwMode));
+            } catch (e) {
+                console.error('saveState failed:', e);
+                alert('Could not save — storage is full. Try deleting some chat history or exporting a backup.');
+            }
             renderSidebar();
         }
 
@@ -617,20 +627,27 @@ HTML_CODE = """
             currentEditingAvatarType = type;
             let currentSrc = type === 'char' ? document.getElementById('avatar-img-preview').src : type === 'group' ? document.getElementById('group-avatar-preview').src : document.getElementById('user-avatar-preview').src;
             let imgElem = document.getElementById('cropper-target-img');
-            imgElem.src = currentSrc;
             document.getElementById('cropper-modal').classList.remove('hidden');
-            if(cropperInstance) cropperInstance.destroy();
-            cropperInstance = new Cropper(imgElem, { aspectRatio: 1, viewMode: 1, dragMode: 'move' });
+            if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
+            // FIX #10: wait for the image to actually load before instantiating Cropper,
+            // otherwise the crop box can be sized against a 0x0 image.
+            const initCropper = () => {
+                if (cropperInstance) cropperInstance.destroy();
+                cropperInstance = new Cropper(imgElem, { aspectRatio: 1, viewMode: 1, dragMode: 'move' });
+            };
+            imgElem.onload = initCropper;
+            imgElem.src = currentSrc;
+            if (imgElem.complete && imgElem.naturalWidth > 0) initCropper();
         }
-        function closeCropperModal() { if(cropperInstance) cropperInstance.destroy(); document.getElementById('cropper-modal').classList.add('hidden'); }
+        function closeCropperModal() { if(cropperInstance) { cropperInstance.destroy(); cropperInstance = null; } document.getElementById('cropper-modal').classList.add('hidden'); }
         function loadNewCropperImage(input) {
             if (input.files && input.files[0]) {
                 let r = new FileReader();
                 r.onload = (e) => {
-                    if(cropperInstance) cropperInstance.destroy();
+                    if(cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
                     let imgElem = document.getElementById('cropper-target-img');
+                    imgElem.onload = () => { cropperInstance = new Cropper(imgElem, { aspectRatio: 1, viewMode: 1, dragMode: 'move' }); };
                     imgElem.src = e.target.result;
-                    cropperInstance = new Cropper(imgElem, { aspectRatio: 1, viewMode: 1, dragMode: 'move' });
                 };
                 r.readAsDataURL(input.files[0]);
             }
@@ -676,7 +693,7 @@ HTML_CODE = """
             let container = document.getElementById('user-memories-list');
             if(!userPersona.memories.length) return container.innerHTML = `<div style="font-size:0.78rem; color:var(--text-sub);">No facts stored yet.</div>`;
             container.innerHTML = userPersona.memories.map((m, idx) => `
-                <div class="memory-tag-chip"><span>${m}</span><i class="fa-solid fa-trash" onclick="deleteUserMemory(${idx})"></i></div>
+                <div class="memory-tag-chip"><span>${escapeHtml(m)}</span><i class="fa-solid fa-trash" onclick="deleteUserMemory(${idx})"></i></div>
             `).join('');
         }
         function deleteUserMemory(idx) { userPersona.memories.splice(idx, 1); saveState(); renderUserMemories(); }
@@ -702,10 +719,14 @@ HTML_CODE = """
             if(idx >= 0) characters[idx] = charObj; else characters.push(charObj);
             saveState(); openChat('char', id);
         }
+        // FIX #6: when a character is deleted, also strip them out of any groups
+        // that reference them so groups don't keep an orphaned memberId.
         function deleteCurrentCharacter() {
             let id = document.getElementById('char-id').value;
             if(id && confirm("Delete character permanently?")) {
-                characters = characters.filter(c => c.id !== id); delete chatHistories[id];
+                characters = characters.filter(c => c.id !== id);
+                delete chatHistories[id];
+                groups.forEach(g => { g.memberIds = (g.memberIds || []).filter(mid => mid !== id); });
                 saveState(); goHome();
             }
         }
@@ -722,8 +743,8 @@ HTML_CODE = """
             let selectedIds = (groups.find(g => g.id === document.getElementById('group-id').value) || {}).memberIds || [];
             document.getElementById('group-char-selector').innerHTML = characters.map(c => `
                 <label style="display:flex; align-items:center; gap:8px; background:var(--bg-surface-solid); padding:8px; border-radius:8px; cursor:pointer; margin-bottom:4px;">
-                    <input type="checkbox" value="${c.id}" ${selectedIds.includes(c.id)?'checked':''} class="group-char-checkbox">
-                    <img src="${c.avatar}" style="width:24px; height:24px; border-radius:50%;"/> ${c.name}
+                    <input type="checkbox" value="${escapeHtml(c.id)}" ${selectedIds.includes(c.id)?'checked':''} class="group-char-checkbox">
+                    <img src="${c.avatar}" style="width:24px; height:24px; border-radius:50%;"/> ${escapeHtml(c.name)}
                 </label>
             `).join('');
         }
@@ -749,8 +770,8 @@ HTML_CODE = """
         }
 
         function renderSidebar() {
-            document.getElementById('char-list').innerHTML = characters.map(c => `<button class="item-btn ${activeContext?.id===c.id?'active':''}" onclick="openChat('char', '${c.id}')"><img src="${c.avatar}" /><span>${c.name}</span></button>`).join('');
-            document.getElementById('group-list').innerHTML = groups.map(g => `<button class="item-btn ${activeContext?.id===g.id?'active':''}" onclick="openChat('group', '${g.id}')"><img src="${g.avatar}" /><span>${g.title}</span></button>`).join('');
+            document.getElementById('char-list').innerHTML = characters.map(c => `<button class="item-btn ${activeContext?.id===c.id?'active':''}" onclick="openChat('char', '${c.id}')"><img src="${c.avatar}" /><span>${escapeHtml(c.name)}</span></button>`).join('');
+            document.getElementById('group-list').innerHTML = groups.map(g => `<button class="item-btn ${activeContext?.id===g.id?'active':''}" onclick="openChat('group', '${g.id}')"><img src="${g.avatar}" /><span>${escapeHtml(g.title)}</span></button>`).join('');
         }
 
         function openChat(type, id) {
@@ -761,14 +782,22 @@ HTML_CODE = """
             document.getElementById('chat-view').classList.remove('hidden');
             document.getElementById('top-bar').classList.remove('hidden');
 
+            let titleEl = document.getElementById('top-title');
+            titleEl.innerHTML = '';
             if(type === 'group') {
                 document.getElementById('pin-mem-btn').classList.add('hidden');
                 let g = groups.find(i => i.id === id);
-                document.getElementById('top-title').innerHTML = `<img src="${g.avatar}" class="header-avatar" onclick="editCurrentGroup()"><span>${g.title}</span>`;
+                let img = document.createElement('img');
+                img.src = g.avatar; img.className = 'header-avatar'; img.onclick = editCurrentGroup;
+                let span = document.createElement('span'); span.textContent = g.title;
+                titleEl.append(img, span);
             } else {
                 document.getElementById('pin-mem-btn').classList.remove('hidden');
                 let c = characters.find(i => i.id === id);
-                document.getElementById('top-title').innerHTML = `<img src="${c.avatar}" class="header-avatar" onclick="editCurrentCharacter()"><span>${c.name}</span>`;
+                let img = document.createElement('img');
+                img.src = c.avatar; img.className = 'header-avatar'; img.onclick = editCurrentCharacter;
+                let span = document.createElement('span'); span.textContent = c.name;
+                titleEl.append(img, span);
             }
             renderSidebar(); renderMessages();
         }
@@ -792,9 +821,11 @@ HTML_CODE = """
             document.getElementById('group-delete-btn').classList.remove('hidden'); showForm('group-form');
         }
 
-        function formatText(text) { 
-            let formatted = text.replace(/\\*(.*?)\\*/g, '<span class="action-text">*$1*</span>');
-            return formatted.trim(); 
+        // FIX #2: escape raw text first, THEN apply *action* formatting on the escaped string.
+        function formatText(text) {
+            let safe = escapeHtml(text);
+            let formatted = safe.replace(/\\*(.*?)\\*/g, '<span class="action-text">*$1*</span>');
+            return formatted.trim();
         }
 
         function renderMessages() {
@@ -806,7 +837,7 @@ HTML_CODE = """
             }
             cont.innerHTML = hist.map((m, idx) => `
                 <div class="message ${m.sender==='You'?'user':'ai'}">
-                    <div class="sender-name">${m.sender}</div>
+                    <div class="sender-name">${escapeHtml(m.sender)}</div>
                     <div class="content">${formatText(m.text)}
                         <div class="bubble-controls">
                             <i class="fa-solid fa-pen-to-square bubble-btn-icon" onclick="tweakMsg(${idx})" title="Edit"></i>
@@ -821,21 +852,23 @@ HTML_CODE = """
             cont.scrollTop = cont.scrollHeight;
         }
 
-        async function streamWordByWord(sender, newText) {
+        // FIX #1: capture the target chat id up front and use it throughout,
+        // instead of re-reading the (possibly-changed) global activeContext.
+        async function streamWordByWord(targetId, sender, newText) {
             return new Promise((resolve) => {
                 removeTypingIndicator();
-                if(!chatHistories[activeContext.id]) chatHistories[activeContext.id] = [];
+                if(!chatHistories[targetId]) chatHistories[targetId] = [];
                 let words = newText.split(' ');
                 let wordIdx = 0;
                 let currentText = '';
-                chatHistories[activeContext.id].push({ sender: sender, text: '' });
-                let msgIndex = chatHistories[activeContext.id].length - 1;
+                chatHistories[targetId].push({ sender: sender, text: '' });
+                let msgIndex = chatHistories[targetId].length - 1;
 
                 let timer = setInterval(() => {
                     if (wordIdx < words.length) {
                         currentText += (wordIdx === 0 ? '' : ' ') + words[wordIdx];
-                        chatHistories[activeContext.id][msgIndex].text = currentText;
-                        renderMessages();
+                        chatHistories[targetId][msgIndex].text = currentText;
+                        if (activeContext && activeContext.id === targetId) renderMessages();
                         wordIdx++;
                     } else {
                         clearInterval(timer);
@@ -851,7 +884,7 @@ HTML_CODE = """
             if(cont.querySelector('.empty-chat-placeholder')) cont.innerHTML = '';
             let t = document.createElement('div');
             t.id = 'typing-bubble'; t.className = 'message ai';
-            t.innerHTML = `<div class="sender-name">${name}</div><div class="content typing-indicator"><i class="fa-solid fa-ellipsis fa-beat"></i> typing...</div>`;
+            t.innerHTML = `<div class="sender-name">${escapeHtml(name)}</div><div class="content typing-indicator"><i class="fa-solid fa-ellipsis fa-beat"></i> typing...</div>`;
             cont.appendChild(t); cont.scrollTop = cont.scrollHeight;
         }
         function removeTypingIndicator() { let e = document.getElementById('typing-bubble'); if(e) e.remove(); }
@@ -873,52 +906,57 @@ HTML_CODE = """
             fetchAIResponse(true);
         }
 
+        // FIX #1 (cont.): snapshot targetId/targetType at call time so a mid-flight
+        // chat switch can't misroute the streamed reply into the wrong conversation.
         async function fetchAIResponse(isContinue = false) {
-            let targetName = activeContext.type === 'char' ? characters.find(c => c.id === activeContext.id)?.name : 'Group';
-            showTypingIndicator(targetName);
+            const targetId = activeContext.id;
+            const targetType = activeContext.type;
+            let targetName = targetType === 'char' ? characters.find(c => c.id === targetId)?.name : 'Group';
+            if (activeContext.id === targetId) showTypingIndicator(targetName);
 
             let payload = {
-                type: activeContext.type,
-                contextId: activeContext.id,
+                type: targetType,
+                contextId: targetId,
                 userPersona: userPersona,
                 nsfw: nsfwMode,
                 isContinue: isContinue,
-                history: chatHistories[activeContext.id]
+                history: chatHistories[targetId] || []
             };
 
-            if(activeContext.type === 'char') payload.character = characters.find(c => c.id === activeContext.id);
+            if(targetType === 'char') payload.character = characters.find(c => c.id === targetId);
             else {
-                let g = groups.find(g => g.id === activeContext.id);
+                let g = groups.find(g => g.id === targetId);
                 payload.group = g; payload.members = characters.filter(c => g.memberIds.includes(c.id));
             }
 
             try {
                 let res = await fetch('/api/advanced-chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                 let data = await res.json();
-                removeTypingIndicator();
+                if (activeContext && activeContext.id === targetId) removeTypingIndicator();
 
                 if(data.responses && data.responses.length > 0) {
                     for (let i = 0; i < data.responses.length; i++) {
                         let r = data.responses[i];
-                        
-                        if(r.text.includes("Groq Error") || r.text.includes("Rate limit")) {
-                           alert("API Token Limit Hit! Please clear some chat history or try again in a minute.");
+
+                        // FIX #3: match the actual error prefix the backend now uses consistently.
+                        if(r.text.startsWith("Groq Error:")) {
+                           alert("API issue: " + r.text.replace(/^Groq Error:\\s*/, ''));
                            break;
                         }
 
                         if(i > 0) {
-                            showTypingIndicator(r.sender);
-                            await new Promise(res => setTimeout(res, 800)); 
-                            removeTypingIndicator();
+                            if (activeContext && activeContext.id === targetId) showTypingIndicator(r.sender);
+                            await new Promise(res => setTimeout(res, 800));
+                            if (activeContext && activeContext.id === targetId) removeTypingIndicator();
                         }
-                        await streamWordByWord(r.sender, r.text);
+                        await streamWordByWord(targetId, r.sender, r.text);
                     }
                 } else {
-                     removeTypingIndicator();
+                     if (activeContext && activeContext.id === targetId) removeTypingIndicator();
                      alert("Something went wrong, no response from AI.");
                 }
             } catch(e) {
-                removeTypingIndicator();
+                if (activeContext && activeContext.id === targetId) removeTypingIndicator();
                 alert("Network error connecting to API.");
             }
         }
@@ -951,10 +989,15 @@ HTML_CODE = """
         async function suggestUserMessage() {
             if(!activeContext) return;
             let i = document.getElementById('chat-input'); i.placeholder = "Generating...";
-            let res = await fetch('/api/suggest-reply', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userPersona, history: chatHistories[activeContext.id]||[] }) });
-            let data = await res.json();
-            if(data.suggestion) i.value = data.suggestion;
-            i.placeholder = "Type a message...";
+            try {
+                let res = await fetch('/api/suggest-reply', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userPersona, history: chatHistories[activeContext.id]||[] }) });
+                let data = await res.json();
+                if(data.suggestion) i.value = data.suggestion;
+            } catch(e) {
+                alert("Network error connecting to API.");
+            } finally {
+                i.placeholder = "Type a message...";
+            }
         }
         async function generateImagePrompt() {
             if(activeContext?.type !== 'char') return alert('GP feature is for single character chats!');
@@ -964,6 +1007,8 @@ HTML_CODE = """
                 let data = await res.json();
                 document.getElementById('prompt-output-box').value = data.prompt || 'Failed';
                 document.getElementById('prompt-modal').classList.remove('hidden');
+            } catch(e) {
+                alert("Network error connecting to API.");
             } finally { btn.innerHTML = orig; }
         }
         function copyPromptText() {
@@ -972,7 +1017,7 @@ HTML_CODE = """
 
         function openBackupOptionsModal() {
             let list = document.getElementById('backup-char-list');
-            list.innerHTML = characters.map(c => `<button class="sub-create-btn" style="background:#27272a;" onclick="exportSingle('${c.id}')">${c.name} JSON</button>`).join('');
+            list.innerHTML = characters.map(c => `<button class="sub-create-btn" style="background:#27272a;" onclick="exportSingle('${c.id}')">${escapeHtml(c.name)} JSON</button>`).join('');
             document.getElementById('backup-modal').classList.remove('hidden');
         }
         function exportSingle(id) {
@@ -1012,22 +1057,32 @@ HTML_CODE = """
 </html>
 """
 
+# FIX #3 & #9: every error path now returns a message starting with the same
+# "Groq Error:" prefix (so the frontend can reliably detect failures), and the
+# outbound request has a timeout so a hung Groq API can't hang the Flask worker.
 def call_llm(messages, system_prompt):
     api_key = os.environ.get("GROQ_API_KEY")
-    if not api_key: return "Groq Key missing!"
+    if not api_key:
+        return "Groq Error: API key missing on server."
     headers = {"Authorization": f"Bearer {api_key.strip()}", "Content-Type": "application/json"}
-    
+
     payload = {
         "model": "llama-3.3-70b-versatile",
         "messages": [{"role": "system", "content": system_prompt}] + messages,
         "max_tokens": 400
     }
     try:
-        res = requests.post("https://api.groq.com/openai/v1/chat/completions", json=payload, headers=headers).json()
-        if "choices" in res: return res["choices"][0]["message"]["content"]
-        return f"Groq Error: API format issue." 
+        resp = requests.post("https://api.groq.com/openai/v1/chat/completions", json=payload, headers=headers, timeout=30)
+        if resp.status_code == 429:
+            return "Groq Error: Rate limit hit, please wait a moment."
+        res = resp.json()
+        if "choices" in res:
+            return res["choices"][0]["message"]["content"]
+        return "Groq Error: Unexpected API response format."
+    except requests.exceptions.Timeout:
+        return "Groq Error: Request timed out."
     except Exception as e:
-        return f"Error calling AI: {str(e)}"
+        return f"Groq Error: {str(e)}"
 
 @app.route("/")
 def home():
@@ -1035,40 +1090,49 @@ def home():
 
 @app.route("/api/generate-image-prompt", methods=["POST"])
 def generate_image_prompt():
-    data = request.json
-    c = data.get("character", {})
-    history = data.get("history", [])
-    recent = "\n".join([f"{m['sender']}: {m['text']}" for m in history[-2:]])
+    data = request.json or {}
+    c = data.get("character") or {}
+    history = data.get("history") or []
+    recent = "\n".join([f"{m.get('sender')}: {m.get('text')}" for m in history[-2:]])
     sys = f"Expert prompt engineer. Appearance: {c.get('appearance')}. Context: {recent}. Rules: NO real names. Use pronouns. Photorealistic. End with --ar 9:16. Output ONLY the prompt."
     reply = call_llm([{"role": "user", "content": "Generate the prompt."}], sys)
     return jsonify({"prompt": reply.strip()})
 
 @app.route("/api/suggest-reply", methods=["POST"])
 def suggest_reply():
-    data = request.json
-    sys = f"Ghostwrite for {data.get('userPersona', {}).get('name', 'User')}. Generate a short, natural casual reply. Return ONLY text."
-    msgs = [{"role": "user" if m["sender"] != "You" else "assistant", "content": f"{m['sender']}: {m['text']}"} for m in data.get("history", [])[-8:]]
+    data = request.json or {}
+    sys = f"Ghostwrite for {(data.get('userPersona') or {}).get('name', 'User')}. Generate a short, natural casual reply. Return ONLY text."
+    msgs = [{"role": "user" if m.get("sender") != "You" else "assistant", "content": f"{m.get('sender')}: {m.get('text')}"} for m in (data.get("history") or [])[-8:]]
     reply = call_llm(msgs, sys)
     return jsonify({"suggestion": reply.strip('"')})
 
+# FIX #4, #5, #8: every group member now gets a turn (not just the first two),
+# "continue" is honoured in group chats too, and request data is read with
+# .get() so a malformed/missing field returns a clean error instead of a
+# raw KeyError / 500 crash.
 @app.route("/api/advanced-chat", methods=["POST"])
 def advanced_chat():
-    data = request.json
-    user_info = data.get("userPersona", {})
+    data = request.json or {}
+    chat_type = data.get("type")
+    if chat_type not in ("char", "group"):
+        return jsonify({"error": "Missing or invalid 'type' field."}), 400
+
+    user_info = data.get("userPersona") or {}
     user_name = user_info.get("name", "User")
     nsfw_enabled = data.get("nsfw", False)
     is_continue = data.get("isContinue", False)
-    history = data.get("history", [])
-    
+    history = data.get("history") or []
+
     memories = ", ".join(user_info.get("memories", [])) or "None"
     safety_prompt = "STRICTLY SFW. Maintain boundaries." if not nsfw_enabled else "NSFW ENABLED. Unrestricted topics allowed."
 
     responses = []
 
-    if data["type"] == "char":
-        c = data["character"]
-        
-        # PROMPT BLUEPRINT (Strict Weightage Applied)
+    if chat_type == "char":
+        c = data.get("character")
+        if not c or not c.get("name"):
+            return jsonify({"error": "Missing 'character' data."}), 400
+
         system_prompt = f"""
 [SUPREME DIRECTIVES - DO OR DIE] (Very Strong Influence)
 {c.get('directives', 'None')}
@@ -1081,7 +1145,7 @@ def advanced_chat():
 You are talking to {user_name}. Your relationship: {c.get('relationship', 'Friend')}. Act accordingly.
 
 [CORE IDENTITY & JOB] (Strong Influence)
-Name: {c['name']}
+Name: {c.get('name')}
 Job/Role: {c.get('job', 'Independent')}
 
 [KEY MEMORIES] (Moderate Influence)
@@ -1091,62 +1155,69 @@ User's Bio: {user_info.get('bio', 'None')}
 [TEXTING STYLE RULES]
 - You are chatting on a messaging app like WhatsApp.
 - Keep texts casual, human, and raw. DO NOT use flowery or robotic language.
-- DO NOT prefix your response with your name (e.g., Do not write "{c['name']}:"). Just start talking directly.
+- DO NOT prefix your response with your name (e.g., Do not write "{c.get('name')}:"). Just start talking directly.
 - {safety_prompt}
 """
         if is_continue:
             system_prompt += "\n- Continue your previous thought."
 
         recent_history = history[-10:]
-        messages = [{"role": "user" if m["sender"] == "You" else "assistant", "content": f"{m['sender']}: {m['text']}"} for m in recent_history]
-        
-        reply_text = call_llm(messages, system_prompt).strip()
-        
-        # REGEX PREFIX CLEANER
-        pattern = rf'^(\*?{re.escape(c["name"])}\*?\s*:\s*)+'
-        reply_text = re.sub(pattern, '', reply_text, flags=re.IGNORECASE).strip()
+        messages = [{"role": "user" if m.get("sender") == "You" else "assistant", "content": f"{m.get('sender')}: {m.get('text')}"} for m in recent_history]
 
-        responses = [{"sender": c['name'], "text": reply_text}]
+        reply_text = call_llm(messages, system_prompt).strip()
+
+        if not reply_text.startswith("Groq Error:"):
+            pattern = rf'^(\*?{re.escape(c.get("name",""))}\*?\s*:\s*)+'
+            reply_text = re.sub(pattern, '', reply_text, flags=re.IGNORECASE).strip()
+
+        responses = [{"sender": c.get('name'), "text": reply_text}]
 
     else:
-        # GROUP CHAT LOGIC (Inter-Character Interaction Enabled)
-        group = data["group"]
-        members = data["members"]
-        
-        # Copy history so we can inject characters' replies dynamically
-        recent_history = history[-8:].copy() 
-        
-        for char in members[:2]:
+        group = data.get("group")
+        members = data.get("members") or []
+        if not group or not members:
+            return jsonify({"error": "Missing 'group' or 'members' data."}), 400
+
+        recent_history = history[-8:].copy()
+
+        # FIX #4: loop over ALL members instead of members[:2]
+        for idx, char in enumerate(members):
             system_prompt = f"""
 [SUPREME DIRECTIVES] (Very Strong Influence)
 {group.get('directives', 'None')}
 
-[CORE IDENTITY] 
-Name: {char['name']}, Job: {char.get('job', 'Member')}
+[CORE IDENTITY]
+Name: {char.get('name')}, Job: {char.get('job', 'Member')}
 Group Chat Name: '{group.get('title', 'Group')}'
 
 [RULES]
-- You are {char['name']}. You are in a group chat with {user_name} and other characters.
-- READ THE LATEST MESSAGES IN HISTORY: If another character just spoke, react to them or build on their point before talking to {user_name}. 
-- Act like humans texting in a WhatsApp group. 
+- You are {char.get('name')}. You are in a group chat with {user_name} and other characters.
+- READ THE LATEST MESSAGES IN HISTORY: If another character just spoke, react to them or build on their point before talking to {user_name}.
+- Act like humans texting in a WhatsApp group.
 - DO NOT prefix your response with your name. Just talk.
 - {safety_prompt}
 """
-            # Create messages using the continuously updating recent_history
-            messages = [{"role": "user" if m["sender"] == "You" else "assistant", "content": f"{m['sender']}: {m['text']}"} for m in recent_history]
-            
+            # FIX #5: honour "continue" in group chats too — only apply it to the
+            # last character who spoke in the existing history, others reply fresh.
+            if is_continue and idx == 0:
+                system_prompt += "\n- Continue your previous thought."
+
+            messages = [{"role": "user" if m.get("sender") == "You" else "assistant", "content": f"{m.get('sender')}: {m.get('text')}"} for m in recent_history]
+
             reply_text = call_llm(messages, system_prompt).strip()
-            
-            # Clean Name Prefix
-            pattern = rf'^(\*?{re.escape(char["name"])}\*?\s*:\s*)+'
+
+            if reply_text.startswith("Groq Error:"):
+                responses.append({"sender": char.get('name'), "text": reply_text})
+                break
+
+            pattern = rf'^(\*?{re.escape(char.get("name",""))}\*?\s*:\s*)+'
             reply_text = re.sub(pattern, '', reply_text, flags=re.IGNORECASE).strip()
-            
-            responses.append({"sender": char['name'], "text": reply_text})
-            
-            # VITAL: Add this character's reply to recent_history so the next character can "read" it
-            recent_history.append({"sender": char['name'], "text": reply_text})
-            
-            time.sleep(1.5) # Prevent rate limits
+
+            responses.append({"sender": char.get('name'), "text": reply_text})
+            recent_history.append({"sender": char.get('name'), "text": reply_text})
+
+            if idx < len(members) - 1:
+                time.sleep(1.5)  # avoid hammering the rate limit between turns
 
     return jsonify({"responses": responses})
 
