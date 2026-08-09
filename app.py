@@ -2,11 +2,13 @@ import os
 import requests
 import json
 import re
+import time # Added for API delay
 from flask import Flask, request, jsonify, render_template_string
 from datetime import datetime
 
 app = Flask(__name__)
 
+# [TERA PURANA HTML_CODE YAHAN HOGA - Same as before, no structural changes needed]
 HTML_CODE = """
 <!DOCTYPE html>
 <html lang="en">
@@ -610,7 +612,6 @@ HTML_CODE = """
             renderSidebar();
         }
 
-        // --- UI Modals & Cropper ---
         function openAvatarCropperModal(type) {
             currentEditingAvatarType = type;
             let currentSrc = type === 'char' ? document.getElementById('avatar-img-preview').src : type === 'group' ? document.getElementById('group-avatar-preview').src : document.getElementById('user-avatar-preview').src;
@@ -643,7 +644,6 @@ HTML_CODE = """
             closeCropperModal();
         }
 
-        // --- Settings & Forms ---
         function showForm(formId) {
             document.getElementById('sidebar').classList.remove('open');
             document.getElementById('top-bar').classList.add('hidden');
@@ -680,7 +680,6 @@ HTML_CODE = """
         }
         function deleteUserMemory(idx) { userPersona.memories.splice(idx, 1); saveState(); renderUserMemories(); }
 
-        // --- Char & Group Forms ---
         function openNewCharForm() {
             document.getElementById('char-id').value = '';
             ['char-name', 'char-job', 'char-rel', 'char-app', 'char-backstory', 'char-directives', 'char-memories'].forEach(id => document.getElementById(id).value = '');
@@ -748,7 +747,6 @@ HTML_CODE = """
             }
         }
 
-        // --- Rendering & Chat ---
         function renderSidebar() {
             document.getElementById('char-list').innerHTML = characters.map(c => `<button class="item-btn ${activeContext?.id===c.id?'active':''}" onclick="openChat('char', '${c.id}')"><img src="${c.avatar}" /><span>${c.name}</span></button>`).join('');
             document.getElementById('group-list').innerHTML = groups.map(g => `<button class="item-btn ${activeContext?.id===g.id?'active':''}" onclick="openChat('group', '${g.id}')"><img src="${g.avatar}" /><span>${g.title}</span></button>`).join('');
@@ -794,9 +792,8 @@ HTML_CODE = """
         }
 
         function formatText(text) { 
-            // Fixes formatting and prevents huge bubbles
             let formatted = text.replace(/\\*(.*?)\\*/g, '<span class="action-text">*$1*</span>');
-            return formatted.trim(); // Ensure no extra trailing spaces cause bubble expansion
+            return formatted.trim(); 
         }
 
         function renderMessages() {
@@ -823,7 +820,6 @@ HTML_CODE = """
             cont.scrollTop = cont.scrollHeight;
         }
 
-        // --- The Async Message Splitter Engine ---
         async function streamWordByWord(sender, newText) {
             return new Promise((resolve) => {
                 removeTypingIndicator();
@@ -895,21 +891,35 @@ HTML_CODE = """
                 payload.group = g; payload.members = characters.filter(c => g.memberIds.includes(c.id));
             }
 
-            let res = await fetch('/api/advanced-chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-            let data = await res.json();
-            removeTypingIndicator();
+            try {
+                let res = await fetch('/api/advanced-chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                let data = await res.json();
+                removeTypingIndicator();
 
-            if(data.responses) {
-                // Sequential Double-Texting Execution
-                for (let i = 0; i < data.responses.length; i++) {
-                    let r = data.responses[i];
-                    if(i > 0) {
-                        showTypingIndicator(r.sender);
-                        await new Promise(res => setTimeout(res, 800)); // Natural pause before double text
-                        removeTypingIndicator();
+                if(data.responses && data.responses.length > 0) {
+                    for (let i = 0; i < data.responses.length; i++) {
+                        let r = data.responses[i];
+                        
+                        // Error handling visual fix
+                        if(r.text.includes("Groq Error") || r.text.includes("Rate limit")) {
+                           alert("API Token Limit Hit! Please clear some chat history or try again in a minute.");
+                           break;
+                        }
+
+                        if(i > 0) {
+                            showTypingIndicator(r.sender);
+                            await new Promise(res => setTimeout(res, 800)); 
+                            removeTypingIndicator();
+                        }
+                        await streamWordByWord(r.sender, r.text);
                     }
-                    await streamWordByWord(r.sender, r.text);
+                } else {
+                     removeTypingIndicator();
+                     alert("Something went wrong, no response from AI.");
                 }
+            } catch(e) {
+                removeTypingIndicator();
+                alert("Network error connecting to API.");
             }
         }
 
@@ -917,7 +927,6 @@ HTML_CODE = """
             let h = chatHistories[activeContext.id];
             if(!h || h.length === 0) return;
             if(h[h.length - 1].sender !== 'You') {
-                // Pop all continuous AI messages (if double texted)
                 while (h.length > 0 && h[h.length - 1].sender !== 'You') h.pop();
                 renderMessages(); fetchAIResponse(false);
             }
@@ -1008,16 +1017,20 @@ def call_llm(messages, system_prompt):
     api_key = os.environ.get("GROQ_API_KEY")
     if not api_key: return "Groq Key missing!"
     headers = {"Authorization": f"Bearer {api_key.strip()}", "Content-Type": "application/json"}
+    
+    # CRITICAL FIX: Limit the output tokens to save API Rate limits!
     payload = {
         "model": "llama-3.1-8b-instant",
-        "messages": [{"role": "system", "content": system_prompt}] + messages
+        "messages": [{"role": "system", "content": system_prompt}] + messages,
+        "max_tokens": 250 
     }
     try:
         res = requests.post("https://api.groq.com/openai/v1/chat/completions", json=payload, headers=headers).json()
         if "choices" in res: return res["choices"][0]["message"]["content"]
-        return f"Groq Error: {res.get('error', 'Unknown error')}"
+        # Return a cleaner error that JS can catch easily
+        return f"Groq Error: API Rate limit hit. Please try again." 
     except Exception as e:
-        return f"*Error calling AI*: {str(e)}"
+        return f"Error calling AI: {str(e)}"
 
 @app.route("/")
 def home():
@@ -1050,11 +1063,9 @@ def advanced_chat():
     is_continue = data.get("isContinue", False)
     history = data.get("history", [])
     
-    # Context & Time
     time_context = f"Current time is {datetime.now().strftime('%I:%M %p')}. Acknowledge morning/night naturally if applicable."
     memories = ", ".join(user_info.get("memories", [])) or "None"
 
-    # NSFW Safety Rule Injection
     safety_prompt = "STRICTLY SFW. Maintain boundaries. Refuse explicit, violent, or mature themes gracefully."
     if nsfw_enabled:
         safety_prompt = "NSFW/UNFILTERED ENABLED. You are permitted to engage in explicit language, mature themes, and unrestricted intimate roleplay as dictated by the user. Do not censor yourself."
@@ -1065,51 +1076,42 @@ def advanced_chat():
         c = data["character"]
         
         system_prompt = f"""
-[CORE IDENTITY - ABSOLUTE PRIORITY]
+[CORE IDENTITY]
 - Name: {c['name']}
-- Core Job/Identity: {c.get('job', 'Independent')}
-- Relationship to User ({user_name}): {c.get('relationship', 'Friend')}
+- Job: {c.get('job', 'Independent')}
+- Relationship to {user_name}: {c.get('relationship', 'Friend')}
 - Appearance: {c.get('appearance', 'Normal')}
 - Backstory: {c.get('backstory', 'None')}
 
-[RESPONSE DIRECTIVES - SUPREME AUTHORITY]
+[DIRECTIVES]
 {c.get('directives', 'None')}
 
-[CONTEXT & MEMORY]
-- Real-World Time: {time_context}
+[CONTEXT]
+- Time: {time_context}
 - User Bio: {user_info.get('bio', '')}
-- Known Memory Facts: {memories}
-
-[SAFETY & BOUNDARIES]
+- Memories: {memories}
 {safety_prompt}
 
-[10-POINT HUMAN TEXTING ENGINE - FOLLOW STRICTLY]
-1. ZERO AI PERSONA: You are a living human. NEVER act like an AI, assistant, or roleplay simulator.
-2. SPLIT MESSAGES: If you have multiple distinct thoughts, separate them by pressing Enter twice (leaving an empty line between paragraphs). The system will split them. DO NOT type the literal characters \\n.
-3. ANTI-HALLUCINATION: NEVER invent past promises, dates, or outings. Do NOT invite the user for lunch/dinner unless they propose it first.
-4. HUMAN PACING & SLANG: Type like a real person on WhatsApp. Use natural Hinglish, occasional lowercase, and natural slangs. NO bookish language.
-5. MATCH LENGTH: If the user sends a short text, reply short. Do not write essays unless necessary.
-6. ATTITUDE: Have your own opinions. Disagree, tease, or roast if it fits your character. No "Yes-Man" syndrome.
-7. ZERO-REPETITION: Do not repeat opening actions (like *smirks*) every time. Keep reactions varied.
-8. MOOD CONTINUITY: Keep your mood consistent with the ongoing conversation. Remember the vibe of the last few messages.
-9. ACTIONS & EMOJIS: Use emojis organically. Use asterisks for physical actions (*sighs*) naturally.
-10. CURIOSITY: Don't end conversations blindly; throw back a natural question or statement.
+[RULES]
+1. ZERO AI PERSONA: You are human. 
+2. SPLIT MESSAGES: Separate distinct thoughts with a blank line (press Enter twice). DO NOT literally type \\n.
+3. ANTI-HALLUCINATION: NEVER invent past promises or dates.
+4. PACING: Use natural Hinglish, slang. NO bookish language.
+5. LENGTH: If user text is short, reply short.
+6. NO YES-MAN: Disagree/tease if it fits your character.
 """
         if is_continue:
             system_prompt += "\nUser pressed Continue. Extend your last response seamlessly."
 
-        messages = [{"role": "user" if m["sender"] == "You" else "assistant", "content": f"{m['sender']}: {m['text']}"} for m in history[-25:]]
+        # CRITICAL FIX: Only send the last 10 messages instead of 25 to save massive tokens!
+        recent_history = history[-10:]
+        messages = [{"role": "user" if m["sender"] == "You" else "assistant", "content": f"{m['sender']}: {m['text']}"} for m in recent_history]
+        
         reply_text = call_llm(messages, system_prompt)
         
-        # FIX: Clean up any literal '\n\n' text outputted by the LLM 
         reply_text = reply_text.replace('\\n', '\n')
-        
-        # SPLITTER ENGINE (Double-texting)
         parts = [p.strip() for p in re.split(r'\n{2,}', reply_text) if p.strip()]
-        
-        # Fallback if no split happened but it's a huge block
-        if not parts: 
-            parts = [reply_text.strip()]
+        if not parts: parts = [reply_text.strip()]
             
         for p in parts:
             responses.append({"sender": c['name'], "text": p})
@@ -1119,26 +1121,32 @@ def advanced_chat():
         group = data["group"]
         members = data["members"]
         
+        # Limit to 2 characters to prevent rate limiting
         for char in members[:2]:
             system_prompt = f"""
-You are {char['name']} (Job: {char.get('job', 'Member')}) in a group chat named '{group.get('title', 'Group')}'.
+You are {char['name']} (Job: {char.get('job', 'Member')}) in a group chat '{group.get('title', 'Group')}'.
 {safety_prompt}
 
-GROUP DYNAMICS RULES:
-1. READ THE ROOM: Look at the chat history. Don't just reply to {user_name}. React to what the other character just said before answering the user.
-2. TEXT LIKE A HUMAN: Use casual Hinglish, short sentences.
-3. SPLIT THOUGHTS: Separate different thoughts into distinct paragraphs (leave an empty line).
+GROUP RULES:
+1. READ THE ROOM: React to what the other character just said before answering {user_name}.
+2. Keep it VERY short and human (Hinglish).
+3. Separate thoughts into paragraphs using blank lines.
 """
-            messages = [{"role": "user" if m["sender"] == "You" else "assistant", "content": f"{m['sender']}: {m['text']}"} for m in history[-25:]]
+            # CRITICAL FIX: Only 8 messages for group chat history to avoid TPM limits
+            recent_history = history[-8:]
+            messages = [{"role": "user" if m["sender"] == "You" else "assistant", "content": f"{m['sender']}: {m['text']}"} for m in recent_history]
+            
             reply_text = call_llm(messages, system_prompt)
             
-            # Cleaning and splitting
             reply_text = reply_text.replace('\\n', '\n')
-            parts = [p.strip() for p in resplit(r'\n{2,}', reply_text) if p.strip()]
+            parts = [p.strip() for p in re.split(r'\n{2,}', reply_text) if p.strip()]
             if not parts: parts = [reply_text.strip()]
                 
             for p in parts:
                 responses.append({"sender": char['name'], "text": p})
+            
+            # CRITICAL FIX: Add a small delay between group API calls to prevent Groq burst rate limits
+            time.sleep(1.5)
 
     return jsonify({"responses": responses})
 
