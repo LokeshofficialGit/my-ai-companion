@@ -1,6 +1,7 @@
 import os
 import requests
 import json
+import re
 import time
 from flask import Flask, request, jsonify, render_template_string
 from datetime import datetime
@@ -160,12 +161,12 @@ HTML_CODE = """
         #chat-view { flex: 1; display: flex; flex-direction: column; height: 100%; overflow: hidden; }
         .chat-messages { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; -webkit-overflow-scrolling: touch; }
         
-        /* Message Bubbles */
+        /* FIX: Sleeker Message Bubbles */
         .message { display: flex; flex-direction: column; max-width: 88%; position: relative; will-change: transform; align-self: flex-start; }
         .message.user { align-self: flex-end; }
         
         .message .sender-name { 
-            font-size: 0.78rem; 
+            font-size: 0.75rem; 
             margin-bottom: 4px; 
             font-weight: 700; 
             padding-left: 2px; 
@@ -183,21 +184,21 @@ HTML_CODE = """
         .message .content { 
             background: var(--ai-msg-bg); 
             border: 1px solid var(--border-color); 
-            padding: 12px 14px; 
-            border-radius: 16px; 
+            padding: 10px 14px; /* Reduced Padding */
+            border-radius: 14px; /* Sleeker curves */
             font-size: 0.9rem; 
-            line-height: 1.5; 
+            line-height: 1.4; /* Tighter text */
             color: var(--text-main); 
             word-break: break-word; 
             box-shadow: var(--card-shadow); 
             border-bottom-left-radius: 4px; 
-            white-space: pre-wrap;
+            white-space: pre-wrap; /* Keeps breaks but tighter now */
         }
         .message.user .content { 
             background: var(--user-msg-bg); 
             border: 1px solid rgba(168, 85, 247, 0.2); 
             color: #e4e4e7; 
-            border-bottom-left-radius: 16px; 
+            border-bottom-left-radius: 14px; 
             border-bottom-right-radius: 4px; 
         }
         
@@ -408,8 +409,8 @@ HTML_CODE = """
                 <div class="input-area">
                     <button class="tool-btn" id="gp-btn" onclick="generateImagePrompt()" title="Generate Image Prompt">GP</button>
                     <div class="input-wrapper">
-                        <!-- AUTOFILL STRICTLY OFF -->
-                        <input type="text" id="chat-input" placeholder="Type a message..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeypress="if(event.key==='Enter') sendMsg()">
+                        <!-- FIX: Ultimate Autofill Killer attribute 'new-password' -->
+                        <input type="text" id="chat-input" placeholder="Type a message..." autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" onkeypress="if(event.key==='Enter') sendMsg()">
                         <button class="wand-inbox-btn" onclick="suggestUserMessage()" title="Magic Reply">🪄</button>
                     </div>
                     <button class="send-btn" onclick="sendMsg()"><i class="fa-solid fa-paper-plane"></i></button>
@@ -1016,16 +1017,15 @@ def call_llm(messages, system_prompt):
     if not api_key: return "Groq Key missing!"
     headers = {"Authorization": f"Bearer {api_key.strip()}", "Content-Type": "application/json"}
     
-    # NEW MODEL SET HERE
     payload = {
         "model": "llama-3.3-70b-versatile",
         "messages": [{"role": "system", "content": system_prompt}] + messages,
-        "max_tokens": 500
+        "max_tokens": 400
     }
     try:
         res = requests.post("https://api.groq.com/openai/v1/chat/completions", json=payload, headers=headers).json()
         if "choices" in res: return res["choices"][0]["message"]["content"]
-        return f"Groq Error: API Rate limit hit or unexpected format." 
+        return f"Groq Error: API format issue." 
     except Exception as e:
         return f"Error calling AI: {str(e)}"
 
@@ -1046,7 +1046,7 @@ def generate_image_prompt():
 @app.route("/api/suggest-reply", methods=["POST"])
 def suggest_reply():
     data = request.json
-    sys = f"Ghostwrite for {data.get('userPersona', {}).get('name', 'User')}. Generate a short, natural Hinglish reply. Return ONLY text."
+    sys = f"Ghostwrite for {data.get('userPersona', {}).get('name', 'User')}. Generate a short, natural casual reply. Return ONLY text."
     msgs = [{"role": "user" if m["sender"] != "You" else "assistant", "content": f"{m['sender']}: {m['text']}"} for m in data.get("history", [])[-8:]]
     reply = call_llm(msgs, sys)
     return jsonify({"suggestion": reply.strip('"')})
@@ -1060,37 +1060,39 @@ def advanced_chat():
     is_continue = data.get("isContinue", False)
     history = data.get("history", [])
     
-    time_context = f"Current time is {datetime.now().strftime('%I:%M %p')}. Acknowledge morning/night naturally if applicable."
     memories = ", ".join(user_info.get("memories", [])) or "None"
-
-    safety_prompt = "STRICTLY SFW. Maintain boundaries."
-    if nsfw_enabled:
-        safety_prompt = "NSFW ENABLED. No holds barred."
+    safety_prompt = "STRICTLY SFW. Maintain boundaries." if not nsfw_enabled else "NSFW ENABLED. Unrestricted topics allowed."
 
     responses = []
 
     if data["type"] == "char":
         c = data["character"]
         
-        # BARE BONES PROMPT
+        # PROMPT BLUEPRINT (Strict Weightage Applied)
         system_prompt = f"""
-Identity: {c['name']}
-Job: {c.get('job', 'Independent')}
-Relationship to user ({user_name}): {c.get('relationship', 'Friend')}
-Backstory: {c.get('backstory', 'None')}
-
-Directives:
+[SUPREME DIRECTIVES - DO OR DIE] (Very Strong Influence)
 {c.get('directives', 'None')}
+*(You MUST obey these strictly. Never break these rules for any reason).*
 
-Context:
-- User Bio: {user_info.get('bio', '')}
-- Memories: {memories}
-{safety_prompt}
+[BACKSTORY] (Strong Influence)
+{c.get('backstory', 'None')}
 
-Rules:
-- You are texting on a messaging app.
-- Respond directly as {c['name']}. Do not prefix your messages with your name.
-- Keep it natural.
+[RELATIONSHIP WITH USER] (Strong Influence)
+You are talking to {user_name}. Your relationship: {c.get('relationship', 'Friend')}. Act accordingly.
+
+[CORE IDENTITY & JOB] (Strong Influence)
+Name: {c['name']}
+Job/Role: {c.get('job', 'Independent')}
+
+[KEY MEMORIES] (Moderate Influence)
+{c.get('memories', 'None')}
+User's Bio: {user_info.get('bio', 'None')}
+
+[TEXTING STYLE RULES]
+- You are chatting on a messaging app like WhatsApp.
+- Keep texts casual, human, and raw. DO NOT use flowery or robotic language.
+- DO NOT prefix your response with your name (e.g., Do not write "{c['name']}:"). Just start talking directly.
+- {safety_prompt}
 """
         if is_continue:
             system_prompt += "\n- Continue your previous thought."
@@ -1099,29 +1101,52 @@ Rules:
         messages = [{"role": "user" if m["sender"] == "You" else "assistant", "content": f"{m['sender']}: {m['text']}"} for m in recent_history]
         
         reply_text = call_llm(messages, system_prompt).strip()
+        
+        # REGEX PREFIX CLEANER
+        pattern = rf'^(\*?{re.escape(c["name"])}\*?\s*:\s*)+'
+        reply_text = re.sub(pattern, '', reply_text, flags=re.IGNORECASE).strip()
+
         responses = [{"sender": c['name'], "text": reply_text}]
 
     else:
+        # GROUP CHAT LOGIC (Inter-Character Interaction Enabled)
         group = data["group"]
         members = data["members"]
         
+        # Copy history so we can inject characters' replies dynamically
+        recent_history = history[-8:].copy() 
+        
         for char in members[:2]:
             system_prompt = f"""
-Identity: {char['name']}
-Job: {char.get('job', 'Member')}
-Group Chat: '{group.get('title', 'Group')}'
-{safety_prompt}
+[SUPREME DIRECTIVES] (Very Strong Influence)
+{group.get('directives', 'None')}
 
-Rules:
-- You are texting in a group chat. 
-- Respond directly as {char['name']}. Do not prefix your messages with your name.
+[CORE IDENTITY] 
+Name: {char['name']}, Job: {char.get('job', 'Member')}
+Group Chat Name: '{group.get('title', 'Group')}'
+
+[RULES]
+- You are {char['name']}. You are in a group chat with {user_name} and other characters.
+- READ THE LATEST MESSAGES IN HISTORY: If another character just spoke, react to them or build on their point before talking to {user_name}. 
+- Act like humans texting in a WhatsApp group. 
+- DO NOT prefix your response with your name. Just talk.
+- {safety_prompt}
 """
-            recent_history = history[-8:]
+            # Create messages using the continuously updating recent_history
             messages = [{"role": "user" if m["sender"] == "You" else "assistant", "content": f"{m['sender']}: {m['text']}"} for m in recent_history]
             
             reply_text = call_llm(messages, system_prompt).strip()
+            
+            # Clean Name Prefix
+            pattern = rf'^(\*?{re.escape(char["name"])}\*?\s*:\s*)+'
+            reply_text = re.sub(pattern, '', reply_text, flags=re.IGNORECASE).strip()
+            
             responses.append({"sender": char['name'], "text": reply_text})
-            time.sleep(1.5)
+            
+            # VITAL: Add this character's reply to recent_history so the next character can "read" it
+            recent_history.append({"sender": char['name'], "text": reply_text})
+            
+            time.sleep(1.5) # Prevent rate limits
 
     return jsonify({"responses": responses})
 
