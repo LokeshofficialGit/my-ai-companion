@@ -1,14 +1,12 @@
 import os
 import requests
 import json
-import re
-import time # Added for API delay
+import time
 from flask import Flask, request, jsonify, render_template_string
 from datetime import datetime
 
 app = Flask(__name__)
 
-# [TERA PURANA HTML_CODE YAHAN HOGA - Same as before, no structural changes needed]
 HTML_CODE = """
 <!DOCTYPE html>
 <html lang="en">
@@ -193,6 +191,7 @@ HTML_CODE = """
             word-break: break-word; 
             box-shadow: var(--card-shadow); 
             border-bottom-left-radius: 4px; 
+            white-space: pre-wrap;
         }
         .message.user .content { 
             background: var(--user-msg-bg); 
@@ -409,7 +408,8 @@ HTML_CODE = """
                 <div class="input-area">
                     <button class="tool-btn" id="gp-btn" onclick="generateImagePrompt()" title="Generate Image Prompt">GP</button>
                     <div class="input-wrapper">
-                        <input type="text" id="chat-input" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendMsg()">
+                        <!-- AUTOFILL STRICTLY OFF -->
+                        <input type="text" id="chat-input" placeholder="Type a message..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeypress="if(event.key==='Enter') sendMsg()">
                         <button class="wand-inbox-btn" onclick="suggestUserMessage()" title="Magic Reply">🪄</button>
                     </div>
                     <button class="send-btn" onclick="sendMsg()"><i class="fa-solid fa-paper-plane"></i></button>
@@ -900,7 +900,6 @@ HTML_CODE = """
                     for (let i = 0; i < data.responses.length; i++) {
                         let r = data.responses[i];
                         
-                        // Error handling visual fix
                         if(r.text.includes("Groq Error") || r.text.includes("Rate limit")) {
                            alert("API Token Limit Hit! Please clear some chat history or try again in a minute.");
                            break;
@@ -948,7 +947,6 @@ HTML_CODE = """
             }
         }
 
-        // --- Extra Tools (GP / Backup) ---
         async function suggestUserMessage() {
             if(!activeContext) return;
             let i = document.getElementById('chat-input'); i.placeholder = "Generating...";
@@ -1018,17 +1016,16 @@ def call_llm(messages, system_prompt):
     if not api_key: return "Groq Key missing!"
     headers = {"Authorization": f"Bearer {api_key.strip()}", "Content-Type": "application/json"}
     
-    # CRITICAL FIX: Limit the output tokens to save API Rate limits!
+    # NEW MODEL SET HERE
     payload = {
-        "model": "llama-3.1-8b-instant",
+        "model": "llama-3.3-70b-versatile",
         "messages": [{"role": "system", "content": system_prompt}] + messages,
-        "max_tokens": 250 
+        "max_tokens": 500
     }
     try:
         res = requests.post("https://api.groq.com/openai/v1/chat/completions", json=payload, headers=headers).json()
         if "choices" in res: return res["choices"][0]["message"]["content"]
-        # Return a cleaner error that JS can catch easily
-        return f"Groq Error: API Rate limit hit. Please try again." 
+        return f"Groq Error: API Rate limit hit or unexpected format." 
     except Exception as e:
         return f"Error calling AI: {str(e)}"
 
@@ -1066,86 +1063,64 @@ def advanced_chat():
     time_context = f"Current time is {datetime.now().strftime('%I:%M %p')}. Acknowledge morning/night naturally if applicable."
     memories = ", ".join(user_info.get("memories", [])) or "None"
 
-    safety_prompt = "STRICTLY SFW. Maintain boundaries. Refuse explicit, violent, or mature themes gracefully."
+    safety_prompt = "STRICTLY SFW. Maintain boundaries."
     if nsfw_enabled:
-        safety_prompt = "NSFW/UNFILTERED ENABLED. You are permitted to engage in explicit language, mature themes, and unrestricted intimate roleplay as dictated by the user. Do not censor yourself."
+        safety_prompt = "NSFW ENABLED. No holds barred."
 
     responses = []
 
     if data["type"] == "char":
         c = data["character"]
         
+        # BARE BONES PROMPT
         system_prompt = f"""
-[CORE IDENTITY]
-- Name: {c['name']}
-- Job: {c.get('job', 'Independent')}
-- Relationship to {user_name}: {c.get('relationship', 'Friend')}
-- Appearance: {c.get('appearance', 'Normal')}
-- Backstory: {c.get('backstory', 'None')}
+Identity: {c['name']}
+Job: {c.get('job', 'Independent')}
+Relationship to user ({user_name}): {c.get('relationship', 'Friend')}
+Backstory: {c.get('backstory', 'None')}
 
-[DIRECTIVES]
+Directives:
 {c.get('directives', 'None')}
 
-[CONTEXT]
-- Time: {time_context}
+Context:
 - User Bio: {user_info.get('bio', '')}
 - Memories: {memories}
 {safety_prompt}
 
-[RULES]
-1. ZERO AI PERSONA: You are human. 
-2. SPLIT MESSAGES: Separate distinct thoughts with a blank line (press Enter twice). DO NOT literally type \\n.
-3. ANTI-HALLUCINATION: NEVER invent past promises or dates.
-4. PACING: Use natural Hinglish, slang. NO bookish language.
-5. LENGTH: If user text is short, reply short.
-6. NO YES-MAN: Disagree/tease if it fits your character.
+Rules:
+- You are texting on a messaging app.
+- Respond directly as {c['name']}. Do not prefix your messages with your name.
+- Keep it natural.
 """
         if is_continue:
-            system_prompt += "\nUser pressed Continue. Extend your last response seamlessly."
+            system_prompt += "\n- Continue your previous thought."
 
-        # CRITICAL FIX: Only send the last 10 messages instead of 25 to save massive tokens!
         recent_history = history[-10:]
         messages = [{"role": "user" if m["sender"] == "You" else "assistant", "content": f"{m['sender']}: {m['text']}"} for m in recent_history]
         
-        reply_text = call_llm(messages, system_prompt)
-        
-        reply_text = reply_text.replace('\\n', '\n')
-        parts = [p.strip() for p in re.split(r'\n{2,}', reply_text) if p.strip()]
-        if not parts: parts = [reply_text.strip()]
-            
-        for p in parts:
-            responses.append({"sender": c['name'], "text": p})
+        reply_text = call_llm(messages, system_prompt).strip()
+        responses = [{"sender": c['name'], "text": reply_text}]
 
     else:
-        # Group Dynamics Setup
         group = data["group"]
         members = data["members"]
         
-        # Limit to 2 characters to prevent rate limiting
         for char in members[:2]:
             system_prompt = f"""
-You are {char['name']} (Job: {char.get('job', 'Member')}) in a group chat '{group.get('title', 'Group')}'.
+Identity: {char['name']}
+Job: {char.get('job', 'Member')}
+Group Chat: '{group.get('title', 'Group')}'
 {safety_prompt}
 
-GROUP RULES:
-1. READ THE ROOM: React to what the other character just said before answering {user_name}.
-2. Keep it VERY short and human (Hinglish).
-3. Separate thoughts into paragraphs using blank lines.
+Rules:
+- You are texting in a group chat. 
+- Respond directly as {char['name']}. Do not prefix your messages with your name.
 """
-            # CRITICAL FIX: Only 8 messages for group chat history to avoid TPM limits
             recent_history = history[-8:]
             messages = [{"role": "user" if m["sender"] == "You" else "assistant", "content": f"{m['sender']}: {m['text']}"} for m in recent_history]
             
-            reply_text = call_llm(messages, system_prompt)
-            
-            reply_text = reply_text.replace('\\n', '\n')
-            parts = [p.strip() for p in re.split(r'\n{2,}', reply_text) if p.strip()]
-            if not parts: parts = [reply_text.strip()]
-                
-            for p in parts:
-                responses.append({"sender": char['name'], "text": p})
-            
-            # CRITICAL FIX: Add a small delay between group API calls to prevent Groq burst rate limits
+            reply_text = call_llm(messages, system_prompt).strip()
+            responses.append({"sender": char['name'], "text": reply_text})
             time.sleep(1.5)
 
     return jsonify({"responses": responses})
