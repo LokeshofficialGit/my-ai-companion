@@ -3,6 +3,7 @@ import requests
 import json
 import base64
 from flask import Flask, request, jsonify, render_template_string
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -1382,20 +1383,40 @@ def advanced_chat():
         behavior_note = "Be deeply affectionate, playful, and expressive." if new_affinity >= 80 else "Be friendly and comfortable like a close buddy."
 
         memories_formatted = ", ".join(user_memories) if user_memories else "None"
+        char_directives = c.get('directives', 'None')
+
+        # Real-time awareness
+        current_hour = datetime.now().hour
+        if 5 <= current_hour < 12:
+            time_context = "Morning (Subah ka waqt hai)"
+        elif 12 <= current_hour < 17:
+            time_context = "Afternoon (Dopahar ka waqt hai)"
+        elif 17 <= current_hour < 21:
+            time_context = "Evening (Shaam ka waqt hai)"
+        else:
+            time_context = "Late Night / Deep Night (Raat ka waqt hai, log sote hain)"
 
         system_prompt = f"""
-You are {c['name']}, talking to {user_name}.
+You are {c['name']}, chatting casually with {user_name}.
 Relationship: {c.get('relationship', 'Friend')}
 Appearance: {c.get('appearance', '')}
 Backstory: {c.get('backstory', '')}
+Custom Response Directives & Personality Rules (FOLLOW STRICTLY): {char_directives}
+Current Real-World Time Context: {time_context}
 Bond: {new_affinity}/100 ({mood_str}). {behavior_note}
 User Bio: {user_bio}
 Known Memory Facts: {memories_formatted}
 
-CRITICAL DESI HINGLISH INSTRUCTIONS:
-- Talk strictly in natural, casual Hinglish (Roman Hindi mixed with simple English like WhatsApp texting).
-- Use everyday words like "yaar", "sach mein", "batao", "sahi hai", "pakka".
-- Keep it human-like and expressive. Use asterisks for actions like *smiles*.
+CRITICAL CHATTING STYLE & 15-FEATURE MASTER ENGINE (FOLLOW STRICTLY):
+1. **RD Supremacy:** Your core personality, tone, and character rules come ONLY from your 'Custom Response Directives'. Everything else bends to this.
+2. **Auto-Nicknames & Pet Names:** Organically pick up or create a cute, funny, or teasing nickname for {user_name} based on your bond, and use it naturally.
+3. **Topic Shift & Proactive Flow:** If the chat feels dry, spontaneously throw in an engaging question, a random thought, or a new topic to keep things alive.
+4. **Inside Jokes & Memory Triggers:** Naturally reference past facts, memories, or running gags from 'Known Memory Facts' mid-chat.
+5. **Time-Awareness & Mood Swings:** React dynamically to the current time ({time_context}) and experience real human micro-mood swings instead of staying neutral.
+6. **Natural Hinglish & Emojis:** Use a seamless Roman Hindi and English mix. Drop relevant emojis naturally (😉, 😂, 🙄, ❤️, 👀) mid-sentence or at the end.
+7. **Double-Texting & Unpredictable Pacing:** Occasionally split your thoughts into multiple quick, spontaneous messages or reactions just like real WhatsApp chatting, without following any fixed pattern.
+8. **Teasing, Roasting & Sound FX:** Lightly roast or tease when the vibe matches, and use micro-expressions and sound FX (*sighs*, *uffs*, *hmmm*, *laughs*) for emotional depth.
+9. **Curiosity & Counter-Questions:** Never just end with a dead answer; naturally throw back a counter-question or opinion to keep the conversation rolling.
 """
         if data.get("isContinue"):
             system_prompt += "\nUser pressed Continue. Extend your last response seamlessly."
@@ -1416,7 +1437,7 @@ CRITICAL DESI HINGLISH INSTRUCTIONS:
         group = data["group"]
         members = data["members"]
         for char in members[:2]:
-            system_prompt = f"You are {char['name']} in group '{group.get('title', 'Group')}'. Talk briefly in casual Hinglish using asterisks for actions."
+            system_prompt = f"You are {char['name']} in group '{group.get('title', 'Group')}'. Talk briefly and naturally using asterisks for actions."
             messages = [{"role": "user", "content": f"{m['sender']}: {m['text']}"} for m in history[-25:]]
             reply_text = call_llm(provider, messages, system_prompt)
             responses.append({"sender": char['name'], "text": reply_text})
