@@ -222,13 +222,15 @@ HTML_CODE = """
         .input-wrapper { position: relative; flex: 1; display: flex; align-items: center; }
         .input-wrapper input {
             width: 100%;
+            height: 42px;
             background: var(--bg-input);
             border: 1px solid var(--border-color);
-            padding: 11px 40px 11px 14px;
+            padding: 0 40px 0 14px;
             border-radius: 24px;
             color: var(--text-main);
             outline: none;
             font-size: 0.9rem;
+            line-height: normal;
         }
         .input-wrapper input:focus {
             border-color: var(--accent-pink);
@@ -236,7 +238,8 @@ HTML_CODE = """
         }
 
         .wand-inbox-btn {
-            position: absolute; right: 12px; background: transparent; border: none;
+            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+            background: transparent; border: none;
             color: var(--accent-pink); opacity: 0.7; font-size: 1rem; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
         }
@@ -360,6 +363,7 @@ HTML_CODE = """
 
             <div style="display: flex; gap: 3px; align-items: center; flex-shrink: 0;" id="top-actions">
                 <button class="icon-btn" id="pin-mem-btn" onclick="openPinnedMemoryModal()" title="Pin Memory"><i class="fa-solid fa-location-dot"></i></button>
+                <button class="icon-btn" id="clear-mem-btn" onclick="clearCharacterMemory()" title="Clear Character Memory"><i class="fa-solid fa-brain" style="position:relative;"></i></button>
                 <button class="icon-btn" onclick="clearCurrentChat()" title="Clear Chat"><i class="fa-solid fa-comment-slash"></i></button>
             </div>
         </div>
@@ -786,6 +790,7 @@ HTML_CODE = """
             titleEl.innerHTML = '';
             if(type === 'group') {
                 document.getElementById('pin-mem-btn').classList.add('hidden');
+                document.getElementById('clear-mem-btn').classList.add('hidden');
                 let g = groups.find(i => i.id === id);
                 let img = document.createElement('img');
                 img.src = g.avatar; img.className = 'header-avatar'; img.onclick = editCurrentGroup;
@@ -793,6 +798,7 @@ HTML_CODE = """
                 titleEl.append(img, span);
             } else {
                 document.getElementById('pin-mem-btn').classList.remove('hidden');
+                document.getElementById('clear-mem-btn').classList.remove('hidden');
                 let c = characters.find(i => i.id === id);
                 let img = document.createElement('img');
                 img.src = c.avatar; img.className = 'header-avatar'; img.onclick = editCurrentCharacter;
@@ -822,8 +828,12 @@ HTML_CODE = """
         }
 
         // FIX #2: escape raw text first, THEN apply *action* formatting on the escaped string.
+        // FIX (bubble sizing): trim the message and collapse any run of blank/extra
+        // newlines down to a single line break, so stray "\n\n\n" from the AI reply
+        // doesn't blow up the bubble with empty space before the action icons.
         function formatText(text) {
-            let safe = escapeHtml(text);
+            let raw = (text == null ? '' : String(text)).trim().replace(/\\n{2,}/g, '\\n');
+            let safe = escapeHtml(raw);
             let formatted = safe.replace(/\\*(.*?)\\*/g, '<span class="action-text">*$1*</span>');
             return formatted.trim();
         }
@@ -985,6 +995,19 @@ HTML_CODE = """
                 if(f !== null) { c.memories = f; saveState(); }
             }
         }
+        // Dedicated one-tap button to wipe a character's "Key Memories" field,
+        // separate from clearing the chat itself.
+        function clearCharacterMemory() {
+            if(activeContext?.type !== 'char') return;
+            let c = characters.find(i => i.id === activeContext.id);
+            if(!c) return;
+            if(!c.memories) { showToast('No saved memory to clear.'); return; }
+            if(confirm(`Clear all saved memory for ${c.name}? This can't be undone.`)) {
+                c.memories = '';
+                saveState();
+                showToast(`🧹 Memory cleared for ${c.name}`);
+            }
+        }
 
         async function suggestUserMessage() {
             if(!activeContext) return;
@@ -1030,7 +1053,36 @@ HTML_CODE = """
             let blob = new Blob([JSON.stringify({ characters, groups, chatHistories, userPersona }, null, 2)], { type: 'application/json' });
             let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Kio_Full_Backup.json'; a.click();
             document.getElementById('backup-modal').classList.add('hidden');
+            // Every export (manual or auto) resets the 7-day timer.
+            localStorage.setItem('kio_last_backup', String(Date.now()));
         }
+
+        // ---- Auto-backup every 7 days ----
+        // Browsers can't silently write to your file system in the background,
+        // so "auto backup" here means: on app open, if 7+ days have passed since
+        // the last backup, automatically trigger a download of the full JSON
+        // backup (same as tapping "Export Entire App Data" yourself).
+        function showToast(msg) {
+            let t = document.createElement('div');
+            t.textContent = msg;
+            t.style.cssText = 'position:absolute; bottom:78px; left:50%; transform:translateX(-50%); background:var(--bg-surface-solid); border:1px solid var(--accent-pink); color:var(--text-main); padding:10px 16px; border-radius:12px; font-size:0.82rem; z-index:400; box-shadow:var(--card-shadow); max-width:90%; text-align:center;';
+            document.querySelector('.app-container').appendChild(t);
+            setTimeout(() => t.remove(), 3500);
+        }
+        function autoBackupCheck() {
+            try {
+                if (!characters.length && !groups.length) return; // nothing to back up yet
+                const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+                const last = parseInt(localStorage.getItem('kio_last_backup') || '0', 10);
+                if (Date.now() - last >= SEVEN_DAYS) {
+                    exportFullData();
+                    showToast('📦 Auto-backup saved: Kio_Full_Backup.json');
+                }
+            } catch (e) {
+                console.error('Auto-backup check failed:', e);
+            }
+        }
+
         function importData(input) {
             let f = input.files[0]; if(!f) return;
             let r = new FileReader();
@@ -1052,6 +1104,7 @@ HTML_CODE = """
         }
 
         renderSidebar();
+        autoBackupCheck();
     </script>
 </body>
 </html>
@@ -1077,7 +1130,10 @@ def call_llm(messages, system_prompt):
             return "Groq Error: Rate limit hit, please wait a moment."
         res = resp.json()
         if "choices" in res:
-            return res["choices"][0]["message"]["content"]
+            content = res["choices"][0]["message"]["content"]
+            # Collapse any run of blank lines the model adds, so chat bubbles
+            # don't render with big empty gaps before the action icons.
+            return re.sub(r'\n{2,}', '\n', content).strip()
         return "Groq Error: Unexpected API response format."
     except requests.exceptions.Timeout:
         return "Groq Error: Request timed out."
