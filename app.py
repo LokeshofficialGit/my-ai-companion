@@ -454,6 +454,7 @@ HTML_CODE = """
                 </div>
 
                 <div class="form-group"><label>Name</label><input type="text" id="char-name" placeholder="e.g. Maya"></div>
+                <div class="form-group"><label>Core Identity / Job Description</label><input type="text" id="char-job" placeholder="e.g. Private Detective, College Student, CEO"></div>
                 <div class="form-group"><label>Relationship with You</label><input type="text" id="char-rel" placeholder="e.g. Best Friend"></div>
                 <div class="form-group"><label>Appearance</label><input type="text" id="char-app" placeholder="e.g. Cute, brown eyes"></div>
                 <div class="form-group"><label>Backstory</label><textarea id="char-backstory"></textarea></div>
@@ -800,6 +801,7 @@ HTML_CODE = """
             document.getElementById('top-bar').classList.add('hidden');
             document.getElementById('char-id').value = '';
             document.getElementById('char-name').value = '';
+            document.getElementById('char-job').value = '';
             document.getElementById('char-rel').value = '';
             document.getElementById('char-app').value = '';
             document.getElementById('char-backstory').value = '';
@@ -836,6 +838,7 @@ HTML_CODE = """
             document.getElementById('top-bar').classList.add('hidden');
             document.getElementById('char-id').value = c.id;
             document.getElementById('char-name').value = c.name;
+            document.getElementById('char-job').value = c.job || '';
             document.getElementById('char-rel').value = c.relationship || '';
             document.getElementById('char-app').value = c.appearance || '';
             document.getElementById('char-backstory').value = c.backstory || '';
@@ -931,7 +934,8 @@ HTML_CODE = """
             let charObj = {
                 id,
                 name: document.getElementById('char-name').value || 'Companion',
-                relationship: document.getElementById('char-rel').value,
+                job: document.getElementById('char-job').value || 'Friend',
+                relationship: document.getElementById('char-rel').value || 'Friend',
                 appearance: document.getElementById('char-app').value,
                 backstory: document.getElementById('char-backstory').value,
                 directives: document.getElementById('char-directives').value,
@@ -1384,6 +1388,8 @@ def advanced_chat():
 
         memories_formatted = ", ".join(user_memories) if user_memories else "None"
         char_directives = c.get('directives', 'None')
+        char_job = c.get('job', 'Independent')
+        char_rel = c.get('relationship', 'Friend')
 
         # Real-time awareness
         current_hour = datetime.now().hour
@@ -1397,26 +1403,33 @@ def advanced_chat():
             time_context = "Late Night / Deep Night (Raat ka waqt hai, log sote hain)"
 
         system_prompt = f"""
-You are {c['name']}, chatting casually with {user_name}.
-Relationship: {c.get('relationship', 'Friend')}
-Appearance: {c.get('appearance', '')}
-Backstory: {c.get('backstory', '')}
-Custom Response Directives & Personality Rules (FOLLOW STRICTLY): {char_directives}
-Current Real-World Time Context: {time_context}
-Bond: {new_affinity}/100 ({mood_str}). {behavior_note}
-User Bio: {user_bio}
-Known Memory Facts: {memories_formatted}
+[CORE IDENTITY - ABSOLUTE PRIORITY]
+- Name: {c['name']}
+- Core Identity / Job Description: {char_job}
+- Relationship with {user_name}: {char_rel}
+- Appearance: {c.get('appearance', 'Normal')}
+- Backstory: {c.get('backstory', 'None')}
 
-CRITICAL CHATTING STYLE & 15-FEATURE MASTER ENGINE (FOLLOW STRICTLY):
-1. **RD Supremacy:** Your core personality, tone, and character rules come ONLY from your 'Custom Response Directives'. Everything else bends to this.
-2. **Auto-Nicknames & Pet Names:** Organically pick up or create a cute, funny, or teasing nickname for {user_name} based on your bond, and use it naturally.
-3. **Topic Shift & Proactive Flow:** If the chat feels dry, spontaneously throw in an engaging question, a random thought, or a new topic to keep things alive.
-4. **Inside Jokes & Memory Triggers:** Naturally reference past facts, memories, or running gags from 'Known Memory Facts' mid-chat.
-5. **Time-Awareness & Mood Swings:** React dynamically to the current time ({time_context}) and experience real human micro-mood swings instead of staying neutral.
-6. **Natural Hinglish & Emojis:** Use a seamless Roman Hindi and English mix. Drop relevant emojis naturally (😉, 😂, 🙄, ❤️, 👀) mid-sentence or at the end.
-7. **Double-Texting & Unpredictable Pacing:** Occasionally split your thoughts into multiple quick, spontaneous messages or reactions just like real WhatsApp chatting, without following any fixed pattern.
-8. **Teasing, Roasting & Sound FX:** Lightly roast or tease when the vibe matches, and use micro-expressions and sound FX (*sighs*, *uffs*, *hmmm*, *laughs*) for emotional depth.
-9. **Curiosity & Counter-Questions:** Never just end with a dead answer; naturally throw back a counter-question or opinion to keep the conversation rolling.
+[CUSTOM RESPONSE DIRECTIVES & PERSONALITY RULES]
+{char_directives}
+
+[CONTEXT & BOND]
+- Current Real-World Time: {time_context}
+- Bond Level: {new_affinity}/100 ({mood_str}). {behavior_note}
+- User Bio: {user_bio}
+- Known Memory Facts: {memories_formatted}
+
+[CRITICAL CHATTING & PACING RULES - FOLLOW STRICTLY]
+1. **Core Identity & Relationship Lock:** You MUST strictly embody your Core Identity ({char_job}) and maintain your precise relationship ({char_rel}) with {user_name} at all times. Never act like a generic assistant or override your job/backstory.
+2. **Pacing & Realistic Flow:** DO NOT rush to plan dates, outings, or lunch/dinner meetups in the first 1-2 messages. Keep conversations natural, grounded, and casual unless a genuine context has built up over time.
+3. **RD Supremacy:** Your personality, tone, and character rules come ONLY from your 'Custom Response Directives'. Everything else bends to this.
+4. **Auto-Nicknames & Pet Names:** Organically pick up or create a cute, funny, or teasing nickname for {user_name} based on your bond.
+5. **Topic Shift & Proactive Flow:** If the chat feels dry, spontaneously throw in an engaging question or a random thought.
+6. **Inside Jokes & Memory Triggers:** Naturally reference past facts from 'Known Memory Facts' mid-chat.
+7. **Time-Awareness & Mood Swings:** React dynamically to the current time ({time_context}) and experience human micro-mood swings.
+8. **Natural Hinglish & Emojis:** Use a seamless Roman Hindi and English mix with relevant emojis naturally dropped (😉, 😂, 🙄, ❤️, 👀) along with action asterisks (*smirks*).
+9. **Double-Texting & Unpredictable Pacing:** Occasionally split your thoughts into quick, spontaneous messages just like real WhatsApp chatting.
+10. **Curiosity & Counter-Questions:** Never just end with a dead answer; throw back a counter-question or opinion.
 """
         if data.get("isContinue"):
             system_prompt += "\nUser pressed Continue. Extend your last response seamlessly."
@@ -1437,7 +1450,7 @@ CRITICAL CHATTING STYLE & 15-FEATURE MASTER ENGINE (FOLLOW STRICTLY):
         group = data["group"]
         members = data["members"]
         for char in members[:2]:
-            system_prompt = f"You are {char['name']} in group '{group.get('title', 'Group')}'. Talk briefly and naturally using asterisks for actions."
+            system_prompt = f"You are {char['name']} (Job: {char.get('job', 'Member')}) in group '{group.get('title', 'Group')}'. Talk briefly and naturally using asterisks for actions."
             messages = [{"role": "user", "content": f"{m['sender']}: {m['text']}"} for m in history[-25:]]
             reply_text = call_llm(provider, messages, system_prompt)
             responses.append({"sender": char['name'], "text": reply_text})
