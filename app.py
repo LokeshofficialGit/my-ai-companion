@@ -1,7 +1,7 @@
 import os
 import requests
 import json
-import base64
+import re
 from flask import Flask, request, jsonify, render_template_string
 from datetime import datetime
 
@@ -191,7 +191,6 @@ HTML_CODE = """
             word-break: break-word; 
             box-shadow: var(--card-shadow); 
             border-bottom-left-radius: 4px; 
-            white-space: pre-wrap;
         }
         .message.user .content { 
             background: var(--user-msg-bg); 
@@ -794,7 +793,11 @@ HTML_CODE = """
             document.getElementById('group-delete-btn').classList.remove('hidden'); showForm('group-form');
         }
 
-        function formatText(text) { return text.replace(/\\*(.*?)\\*/g, '<span class="action-text">*$1*</span>'); }
+        function formatText(text) { 
+            // Fixes formatting and prevents huge bubbles
+            let formatted = text.replace(/\\*(.*?)\\*/g, '<span class="action-text">*$1*</span>');
+            return formatted.trim(); // Ensure no extra trailing spaces cause bubble expansion
+        }
 
         function renderMessages() {
             let cont = document.getElementById('message-container');
@@ -808,8 +811,11 @@ HTML_CODE = """
                     <div class="sender-name">${m.sender}</div>
                     <div class="content">${formatText(m.text)}
                         <div class="bubble-controls">
-                            <i class="fa-solid fa-pen-to-square bubble-btn-icon" onclick="tweakMsg(${idx})"></i>
-                            ${m.sender!=='You' ? `<i class="fa-solid fa-rotate-right bubble-btn-icon" onclick="regenerateLastResponse()"></i>` : ''}
+                            <i class="fa-solid fa-pen-to-square bubble-btn-icon" onclick="tweakMsg(${idx})" title="Edit"></i>
+                            ${m.sender!=='You' ? `
+                                <i class="fa-solid fa-forward-step bubble-btn-icon" onclick="continueAiReply()" title="Continue"></i>
+                                <i class="fa-solid fa-rotate-right bubble-btn-icon" onclick="regenerateLastResponse()" title="Regenerate"></i>
+                            ` : ''}
                         </div>
                     </div>
                 </div>
@@ -861,10 +867,16 @@ HTML_CODE = """
             if(!chatHistories[activeContext.id]) chatHistories[activeContext.id] = [];
             chatHistories[activeContext.id].push({ sender: 'You', text });
             renderMessages();
-            fetchAIResponse();
+            fetchAIResponse(false);
         }
 
-        async function fetchAIResponse() {
+        async function continueAiReply() {
+            if(!activeContext) return;
+            if(!chatHistories[activeContext.id]) chatHistories[activeContext.id] = [];
+            fetchAIResponse(true);
+        }
+
+        async function fetchAIResponse(isContinue = false) {
             let targetName = activeContext.type === 'char' ? characters.find(c => c.id === activeContext.id)?.name : 'Group';
             showTypingIndicator(targetName);
 
@@ -873,6 +885,7 @@ HTML_CODE = """
                 contextId: activeContext.id,
                 userPersona: userPersona,
                 nsfw: nsfwMode,
+                isContinue: isContinue,
                 history: chatHistories[activeContext.id]
             };
 
@@ -906,7 +919,7 @@ HTML_CODE = """
             if(h[h.length - 1].sender !== 'You') {
                 // Pop all continuous AI messages (if double texted)
                 while (h.length > 0 && h[h.length - 1].sender !== 'You') h.pop();
-                renderMessages(); fetchAIResponse();
+                renderMessages(); fetchAIResponse(false);
             }
         }
 
@@ -1034,6 +1047,7 @@ def advanced_chat():
     user_info = data.get("userPersona", {})
     user_name = user_info.get("name", "User")
     nsfw_enabled = data.get("nsfw", False)
+    is_continue = data.get("isContinue", False)
     history = data.get("history", [])
     
     # Context & Time
@@ -1071,21 +1085,32 @@ def advanced_chat():
 
 [10-POINT HUMAN TEXTING ENGINE - FOLLOW STRICTLY]
 1. ZERO AI PERSONA: You are a living human. NEVER act like an AI, assistant, or roleplay simulator.
-2. SPLIT MESSAGES (Double-Texting): If you have multiple distinct thoughts or a long reply, separate them strictly with a double newline (\\n\\n). The backend will split them into separate text bubbles.
+2. SPLIT MESSAGES: If you have multiple distinct thoughts, separate them by pressing Enter twice (leaving an empty line between paragraphs). The system will split them. DO NOT type the literal characters \\n.
 3. ANTI-HALLUCINATION: NEVER invent past promises, dates, or outings. Do NOT invite the user for lunch/dinner unless they propose it first.
-4. HUMAN PACING & SLANG: Type like a real person on WhatsApp. Use natural Hinglish (Roman Hindi + English), occasional lowercase, and natural slangs. NO bookish language.
-5. MATCH LENGTH: If the user sends a short casual text, reply short. Do not write essays unless necessary.
+4. HUMAN PACING & SLANG: Type like a real person on WhatsApp. Use natural Hinglish, occasional lowercase, and natural slangs. NO bookish language.
+5. MATCH LENGTH: If the user sends a short text, reply short. Do not write essays unless necessary.
 6. ATTITUDE: Have your own opinions. Disagree, tease, or roast if it fits your character. No "Yes-Man" syndrome.
 7. ZERO-REPETITION: Do not repeat opening actions (like *smirks*) every time. Keep reactions varied.
 8. MOOD CONTINUITY: Keep your mood consistent with the ongoing conversation. Remember the vibe of the last few messages.
 9. ACTIONS & EMOJIS: Use emojis organically. Use asterisks for physical actions (*sighs*) naturally.
 10. CURIOSITY: Don't end conversations blindly; throw back a natural question or statement.
 """
+        if is_continue:
+            system_prompt += "\nUser pressed Continue. Extend your last response seamlessly."
+
         messages = [{"role": "user" if m["sender"] == "You" else "assistant", "content": f"{m['sender']}: {m['text']}"} for m in history[-25:]]
         reply_text = call_llm(messages, system_prompt)
         
-        # SPLITTER ENGINE (The magic for Double-texting)
-        parts = [p.strip() for p in reply_text.split('\n\n') if p.strip()]
+        # FIX: Clean up any literal '\n\n' text outputted by the LLM 
+        reply_text = reply_text.replace('\\n', '\n')
+        
+        # SPLITTER ENGINE (Double-texting)
+        parts = [p.strip() for p in re.split(r'\n{2,}', reply_text) if p.strip()]
+        
+        # Fallback if no split happened but it's a huge block
+        if not parts: 
+            parts = [reply_text.strip()]
+            
         for p in parts:
             responses.append({"sender": c['name'], "text": p})
 
@@ -1094,21 +1119,24 @@ def advanced_chat():
         group = data["group"]
         members = data["members"]
         
-        # In a group, we pick one or two characters to reply. We'll simulate 2 characters reacting if possible.
         for char in members[:2]:
             system_prompt = f"""
 You are {char['name']} (Job: {char.get('job', 'Member')}) in a group chat named '{group.get('title', 'Group')}'.
 {safety_prompt}
 
 GROUP DYNAMICS RULES:
-1. READ THE ROOM: Look at the chat history. Don't just reply to {user_name}. If another character just spoke, roast them, agree with them, or react to them before answering the user.
+1. READ THE ROOM: Look at the chat history. Don't just reply to {user_name}. React to what the other character just said before answering the user.
 2. TEXT LIKE A HUMAN: Use casual Hinglish, short sentences.
-3. SPLIT THOUGHTS: Use \\n\\n to separate thoughts into different message bubbles.
+3. SPLIT THOUGHTS: Separate different thoughts into distinct paragraphs (leave an empty line).
 """
             messages = [{"role": "user" if m["sender"] == "You" else "assistant", "content": f"{m['sender']}: {m['text']}"} for m in history[-25:]]
             reply_text = call_llm(messages, system_prompt)
             
-            parts = [p.strip() for p in reply_text.split('\n\n') if p.strip()]
+            # Cleaning and splitting
+            reply_text = reply_text.replace('\\n', '\n')
+            parts = [p.strip() for p in resplit(r'\n{2,}', reply_text) if p.strip()]
+            if not parts: parts = [reply_text.strip()]
+                
             for p in parts:
                 responses.append({"sender": char['name'], "text": p})
 
