@@ -581,6 +581,10 @@ HTML_CODE = """
         let chatHistories = JSON.parse(localStorage.getItem('aura_chats') || '{}');
         let userPersona = JSON.parse(localStorage.getItem('aura_user') || '{"name":"User", "bio":"", "avatar":"https://api.dicebear.com/7.x/identicon/svg?seed=user", "memories":[]}');
         let nsfwMode = JSON.parse(localStorage.getItem('kio_nsfw') || 'false');
+        // Auto-generated "long term memory" per chat: { [contextId]: { text: "...", upTo: N } }
+        // 'text' is a running summary, 'upTo' is how many messages (from the start)
+        // have already been folded into that summary, so we never re-summarize the same messages.
+        let chatSummaries = JSON.parse(localStorage.getItem('aura_summaries') || '{}');
 
         if (!userPersona.memories) userPersona.memories = [];
 
@@ -620,6 +624,7 @@ HTML_CODE = """
                 localStorage.setItem('aura_chats', JSON.stringify(chatHistories));
                 localStorage.setItem('aura_user', JSON.stringify(userPersona));
                 localStorage.setItem('kio_nsfw', JSON.stringify(nsfwMode));
+                localStorage.setItem('aura_summaries', JSON.stringify(chatSummaries));
             } catch (e) {
                 console.error('saveState failed:', e);
                 alert('Could not save — storage is full. Try deleting some chat history or exporting a backup.');
@@ -730,6 +735,7 @@ HTML_CODE = """
             if(id && confirm("Delete character permanently?")) {
                 characters = characters.filter(c => c.id !== id);
                 delete chatHistories[id];
+                delete chatSummaries[id];
                 groups.forEach(g => { g.memberIds = (g.memberIds || []).filter(mid => mid !== id); });
                 saveState(); goHome();
             }
@@ -768,7 +774,9 @@ HTML_CODE = """
         function deleteCurrentGroup() {
             let id = document.getElementById('group-id').value;
             if(id && confirm("Delete group permanently?")) {
-                groups = groups.filter(g => g.id !== id); delete chatHistories[id];
+                groups = groups.filter(g => g.id !== id);
+                delete chatHistories[id];
+                delete chatSummaries[id];
                 saveState(); goHome();
             }
         }
@@ -829,8 +837,8 @@ HTML_CODE = """
 
         // FIX #2: escape raw text first, THEN apply *action* formatting on the escaped string.
         // FIX (bubble sizing): trim the message and collapse any run of blank/extra
-        // newlines down to a single line break, so stray "\n\n\n" from the AI reply
-        // doesn't blow up the bubble with empty space before the action icons.
+        // newline characters down to a single line break, so stray blank lines from
+        // the AI reply don't blow up the bubble with empty space before the icons.
         function formatText(text) {
             let raw = (text == null ? '' : String(text)).trim().replace(/\\n{2,}/g, '\\n');
             let safe = escapeHtml(raw);
@@ -918,6 +926,44 @@ HTML_CODE = """
 
         // FIX #1 (cont.): snapshot targetId/targetType at call time so a mid-flight
         // chat switch can't misroute the streamed reply into the wrong conversation.
+        // ---- Long-term memory: auto-summarize older messages ----
+        // Only the last 10 messages get sent to the AI as raw text (fast, cheap).
+        // Everything older gets folded into a short running summary once 20 new
+        // messages pile up beyond that window, so the character keeps remembering
+        // old context without us paying to re-send the whole history every time.
+        async function maybeUpdateSummary(contextId) {
+            try {
+                const hist = chatHistories[contextId] || [];
+                const entry = chatSummaries[contextId] || { text: '', upTo: 0 };
+                const KEEP_RECENT = 10;
+                const CHUNK_TRIGGER = 20;
+                const boundary = hist.length - KEEP_RECENT;
+                if (boundary - entry.upTo < CHUNK_TRIGGER) return; // not enough new messages yet
+
+                const chunk = hist.slice(entry.upTo, boundary);
+                if (!chunk.length) return;
+
+                const isChar = characters.some(c => c.id === contextId);
+                const name = isChar
+                    ? (characters.find(c => c.id === contextId)?.name || 'Character')
+                    : (groups.find(g => g.id === contextId)?.title || 'Group');
+
+                const res = await fetch('/api/update-summary', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ existingSummary: entry.text, newMessages: chunk, name, userName: userPersona.name })
+                });
+                const data = await res.json();
+                if (data.summary) {
+                    chatSummaries[contextId] = { text: data.summary, upTo: boundary };
+                    saveState();
+                }
+            } catch (e) {
+                // Non-critical — chat still works fine without an updated summary,
+                // it'll just retry on the next message.
+                console.error('Summary update failed (non-critical):', e);
+            }
+        }
+
         async function fetchAIResponse(isContinue = false) {
             const targetId = activeContext.id;
             const targetType = activeContext.type;
@@ -930,7 +976,10 @@ HTML_CODE = """
                 userPersona: userPersona,
                 nsfw: nsfwMode,
                 isContinue: isContinue,
-                history: chatHistories[targetId] || []
+                history: chatHistories[targetId] || [],
+                // Long-term memory: a running summary of everything older than the
+                // last 10 messages, so the character doesn't forget old context.
+                summary: (chatSummaries[targetId] && chatSummaries[targetId].text) || ''
             };
 
             if(targetType === 'char') payload.character = characters.find(c => c.id === targetId);
@@ -961,6 +1010,9 @@ HTML_CODE = """
                         }
                         await streamWordByWord(targetId, r.sender, r.text);
                     }
+                    // Fire-and-forget: check if it's time to fold older messages into
+                    // the running summary. Doesn't block the UI or the typed reply.
+                    maybeUpdateSummary(targetId);
                 } else {
                      if (activeContext && activeContext.id === targetId) removeTypingIndicator();
                      alert("Something went wrong, no response from AI.");
@@ -986,7 +1038,11 @@ HTML_CODE = """
             if(n !== null) { h[idx].text = n; saveState(); renderMessages(); }
         }
         function clearCurrentChat() {
-            if(activeContext && confirm('Clear chat history?')) { chatHistories[activeContext.id] = []; saveState(); renderMessages(); }
+            if(activeContext && confirm('Clear chat history?')) {
+                chatHistories[activeContext.id] = [];
+                delete chatSummaries[activeContext.id]; // fresh chat = fresh long-term memory too
+                saveState(); renderMessages();
+            }
         }
         function openPinnedMemoryModal() {
             if(activeContext?.type === 'char') {
@@ -995,15 +1051,17 @@ HTML_CODE = """
                 if(f !== null) { c.memories = f; saveState(); }
             }
         }
-        // Dedicated one-tap button to wipe a character's "Key Memories" field,
-        // separate from clearing the chat itself.
+        // Dedicated one-tap button to wipe a character's memory — both the manually
+        // pinned "Key Memories" field AND the auto-generated long-term chat summary.
         function clearCharacterMemory() {
             if(activeContext?.type !== 'char') return;
             let c = characters.find(i => i.id === activeContext.id);
             if(!c) return;
-            if(!c.memories) { showToast('No saved memory to clear.'); return; }
-            if(confirm(`Clear all saved memory for ${c.name}? This can't be undone.`)) {
+            let hasAutoSummary = !!(chatSummaries[c.id] && chatSummaries[c.id].text);
+            if(!c.memories && !hasAutoSummary) { showToast('No saved memory to clear.'); return; }
+            if(confirm(`Clear all saved memory for ${c.name} (pinned + auto-remembered)? This can't be undone.`)) {
                 c.memories = '';
+                delete chatSummaries[c.id];
                 saveState();
                 showToast(`🧹 Memory cleared for ${c.name}`);
             }
@@ -1045,12 +1103,12 @@ HTML_CODE = """
         }
         function exportSingle(id) {
             let c = characters.find(i => i.id === id);
-            let blob = new Blob([JSON.stringify({ type: 'single_character_backup', character: c, chatHistory: chatHistories[id]||[] }, null, 2)], { type: 'application/json' });
+            let blob = new Blob([JSON.stringify({ type: 'single_character_backup', character: c, chatHistory: chatHistories[id]||[], summary: chatSummaries[id] || null }, null, 2)], { type: 'application/json' });
             let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${c.name}_Backup.json`; a.click();
             document.getElementById('backup-modal').classList.add('hidden');
         }
         function exportFullData() {
-            let blob = new Blob([JSON.stringify({ characters, groups, chatHistories, userPersona }, null, 2)], { type: 'application/json' });
+            let blob = new Blob([JSON.stringify({ characters, groups, chatHistories, userPersona, chatSummaries }, null, 2)], { type: 'application/json' });
             let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Kio_Full_Backup.json'; a.click();
             document.getElementById('backup-modal').classList.add('hidden');
             // Every export (manual or auto) resets the 7-day timer.
@@ -1093,9 +1151,11 @@ HTML_CODE = """
                         let i = characters.findIndex(c => c.id === d.character.id);
                         if(i >= 0) characters[i] = d.character; else characters.push(d.character);
                         chatHistories[d.character.id] = d.chatHistory||[];
+                        if(d.summary) chatSummaries[d.character.id] = d.summary;
                     } else {
                         if(d.characters) characters = d.characters; if(d.groups) groups = d.groups;
                         if(d.chatHistories) chatHistories = d.chatHistories; if(d.userPersona) userPersona = d.userPersona;
+                        if(d.chatSummaries) chatSummaries = d.chatSummaries;
                     }
                     saveState(); location.reload();
                 } catch(err) { alert('Invalid File!'); }
@@ -1178,6 +1238,7 @@ def advanced_chat():
     nsfw_enabled = data.get("nsfw", False)
     is_continue = data.get("isContinue", False)
     history = data.get("history") or []
+    long_term_summary = (data.get("summary") or "").strip()
 
     memories = ", ".join(user_info.get("memories", [])) or "None"
     safety_prompt = "STRICTLY SFW. Maintain boundaries." if not nsfw_enabled else "NSFW ENABLED. Unrestricted topics allowed."
@@ -1203,6 +1264,9 @@ You are talking to {user_name}. Your relationship: {c.get('relationship', 'Frien
 [CORE IDENTITY & JOB] (Strong Influence)
 Name: {c.get('name')}
 Job/Role: {c.get('job', 'Independent')}
+
+[LONG-TERM MEMORY OF THIS CONVERSATION] (Strong Influence — things that happened earlier and may not appear in the recent messages below. Remember and reference these naturally when relevant.)
+{long_term_summary or 'Nothing older yet — this is still early in the conversation.'}
 
 [KEY MEMORIES] (Moderate Influence)
 {c.get('memories', 'None')}
