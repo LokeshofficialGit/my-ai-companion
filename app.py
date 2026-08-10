@@ -191,7 +191,6 @@ HTML_CODE = """
             word-break: break-word;
             box-shadow: var(--card-shadow);
             border-bottom-left-radius: 4px;
-            white-space: pre-wrap;
         }
         .message.user .content {
             background: var(--user-msg-bg);
@@ -200,6 +199,11 @@ HTML_CODE = """
             border-bottom-left-radius: 14px;
             border-bottom-right-radius: 4px;
         }
+
+        /* pre-wrap lives ONLY on the text itself, not the .content wrapper —
+           otherwise the template's own indentation/newlines before the
+           bubble-controls div get rendered as visible empty space. */
+        .msg-text { white-space: pre-wrap; }
 
         .action-text { color: var(--action-text); font-style: italic; font-weight: 400; }
 
@@ -856,8 +860,7 @@ HTML_CODE = """
             cont.innerHTML = hist.map((m, idx) => `
                 <div class="message ${m.sender==='You'?'user':'ai'}">
                     <div class="sender-name">${escapeHtml(m.sender)}</div>
-                    <div class="content">${formatText(m.text)}
-                        <div class="bubble-controls">
+                    <div class="content"><div class="msg-text">${formatText(m.text)}</div><div class="bubble-controls">
                             <i class="fa-solid fa-pen-to-square bubble-btn-icon" onclick="tweakMsg(${idx})" title="Edit"></i>
                             ${m.sender!=='You' ? `
                                 <i class="fa-solid fa-forward-step bubble-btn-icon" onclick="continueAiReply()" title="Continue"></i>
