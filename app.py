@@ -15,7 +15,7 @@ HTML_CODE = """
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Kio. - Intelligence with a heart</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg stroke='%23ec4899' stroke-width='2.5' stroke-linecap='round'%3E%3Cline x1='12' y1='3' x2='12' y2='21'/%3E%3Cline x1='3' y1='12' x2='21' y2='12'/%3E%3Cline x1='5.5' y1='5.5' x2='18.5' y2='18.5'/%3E%3Cline x1='18.5' y1='5.5' x2='5.5' y2='18.5'/%3E%3C/g%3E%3C/svg%3E">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ec4899' d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/%3E%3C/svg%3E">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <style>
@@ -154,20 +154,25 @@ HTML_CODE = """
             gap: 0.08em;
         }
 
-        /* Kio spark logo mark — multi-ray asterisk, reused in the dashboard
-           brand name, sidebar header, and the typing indicator. */
-        .kio-spark {
-            width: 0.6em;
-            height: 0.6em;
+        /* Kio heart logo mark — filled gradient heart with a realistic double-beat
+           pulse, reused in the dashboard brand name, sidebar header, and the
+           typing indicator. */
+        .kio-heart {
+            width: 0.62em;
+            height: 0.62em;
             display: inline-block;
             vertical-align: middle;
             flex-shrink: 0;
-            animation: kioSparkPulse 2.4s ease-in-out infinite;
+            animation: kioHeartBeat 1.8s ease-in-out infinite;
             transform-origin: center;
         }
-        @keyframes kioSparkPulse {
-            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(236,72,153,0.5)); opacity: 0.85; }
-            50% { transform: scale(1.18); filter: drop-shadow(0 0 7px rgba(236,72,153,0.95)); opacity: 1; }
+        @keyframes kioHeartBeat {
+            0% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(236,72,153,0.5)); }
+            15% { transform: scale(1.3); filter: drop-shadow(0 0 8px rgba(236,72,153,1)); }
+            30% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(236,72,153,0.5)); }
+            45% { transform: scale(1.22); filter: drop-shadow(0 0 7px rgba(236,72,153,0.95)); }
+            60% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(236,72,153,0.5)); }
+            100% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(236,72,153,0.5)); }
         }
 
         .dash-title { font-size: 1.3rem; font-weight: 800; color: var(--text-main); margin-bottom: 4px; }
@@ -334,10 +339,10 @@ HTML_CODE = """
 </head>
 <body data-theme="dark">
 
-    <!-- Shared gradient definition for the Kio spark logo mark, reused via url(#kioSparkGrad) everywhere the spark appears. -->
+    <!-- Shared gradient definition for the Kio heart logo mark, reused via url(#kioHeartGrad) everywhere the heart appears. -->
     <svg width="0" height="0" style="position:absolute;" aria-hidden="true">
         <defs>
-            <linearGradient id="kioSparkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <linearGradient id="kioHeartGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stop-color="#a855f7"/>
                 <stop offset="100%" stop-color="#ec4899"/>
             </linearGradient>
@@ -348,7 +353,7 @@ HTML_CODE = """
         <!-- Sidebar Navigation -->
         <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <span class="brand-name" style="font-size: 1.2rem; margin:0;">Kio<svg class="kio-spark" viewBox="0 0 24 24"><g stroke="url(#kioSparkGrad)" stroke-width="2.5" stroke-linecap="round" fill="none"><line x1="12" y1="3" x2="12" y2="21"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="5.5" y1="5.5" x2="18.5" y2="18.5"/><line x1="18.5" y1="5.5" x2="5.5" y2="18.5"/></g></svg></span>
+                <span class="brand-name" style="font-size: 1.2rem; margin:0;">Kio<svg class="kio-heart" viewBox="0 0 24 24"><path fill="url(#kioHeartGrad)" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></span>
                 <div class="header-actions">
                     <button class="sidebar-icon-btn" onclick="toggleFullScreen()"><i class="fa-solid fa-expand"></i></button>
                     <button class="sidebar-icon-btn" onclick="toggleSidebar()"><i class="fa-solid fa-xmark"></i></button>
@@ -410,7 +415,7 @@ HTML_CODE = """
                     <button class="icon-btn" onclick="toggleSidebar()" style="width:38px; height:38px; font-size:1rem;"><i class="fa-solid fa-bars"></i></button>
                 </div>
 
-                <div class="brand-name">Kio<svg class="kio-spark" viewBox="0 0 24 24"><g stroke="url(#kioSparkGrad)" stroke-width="2.5" stroke-linecap="round" fill="none"><line x1="12" y1="3" x2="12" y2="21"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="5.5" y1="5.5" x2="18.5" y2="18.5"/><line x1="18.5" y1="5.5" x2="5.5" y2="18.5"/></g></svg></div>
+                <div class="brand-name">Kio<svg class="kio-heart" viewBox="0 0 24 24"><path fill="url(#kioHeartGrad)" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div>
                 <h2 class="dash-title">Welcome to Kio.</h2>
                 <p class="dash-sub">Intelligence with a heart.</p>
 
@@ -935,7 +940,7 @@ HTML_CODE = """
             if(cont.querySelector('.empty-chat-placeholder')) cont.innerHTML = '';
             let t = document.createElement('div');
             t.id = 'typing-bubble'; t.className = 'message ai';
-            t.innerHTML = `<div class="sender-name">${escapeHtml(name)}</div><div class="content typing-indicator"><svg class="kio-spark" style="width:0.85em;height:0.85em;" viewBox="0 0 24 24"><g stroke="url(#kioSparkGrad)" stroke-width="2.5" stroke-linecap="round" fill="none"><line x1="12" y1="3" x2="12" y2="21"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="5.5" y1="5.5" x2="18.5" y2="18.5"/><line x1="18.5" y1="5.5" x2="5.5" y2="18.5"/></g></svg> typing...</div>`;
+            t.innerHTML = `<div class="sender-name">${escapeHtml(name)}</div><div class="content typing-indicator"><svg class="kio-heart" style="width:0.85em;height:0.85em;" viewBox="0 0 24 24"><path fill="url(#kioHeartGrad)" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg> typing...</div>`;
             cont.appendChild(t); cont.scrollTop = cont.scrollHeight;
         }
         function removeTypingIndicator() { let e = document.getElementById('typing-bubble'); if(e) e.remove(); }
